@@ -29,6 +29,16 @@ public class CursoDTO {
     @NotNull(message = "La fecha de fin es obligatoria")
     private LocalDate fechaFin;
 
+    @NotNull(message = "La duración en horas es obligatoria")
+    @Min(value = 1, message = "La duración mínima es 1 hora")
+    private Integer duracionHoras;
+
+    @NotNull(message = "Debe seleccionar una categoría")
+    private Long idCategoria;
+
+    @NotNull(message = "Debe seleccionar una modalidad")
+    private Long idModalidad;
+
     // Genera los Getters y Setters de estos atributos (Alt + Insert en IntelliJ)
 
     public String getTitulo() {
@@ -77,5 +87,29 @@ public class CursoDTO {
 
     public void setFechaFin(LocalDate fechaFin) {
         this.fechaFin = fechaFin;
+    }
+
+    public Integer getDuracionHoras() {
+        return duracionHoras;
+    }
+
+    public void setDuracionHoras(Integer duracionHoras) {
+        this.duracionHoras = duracionHoras;
+    }
+
+    public Long getIdCategoria() {
+        return idCategoria;
+    }
+
+    public void setIdCategoria(Long idCategoria) {
+        this.idCategoria = idCategoria;
+    }
+
+    public Long getIdModalidad() {
+        return idModalidad;
+    }
+
+    public void setIdModalidad(Long idModalidad) {
+        this.idModalidad = idModalidad;
     }
 }
