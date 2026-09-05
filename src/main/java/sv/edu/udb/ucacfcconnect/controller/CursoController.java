@@ -5,23 +5,32 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sv.edu.udb.ucacfcconnect.dto.CursoDTO;
+import sv.edu.udb.ucacfcconnect.service.CursoService;
 
 @RestController
 @RequestMapping("/api/v1/cursos") // Prefijo base estandarizado
 public class CursoController {
 
+    private final CursoService cursoService;
+
+    // Constructor para inyectar tu servicio automáticamente
+    public CursoController(CursoService cursoService) {
+        this.cursoService = cursoService;
+    }
+
     // GET /api/v1/cursos: Obtiene el catálogo de cursos
     @GetMapping
     public ResponseEntity<String> listarCursos() {
-        // Todo: Llamar al servicio cuando Kevin Z. termine la BD
+        // Todo: Implementar la lista real desde el servicio más adelante
         return ResponseEntity.ok("Lista de cursos (Simulación)");
     }
 
-    // POST /api/v1/cursos: Crea un nuevo curso
+    // POST /api/v1/cursos: Crea un nuevo curso y lo guarda en MySQL
     @PostMapping
     public ResponseEntity<String> crearCurso(@Valid @RequestBody CursoDTO cursoDTO) {
-        // La etiqueta @Valid forzará a que se cumplan las reglas de tu CursoDTO
-        return new ResponseEntity<>("Curso creado exitosamente: " + cursoDTO.getTitulo(), HttpStatus.CREATED);
+        // Llamamos al servicio para guardar en la BD real
+        cursoService.crearCurso(cursoDTO);
+        return new ResponseEntity<>("¡Éxito! Curso guardado en MySQL: " + cursoDTO.getTitulo(), HttpStatus.CREATED);
     }
 
     // PUT /api/v1/cursos/{id}: Modifica un curso
@@ -35,5 +44,4 @@ public class CursoController {
     public ResponseEntity<String> cambiarEstadoCurso(@PathVariable Long id, @RequestBody Boolean activo) {
         return ResponseEntity.ok("Estado del curso " + id + " cambiado a: " + activo);
     }
-
 }
