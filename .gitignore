@@ -34,3 +34,8 @@ build/
 
 ### Database dumps ###
 *.sql
+
+### Local secrets ###
+.env
+.env.*
+!.env.example
