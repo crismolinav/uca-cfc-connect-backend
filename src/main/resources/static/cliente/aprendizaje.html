@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tu espacio de aprendizaje en UCA CFC Connect.">
+    <title>Mi aprendizaje | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/cliente.css">
+    <script src="/js/client-shell.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/aprendizaje.js" defer></script>
+</head>
+<body data-page="aprendizaje">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="/cliente/index.html" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
+        <nav class="primary-nav" aria-label="Principal">
+            <a href="/cliente/index.html#explorar">Explorar</a>
+            <a href="/cliente/aprendizaje.html" aria-current="page">Mi aprendizaje</a>
+            <a href="/cliente/index.html#servicios">Servicios</a>
+        </nav>
+        <form class="site-search" role="search" action="/cliente/index.html" method="get">
+            <label class="visually-hidden" for="client-search-input">Buscar formatos y servicios</label>
+            <input id="client-search-input" name="q" type="search" placeholder="Buscar formatos y servicios" autocomplete="off">
+            <button type="submit" aria-label="Buscar formatos de formación"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
+        </form>
+        <div class="account-control">
+            <button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button>
+            <nav id="account-menu" class="account-menu" aria-label="Cuenta" hidden>
+                <a href="/cliente/aprendizaje.html" aria-current="page">Mi aprendizaje</a>
+                <a href="/cliente/configuracion.html">Configuración</a>
+                <button id="logout-button" type="button">Cerrar sesión</button>
+            </nav>
+        </div>
+    </div>
+</header>
+<main id="contenido" class="page-shell inner-page">
+    <p id="client-loading" class="loading" role="status">Cargando tu espacio...</p>
+    <p id="client-error" class="error-message" role="alert"></p>
+    <div id="client-content" hidden>
+        <section class="learning-intro" aria-labelledby="learning-title">
+            <div class="learning-intro-copy">
+                <span id="learning-avatar" class="intro-avatar" aria-hidden="true">U</span>
+                <div><h1 id="learning-title">Hola, <span id="client-name"></span></h1><p>Este es tu espacio de aprendizaje.</p></div>
+            </div>
+            <div class="learning-intro-art" aria-hidden="true"><span></span><span></span><span></span></div>
+        </section>
+        <p class="learning-note">Cuando estén disponibles las inscripciones en línea, aquí podrás consultar tu actividad.</p>
+        <div class="learning-filters" role="group" aria-label="Ver estado de aprendizaje">
+            <button type="button" data-learning-filter="curso" aria-pressed="true">En curso</button>
+            <button type="button" data-learning-filter="completado" aria-pressed="false">Completado(a)</button>
+            <button type="button" data-learning-filter="certificados" aria-pressed="false">Certificados</button>
+        </div>
+        <section class="learning-empty" aria-labelledby="learning-empty-title" aria-live="polite">
+            <div class="empty-illustration" aria-hidden="true"><span class="empty-book"></span><span class="empty-page"></span></div>
+            <h2 id="learning-empty-title">Comienza a explorar</h2>
+            <p id="learning-empty-copy">Aún no hay cursos en seguimiento. Conoce los formatos de formación disponibles en el CFC.</p>
+            <a href="/cliente/index.html#explorar">Explorar formatos</a>
+        </section>
+    </div>
+</main>
+</body>
+</html>
