@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Conoce la formación continua y los servicios de UCA CFC Connect. Crea una cuenta o inicia sesión para comenzar.">
+    <title>Formación continua | UCA CFC Connect</title>
+    <link rel="preload" href="/assets/students-studying.png" as="image">
+    <link rel="stylesheet" href="/css/landing.css">
+    <script src="/js/landing.js" defer></script>
+</head>
+<body>
+<!-- THESIS: Una portada de formación con el ritmo visual y la paleta de Coursera Plus, sin inventar oferta ni precios.
+OWN-WORLD: Azul cobalto, navegación blanca, barra superior oscura y acentos magenta y amarillo.
+STORY: Descubrir los tipos de formación y servicios disponibles, luego crear una cuenta o iniciar sesión.
+FIRST VIEWPORT: Dos barras de navegación, aviso azul y hero cobalto con mensaje blanco y composición gráfica a la derecha.
+FORM: Referencia visual directa de Coursera Plus, adaptada a la identidad y capacidades reales de UCA CFC Connect.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md -->
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<div class="utility-bar">
+    <nav class="utility-inner" aria-label="Áreas de interés">
+        <a href="#formacion" aria-current="page">Para personas</a>
+        <a href="#servicios">Para organizaciones</a>
+    </nav>
+</div>
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="/" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-controls="site-navigation" aria-expanded="false">Menú</button>
+        <nav class="site-navigation" id="site-navigation" aria-label="Navegación principal">
+            <a class="explore-link" href="#formacion">Explorar</a>
+            <a class="nav-service" href="#servicios">Servicios</a>
+            <form class="site-search" id="site-search" role="search">
+                <label class="visually-hidden" for="search-query">Buscar en esta página</label>
+                <input id="search-query" type="search" placeholder="Buscar en esta página" autocomplete="off">
+                <button type="submit" aria-label="Buscar en esta página"><span aria-hidden="true">⌕</span></button>
+            </form>
+            <div class="nav-actions">
+                <a class="login-link" href="/auth/login.html">Iniciar sesión</a>
+                <a class="join-link" href="/auth/registro.html">Únete de forma gratuita</a>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main id="contenido">
+    <div class="announcement" id="announcement">
+        <p>La formación continua comienza aquí. <a href="/auth/registro.html">Crea tu cuenta en UCA CFC Connect</a>.</p>
+        <button id="announcement-close" type="button" aria-label="Cerrar aviso">×</button>
+    </div>
+
+    <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-inner">
+            <div class="hero-copy">
+                <p class="hero-brand">UCA <span>CFC CONNECT</span></p>
+                <h1 id="hero-title">Desarrolla tus habilidades.<br>Da forma a tu futuro.</h1>
+                <p class="hero-description">Conoce los programas de formación continua y los servicios del CFC. Crea tu cuenta para comenzar.</p>
+                <div class="hero-actions">
+                    <a class="hero-button" href="/auth/registro.html">Crear cuenta</a>
+                    <a class="hero-secondary" href="#formacion">Explorar formación <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+                <div class="hero-art-photo"><img src="/assets/students-studying.png" width="1145" height="1374" alt="" fetchpriority="high"></div>
+                <div class="art-magenta"><span>Aprende</span><strong>con el CFC</strong></div>
+                <div class="art-yellow">Cursos · Diplomados<br>Seminarios · Talleres</div>
+                <div class="art-loop"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="formats-bar section-shell" aria-labelledby="formats-title">
+        <h2 id="formats-title">Formación para seguir avanzando</h2>
+        <div class="format-pills" aria-label="Tipos de formación">
+            <a href="#cursos">Cursos</a>
+            <a href="#diplomados">Diplomados</a>
+            <a href="#seminarios">Seminarios</a>
+            <a href="#talleres">Talleres</a>
+        </div>
+    </section>
+
+    <section class="formation section-shell" id="formacion" aria-labelledby="formation-title">
+        <div class="formation-panel">
+            <div class="formation-lead">
+                <h2 id="formation-title">Encuentra la formación que buscas</h2>
+                <p>Explora formatos y servicios del CFC. El catálogo de programas específicos se publicará aquí cuando esté disponible.</p>
+                <a href="/auth/registro.html">Crear cuenta <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="catalog-preview">
+                <div class="catalog-filters" role="group" aria-label="Filtrar vistas previas">
+                    <button type="button" data-filter="todos" aria-pressed="true">Todos</button>
+                    <button type="button" data-filter="cursos" aria-pressed="false">Cursos</button>
+                    <button type="button" data-filter="diplomados" aria-pressed="false">Diplomados</button>
+                    <button type="button" data-filter="seminarios" aria-pressed="false">Seminarios</button>
+                    <button type="button" data-filter="talleres" aria-pressed="false">Talleres</button>
+                    <button type="button" data-filter="servicios" aria-pressed="false">Servicios</button>
+                </div>
+                <div class="formation-cards" id="formation-cards">
+                    <article class="formation-card" id="cursos" data-category="cursos">
+                        <div class="card-image"><img src="/assets/adult-workshop.png" width="1536" height="1024" alt="Grupo de personas participando en un taller" loading="lazy"></div>
+                        <div class="card-copy"><span class="card-provider">UCA CFC Connect</span><h3>Cursos</h3><p>Formación por temas y habilidades.</p><span class="card-badge">Programas por publicar</span></div>
+                    </article>
+                    <article class="formation-card" id="diplomados" data-category="diplomados">
+                        <div class="card-color card-color-blue" aria-hidden="true">DIPLOMADOS</div>
+                        <div class="card-copy"><span class="card-provider">UCA CFC Connect</span><h3>Diplomados</h3><p>Profundiza en un área de conocimiento.</p><span class="card-badge">Programas por publicar</span></div>
+                    </article>
+                    <article class="formation-card" id="seminarios" data-category="seminarios">
+                        <div class="card-color card-color-yellow" aria-hidden="true">SEMINARIOS</div>
+                        <div class="card-copy"><span class="card-provider">UCA CFC Connect</span><h3>Seminarios</h3><p>Ideas y experiencias compartidas.</p><span class="card-badge">Programas por publicar</span></div>
+                    </article>
+                    <article class="formation-card" id="talleres" data-category="talleres" hidden>
+                        <div class="card-color card-color-magenta" aria-hidden="true">TALLERES</div>
+                        <div class="card-copy"><span class="card-provider">UCA CFC Connect</span><h3>Talleres</h3><p>Aprendizaje en espacios prácticos.</p><span class="card-badge">Programas por publicar</span></div>
+                    </article>
+                    <article class="formation-card" id="espacios" data-category="servicios" hidden>
+                        <div class="card-color card-color-cobalt" aria-hidden="true">ESPACIOS</div>
+                        <div class="card-copy"><span class="card-provider">UCA CFC Connect</span><h3>Espacios</h3><p>Salas, auditorios y laboratorios.</p><span class="card-badge">Servicio del CFC</span></div>
+                    </article>
+                    <article class="formation-card" id="catering" data-category="servicios" hidden>
+                        <div class="card-color card-color-sky" aria-hidden="true">CATERING</div>
+                        <div class="card-copy"><span class="card-provider">UCA CFC Connect</span><h3>Catering</h3><p>Complemento para eventos.</p><span class="card-badge">Servicio del CFC</span></div>
+                    </article>
+                </div>
+                <button class="show-more" id="show-more" type="button" aria-expanded="false" aria-controls="formation-cards">Mostrar 3 más</button>
+            </div>
+        </div>
+        <p class="search-status" id="search-status" role="status"></p>
+    </section>
+
+    <section class="benefit section-shell" aria-labelledby="benefit-title">
+        <div class="benefit-copy">
+            <h2 id="benefit-title">Todo comienza con tu cuenta</h2>
+            <p>Regístrate con correo y contraseña o continúa con Google. Al entrar, podrás consultar tu perfil y completar tu DUI si hace falta.</p>
+            <a href="/auth/registro.html">Crear cuenta <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="account-stack" aria-hidden="true">
+            <div class="account-sheet account-sheet-back"><span>UCA CFC</span><strong>Acceso con Google</strong></div>
+            <div class="account-sheet account-sheet-mid"><span>UCA CFC</span><strong>Datos de tu perfil</strong></div>
+            <div class="account-sheet account-sheet-front"><span>UCA CFC</span><strong>Tu cuenta personal</strong></div>
+        </div>
+    </section>
+
+    <section class="services section-shell" id="servicios" aria-labelledby="services-title">
+        <div class="services-copy">
+            <h2 id="services-title">Un espacio para aprender y reunirse</h2>
+            <p>El CFC también contempla espacios y servicios para actividades académicas y profesionales.</p>
+        </div>
+        <div class="services-list">
+            <article><h3>Espacios</h3><p>Auditorios, salas de capacitación, laboratorios y salas de reuniones.</p></article>
+            <article><h3>Catering</h3><p>Un servicio complementario para eventos y actividades.</p></article>
+        </div>
+    </section>
+
+    <section class="closing" aria-labelledby="closing-title">
+        <div class="closing-inner section-shell">
+            <h2 id="closing-title">Empieza hoy tu camino de formación</h2>
+            <p>Entra a UCA CFC Connect para continuar con tu cuenta.</p>
+            <a href="/auth/registro.html">Crear cuenta</a>
+        </div>
+    </section>
+
+    <section class="faq section-shell" id="preguntas" aria-labelledby="faq-title">
+        <h2 id="faq-title">Preguntas frecuentes</h2>
+        <div class="faq-list">
+            <details><summary>¿Necesito una cuenta para ver esta página?</summary><p>No. Puedes conocer la propuesta del CFC sin iniciar sesión. Para acceder a tu perfil, sí necesitas una cuenta.</p></details>
+            <details><summary>¿Puedo registrarme con Google?</summary><p>Sí. Encontrarás esa opción en las páginas de registro e inicio de sesión.</p></details>
+            <details><summary>¿Ya puedo consultar el catálogo de cursos?</summary><p>El catálogo todavía se está preparando. Esta página presenta los tipos de formación, pero no cursos específicos.</p></details>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner section-shell">
+        <a class="brand" href="/" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
+        <nav aria-label="Enlaces del pie de página"><a href="#formacion">Formación</a><a href="#servicios">Servicios</a><a href="/auth/login.html">Iniciar sesión</a></nav>
+    </div>
+</footer>
+</body>
+</html>
