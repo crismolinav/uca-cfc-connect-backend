@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Inicia sesión en tu cuenta de UCA CFC Connect.">
+    <title>Iniciar sesión | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body data-page="login">
+<main class="auth-layout">
+    <section class="auth-panel" aria-labelledby="page-title">
+        <div class="auth-card">
+            <a class="brand" href="/" aria-label="UCA CFC Connect, inicio">
+                <span class="brand-mark" aria-hidden="true">U</span>
+                <span>UCA CFC Connect</span>
+            </a>
+
+            <header class="auth-heading">
+                <h1 id="page-title">Bienvenido de nuevo</h1>
+                <p>Ingresa tus datos para continuar en tu cuenta.</p>
+            </header>
+
+            <form id="login-form" class="auth-form" novalidate>
+                <div class="field">
+                    <label for="correo">Correo electrónico</label>
+                    <input id="correo" name="correo" type="email" autocomplete="email"
+                           placeholder="nombre@correo.com" required aria-describedby="correo-error">
+                    <p id="correo-error" class="field-error" aria-live="polite"></p>
+                </div>
+
+                <div class="field">
+                    <label for="password">Contraseña</label>
+                    <div class="password-control">
+                        <input id="password" name="password" type="password" autocomplete="current-password"
+                               placeholder="Ingresa tu contraseña" required aria-describedby="password-error">
+                        <button class="password-toggle" type="button" data-password-toggle
+                                aria-controls="password" aria-label="Mostrar contraseña">Mostrar</button>
+                    </div>
+                    <p id="password-error" class="field-error" aria-live="polite"></p>
+                </div>
+
+                <label class="check-control">
+                    <input id="recordar" name="recordar" type="checkbox">
+                    <span>Mantener mi sesión en este dispositivo</span>
+                </label>
+
+                <p id="form-status" class="form-status" role="alert"></p>
+
+                <button class="primary-button" type="submit" data-idle-label="Iniciar sesión">
+                    Iniciar sesión
+                </button>
+            </form>
+
+            <div class="divider"><span>o continúa con</span></div>
+
+            <a class="google-button" href="/api/v1/auth/google">
+                <img src="/assets/google.svg" width="24" height="24" alt="">
+                <span>Continuar con Google</span>
+            </a>
+
+            <p class="auth-switch">¿Aún no tienes cuenta? <a href="/auth/registro.html">Crear cuenta</a></p>
+        </div>
+    </section>
+
+    <aside class="auth-visual" aria-hidden="true">
+        <img src="/assets/students-studying.png" alt="">
+    </aside>
+</main>
+</body>
+</html>
