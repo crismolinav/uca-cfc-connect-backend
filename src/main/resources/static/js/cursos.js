@@ -566,6 +566,10 @@
     async function iniciar() {
         try {
             const user = await request('/api/v1/auth/me');
+            if (user.rol === 'RECEPCIONISTA') {
+                window.location.replace('/recepcion/index.html');
+                return;
+            }
             if (user.rol !== 'ADMIN') {
                 listStatus.textContent = 'Esta sección es exclusiva para administradores.';
                 document.getElementById('new-course-button').hidden = true;
