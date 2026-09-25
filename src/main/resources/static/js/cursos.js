@@ -22,6 +22,16 @@
     const scheduleDays = [...form.querySelectorAll('input[name="diasHorario"]')];
     const scheduleStart = form.elements.namedItem('horaInicio');
     const scheduleEnd = form.elements.namedItem('horaFin');
+    const scheduleSummary = document.getElementById('schedule-summary');
+    const dayIndexes = {
+        Domingo: 0,
+        Lunes: 1,
+        Martes: 2,
+        Miércoles: 3,
+        Jueves: 4,
+        Viernes: 5,
+        Sábado: 6
+    };
 
     let page = 0;
     let size = 10;
@@ -207,6 +217,70 @@
         form.elements.namedItem('fechaFin').min = inicio || '';
     }
 
+    function minutosDesdeHora(value) {
+        if (!/^\d{2}:\d{2}$/.test(value)) return null;
+        const [horas, minutos] = value.split(':').map(Number);
+        return horas * 60 + minutos;
+    }
+
+    function fechaUtc(value) {
+        const partes = value.split('-').map(Number);
+        if (partes.length !== 3 || partes.some(Number.isNaN)) return null;
+        return new Date(Date.UTC(partes[0], partes[1] - 1, partes[2]));
+    }
+
+    function calcularCargaHoraria() {
+        const inicio = fechaUtc(form.elements.namedItem('fechaInicio').value);
+        const fin = fechaUtc(form.elements.namedItem('fechaFin').value);
+        const duracion = Number(form.elements.namedItem('duracionHoras').value);
+        const dias = new Set(scheduleDays.filter((day) => day.checked).map((day) => dayIndexes[day.value]));
+        const minutoInicio = minutosDesdeHora(scheduleStart.value);
+        const minutoFin = minutosDesdeHora(scheduleEnd.value);
+        if (!inicio || !fin || fin < inicio || !Number.isInteger(duracion) || duracion <= 0
+            || !dias.size || minutoInicio === null || minutoFin === null || minutoFin <= minutoInicio) {
+            return null;
+        }
+
+        let sesiones = 0;
+        const fecha = new Date(inicio.getTime());
+        while (fecha <= fin) {
+            if (dias.has(fecha.getUTCDay())) sesiones += 1;
+            fecha.setUTCDate(fecha.getUTCDate() + 1);
+        }
+        return {
+            sesiones,
+            minutosProgramados: sesiones * (minutoFin - minutoInicio),
+            minutosDeclarados: duracion * 60
+        };
+    }
+
+    function formatearDuracion(minutos) {
+        const horas = Math.floor(minutos / 60);
+        const restantes = minutos % 60;
+        const textoHoras = horas + (horas === 1 ? ' hora' : ' horas');
+        return restantes === 0
+            ? textoHoras
+            : textoHoras + ' y ' + restantes + (restantes === 1 ? ' minuto' : ' minutos');
+    }
+
+    function actualizarResumenHorario() {
+        const carga = calcularCargaHoraria();
+        scheduleSummary.classList.remove('is-valid', 'is-invalid');
+        if (!carga) {
+            scheduleSummary.textContent =
+                'Completa las fechas, la duración y el horario para calcular las horas programadas.';
+            return;
+        }
+
+        const coincide = carga.sesiones > 0 && carga.minutosProgramados === carga.minutosDeclarados;
+        scheduleSummary.classList.add(coincide ? 'is-valid' : 'is-invalid');
+        scheduleSummary.textContent = carga.sesiones === 0
+            ? 'Los días seleccionados no generan sesiones entre las fechas del curso.'
+            : 'El horario programa ' + formatearDuracion(carga.minutosProgramados)
+                + ' en ' + carga.sesiones + (carga.sesiones === 1 ? ' sesión' : ' sesiones')
+                + '. La duración indicada es de ' + formatearDuracion(carga.minutosDeclarados) + '.';
+    }
+
     function validarFormulario() {
         const error = document.getElementById('dialog-error');
         if (!form.reportValidity()) return false;
@@ -253,6 +327,19 @@
             scheduleEnd.focus();
             return false;
         }
+        const carga = calcularCargaHoraria();
+        if (!carga || carga.sesiones === 0) {
+            error.textContent = 'Los días seleccionados no generan sesiones entre las fechas del curso.';
+            firstSelectedDay.focus();
+            return false;
+        }
+        if (carga.minutosProgramados !== carga.minutosDeclarados) {
+            error.textContent = 'La duración indicada es de ' + formatearDuracion(carga.minutosDeclarados)
+                + ', pero el horario programa ' + formatearDuracion(carga.minutosProgramados)
+                + ' en ' + carga.sesiones + (carga.sesiones === 1 ? ' sesión.' : ' sesiones.');
+            form.elements.namedItem('duracionHoras').focus();
+            return false;
+        }
         return true;
     }
 
@@ -274,6 +361,7 @@
         });
         form.elements.namedItem('fechaInicio').min = mode === 'new' ? fechaLocalActual() : '';
         actualizarLimiteFechaFin();
+        actualizarResumenHorario();
         document.getElementById('dialog-save').hidden = readOnly;
         document.getElementById('dialog-cancel').textContent = readOnly ? 'Cerrar' : 'Cancelar';
         document.getElementById('dialog-save').textContent = mode === 'new' ? 'Guardar curso' : 'Guardar cambios';
@@ -513,8 +601,18 @@
         searchTimer = setTimeout(() => { page = 0; cargar(); }, 250);
     });
     form.addEventListener('submit', guardar);
-    form.elements.namedItem('fechaInicio').addEventListener('change', actualizarLimiteFechaFin);
-    scheduleStart.addEventListener('change', () => { scheduleEnd.min = scheduleStart.value; });
+    form.elements.namedItem('fechaInicio').addEventListener('change', () => {
+        actualizarLimiteFechaFin();
+        actualizarResumenHorario();
+    });
+    form.elements.namedItem('fechaFin').addEventListener('change', actualizarResumenHorario);
+    form.elements.namedItem('duracionHoras').addEventListener('input', actualizarResumenHorario);
+    scheduleDays.forEach((day) => day.addEventListener('change', actualizarResumenHorario));
+    scheduleStart.addEventListener('change', () => {
+        scheduleEnd.min = scheduleStart.value;
+        actualizarResumenHorario();
+    });
+    scheduleEnd.addEventListener('change', actualizarResumenHorario);
     [statusDialog, deleteDialog].forEach((modal) => modal.addEventListener('close', () => {
         if (dialogTrigger?.isConnected) dialogTrigger.focus();
         selectedCourse = null;

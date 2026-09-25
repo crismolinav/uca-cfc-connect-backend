@@ -118,7 +118,7 @@ class CursoIntegrationTest {
         CursoDTO dto = new CursoDTO();
         dto.setTitulo("Excel avanzado para negocios");
         dto.setDescripcion("Curso práctico de análisis de datos empresariales");
-        dto.setDuracionHoras(32);
+        dto.setDuracionHoras(20);
         dto.setCupoMaximo(25);
         dto.setCosto(new BigDecimal("125.00"));
         dto.setFechaInicio(LocalDate.of(2026, 10, 5));

@@ -21,12 +21,16 @@ import sv.edu.udb.ucacfcconnect.repository.CategoriaRepository;
 import sv.edu.udb.ucacfcconnect.repository.CursoRepository;
 import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class CursoService {
@@ -43,6 +47,16 @@ public class CursoService {
             Map.entry("activo", "activo"),
             Map.entry("categoria", "categoria.nombre"),
             Map.entry("modalidad", "modalidad.nombre")
+    );
+
+    private static final Map<String, DayOfWeek> DIAS_SEMANA = Map.of(
+            "Lunes", DayOfWeek.MONDAY,
+            "Martes", DayOfWeek.TUESDAY,
+            "Miércoles", DayOfWeek.WEDNESDAY,
+            "Jueves", DayOfWeek.THURSDAY,
+            "Viernes", DayOfWeek.FRIDAY,
+            "Sábado", DayOfWeek.SATURDAY,
+            "Domingo", DayOfWeek.SUNDAY
     );
 
     private final CursoRepository cursoRepository;
@@ -121,7 +135,7 @@ public class CursoService {
     @Transactional
     public CursoResponseDTO crear(CursoDTO dto) {
         validarFechas(dto, null);
-        validarHorario(dto.getHorario());
+        validarHorarioYDuracion(dto);
         Curso curso = new Curso();
         asignarDatos(curso, dto);
         curso.setActivo(true);
@@ -132,7 +146,7 @@ public class CursoService {
     public CursoResponseDTO actualizar(Long id, CursoDTO dto) {
         Curso curso = buscarCurso(id);
         validarFechas(dto, curso.getFechaInicio());
-        validarHorario(dto.getHorario());
+        validarHorarioYDuracion(dto);
         asignarDatos(curso, dto);
         return aRespuesta(cursoRepository.save(curso));
     }
@@ -193,7 +207,8 @@ public class CursoService {
         }
     }
 
-    private void validarHorario(String horario) {
+    private void validarHorarioYDuracion(CursoDTO dto) {
+        String horario = dto.getHorario();
         if (horario == null || horario.isBlank()) {
             throw new ReglaNegocioException("Debe seleccionar al menos un día y un rango de horas");
         }
@@ -201,6 +216,15 @@ public class CursoService {
         if (separador < 1) {
             throw new ReglaNegocioException("El horario no tiene el formato esperado");
         }
+
+        Set<DayOfWeek> dias = new HashSet<>();
+        for (String nombreDia : horario.substring(0, separador).split(", ")) {
+            DayOfWeek dia = DIAS_SEMANA.get(nombreDia);
+            if (dia == null || !dias.add(dia)) {
+                throw new ReglaNegocioException("El horario contiene días inválidos o repetidos");
+            }
+        }
+
         String[] horas = horario.substring(separador + 3).split("-", -1);
         if (horas.length != 2) {
             throw new ReglaNegocioException("El horario no tiene el formato esperado");
@@ -211,9 +235,53 @@ public class CursoService {
             if (!fin.isAfter(inicio)) {
                 throw new ReglaNegocioException("La hora de fin debe ser posterior a la hora de inicio");
             }
+            validarDuracionProgramada(dto, dias, inicio, fin);
         } catch (DateTimeParseException ex) {
             throw new ReglaNegocioException("Las horas deben utilizar el formato HH:mm");
         }
+    }
+
+    private void validarDuracionProgramada(
+            CursoDTO dto,
+            Set<DayOfWeek> dias,
+            LocalTime horaInicio,
+            LocalTime horaFin
+    ) {
+        if (dto.getFechaInicio() == null || dto.getFechaFin() == null || dto.getDuracionHoras() == null) {
+            return;
+        }
+
+        long sesiones = dto.getFechaInicio()
+                .datesUntil(dto.getFechaFin().plusDays(1))
+                .filter(fecha -> dias.contains(fecha.getDayOfWeek()))
+                .count();
+        if (sesiones == 0) {
+            throw new ReglaNegocioException(
+                    "Los días seleccionados no generan ninguna sesión entre las fechas del curso"
+            );
+        }
+
+        long minutosPorSesion = Duration.between(horaInicio, horaFin).toMinutes();
+        long minutosProgramados = sesiones * minutosPorSesion;
+        long minutosDeclarados = dto.getDuracionHoras() * 60L;
+        if (minutosProgramados != minutosDeclarados) {
+            throw new ReglaNegocioException(
+                    "La duración indicada es de " + formatearDuracion(minutosDeclarados)
+                            + ", pero el horario programa " + formatearDuracion(minutosProgramados)
+                            + " en " + sesiones + (sesiones == 1 ? " sesión" : " sesiones")
+                            + " entre las fechas seleccionadas"
+            );
+        }
+    }
+
+    private String formatearDuracion(long minutos) {
+        long horas = minutos / 60;
+        long restantes = minutos % 60;
+        String textoHoras = horas + (horas == 1 ? " hora" : " horas");
+        if (restantes == 0) {
+            return textoHoras;
+        }
+        return textoHoras + " y " + restantes + (restantes == 1 ? " minuto" : " minutos");
     }
 
     private String normalizarFiltro(String texto) {

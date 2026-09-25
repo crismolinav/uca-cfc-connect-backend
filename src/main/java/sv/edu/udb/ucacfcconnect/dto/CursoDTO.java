@@ -46,7 +46,7 @@ public class CursoDTO {
 
     @NotNull(message = "La duración en horas es obligatoria")
     @Positive(message = "La duración debe ser mayor que cero")
-    @Schema(example = "32")
+    @Schema(example = "20")
     private Integer duracionHoras;
 
     @NotBlank(message = "El horario es obligatorio")

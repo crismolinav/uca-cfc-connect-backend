@@ -58,7 +58,7 @@ class CursoServiceTest {
         solicitud = new CursoDTO();
         solicitud.setTitulo("  Excel avanzado  ");
         solicitud.setDescripcion("  Curso práctico para empresas  ");
-        solicitud.setDuracionHoras(32);
+        solicitud.setDuracionHoras(20);
         solicitud.setCupoMaximo(25);
         solicitud.setCosto(new BigDecimal("125.00"));
         solicitud.setFechaInicio(LocalDate.of(2026, 10, 5));
@@ -133,6 +133,20 @@ class CursoServiceTest {
         );
 
         assertTrue(error.getMessage().contains("hora de fin"));
+        verify(cursoRepository, never()).save(any());
+    }
+
+    @Test
+    void crearCursoRechazaDuracionDistintaALasHorasProgramadas() {
+        solicitud.setDuracionHoras(10);
+
+        ReglaNegocioException error = assertThrows(
+                ReglaNegocioException.class,
+                () -> cursoService.crear(solicitud)
+        );
+
+        assertTrue(error.getMessage().contains("duración indicada es de 10 horas"));
+        assertTrue(error.getMessage().contains("horario programa 20 horas"));
         verify(cursoRepository, never()).save(any());
     }
 
@@ -217,7 +231,7 @@ class CursoServiceTest {
         curso.setIdCurso(10L);
         curso.setTitulo("Excel avanzado");
         curso.setDescripcion("Curso práctico para empresas");
-        curso.setDuracionHoras(32);
+        curso.setDuracionHoras(20);
         curso.setCupoMaximo(25);
         curso.setCosto(new BigDecimal("125.00"));
         curso.setFechaInicio(LocalDate.of(2026, 10, 5));
