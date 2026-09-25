@@ -25,13 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import sv.edu.udb.ucacfcconnect.dto.ActividadDiplomadoDTO;
 import sv.edu.udb.ucacfcconnect.dto.ActividadResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.AsignacionDocentesDTO;
 import sv.edu.udb.ucacfcconnect.dto.CatalogoResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.DiplomadoDTO;
 import sv.edu.udb.ucacfcconnect.dto.DiplomadoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.DocenteResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.ErrorResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.EstadoDiplomadoDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.service.DiplomadoService;
+import sv.edu.udb.ucacfcconnect.service.DocenteAsignacionService;
 
 import java.net.URI;
 import java.util.List;
@@ -43,9 +46,14 @@ import java.util.List;
 public class DiplomadoController {
 
     private final DiplomadoService diplomadoService;
+    private final DocenteAsignacionService docenteAsignacionService;
 
-    public DiplomadoController(DiplomadoService diplomadoService) {
+    public DiplomadoController(
+            DiplomadoService diplomadoService,
+            DocenteAsignacionService docenteAsignacionService
+    ) {
         this.diplomadoService = diplomadoService;
+        this.docenteAsignacionService = docenteAsignacionService;
     }
 
     @GetMapping
@@ -81,6 +89,24 @@ public class DiplomadoController {
     @Operation(summary = "Consultar un diplomado")
     public ResponseEntity<DiplomadoResponseDTO> obtenerPorId(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(diplomadoService.obtenerPorId(id));
+    }
+
+    @GetMapping("/{id}/docentes")
+    @Operation(summary = "Listar docentes asignados al diplomado")
+    public ResponseEntity<List<DocenteResumenDTO>> listarDocentes(@PathVariable @Positive Long id) {
+        return ResponseEntity.ok(docenteAsignacionService.listarDiplomado(id));
+    }
+
+    @PutMapping("/{id}/docentes")
+    @Operation(
+            summary = "Asignar docentes al diplomado",
+            description = "Reemplaza la asignación actual y rechaza conflictos con las sesiones programadas."
+    )
+    public ResponseEntity<List<DocenteResumenDTO>> asignarDocentes(
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody AsignacionDocentesDTO solicitud
+    ) {
+        return ResponseEntity.ok(docenteAsignacionService.asignarDiplomado(id, solicitud));
     }
 
     @PostMapping

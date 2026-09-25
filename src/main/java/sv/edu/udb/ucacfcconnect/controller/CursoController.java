@@ -25,12 +25,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import sv.edu.udb.ucacfcconnect.dto.CatalogoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.AsignacionDocentesDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.DocenteResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.ErrorResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.EstadoCursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.service.CursoService;
+import sv.edu.udb.ucacfcconnect.service.DocenteAsignacionService;
 
 import java.net.URI;
 import java.util.List;
@@ -42,9 +45,11 @@ import java.util.List;
 public class CursoController {
 
     private final CursoService cursoService;
+    private final DocenteAsignacionService docenteAsignacionService;
 
-    public CursoController(CursoService cursoService) {
+    public CursoController(CursoService cursoService, DocenteAsignacionService docenteAsignacionService) {
         this.cursoService = cursoService;
+        this.docenteAsignacionService = docenteAsignacionService;
     }
 
     @GetMapping
@@ -103,6 +108,24 @@ public class CursoController {
     })
     public ResponseEntity<CursoResponseDTO> obtenerPorId(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(cursoService.obtenerPorId(id));
+    }
+
+    @GetMapping("/{id}/docentes")
+    @Operation(summary = "Listar docentes asignados al curso")
+    public ResponseEntity<List<DocenteResumenDTO>> listarDocentes(@PathVariable @Positive Long id) {
+        return ResponseEntity.ok(docenteAsignacionService.listarCurso(id));
+    }
+
+    @PutMapping("/{id}/docentes")
+    @Operation(
+            summary = "Asignar docentes al curso",
+            description = "Reemplaza la asignación actual y rechaza conflictos de fecha y horario."
+    )
+    public ResponseEntity<List<DocenteResumenDTO>> asignarDocentes(
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody AsignacionDocentesDTO solicitud
+    ) {
+        return ResponseEntity.ok(docenteAsignacionService.asignarCurso(id, solicitud));
     }
 
     @PostMapping

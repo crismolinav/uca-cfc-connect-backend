@@ -15,6 +15,7 @@
     const modalityFilter = document.getElementById('modality-filter');
     const statusFilter = document.getElementById('status-filter');
     const sortFilter = document.getElementById('sort-filter');
+    const teacherAssignments = window.crearGestorDocentes('cursos');
     const formFields = [
         'titulo', 'descripcion', 'idCategoria', 'idModalidad', 'fechaInicio',
         'fechaFin', 'duracionHoras', 'cupoMaximo', 'costo'
@@ -128,6 +129,8 @@
         wrap.className = 'row-actions ' + extraClass;
         wrap.append(
             boton('Ver', () => abrirFormulario('view', curso), 'Ver ' + curso.titulo),
+            boton('Docentes', (event) => teacherAssignments.open(curso, event.currentTarget),
+                'Asignar docentes a ' + curso.titulo),
             boton('Editar', () => abrirFormulario('edit', curso), 'Editar ' + curso.titulo),
             boton(curso.activo ? 'Inactivar' : 'Activar', (event) => abrirEstado(curso, event.currentTarget),
                 (curso.activo ? 'Inactivar ' : 'Activar ') + curso.titulo),
