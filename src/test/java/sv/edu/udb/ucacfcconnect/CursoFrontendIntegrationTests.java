@@ -88,4 +88,20 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("const diplomaApi = '/api/v1/diplomados'")))
                 .andExpect(content().string(containsString("openDiplomaDetail")));
     }
+
+    @Test
+    void todasLasPantallasAdministrativasCompartenLaMismaNavegacion() throws Exception {
+        for (String ruta : new String[]{
+                "/admin/index.html", "/admin/cursos.html", "/admin/diplomados.html"
+        }) {
+            mockMvc.perform(get(ruta))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("href=\"/admin/index.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/cursos.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/diplomados.html\"")))
+                    .andExpect(content().string(containsString("nav-pending\">Agenda <small>")))
+                    .andExpect(content().string(containsString("nav-pending\">Cotizaciones <small>")))
+                    .andExpect(content().string(containsString("nav-pending\">Pagos <small>")));
+        }
+    }
 }
