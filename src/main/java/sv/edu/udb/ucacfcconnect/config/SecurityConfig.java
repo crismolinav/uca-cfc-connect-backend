@@ -78,6 +78,7 @@ public class SecurityConfig {
                                 "/api/v1/alquileres/**",
                                 "/api/v1/docentes/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/recepcion/**").hasRole("RECEPCIONISTA")
                         .requestMatchers(HttpMethod.GET,
                                 "/",
                                 "/index.html",
@@ -94,6 +95,7 @@ public class SecurityConfig {
                                 "/cuenta/**",
                                 "/cliente/**",
                                 "/admin/**",
+                                "/recepcion/**",
                                 "/css/**",
                                 "/js/**",
                                 "/assets/**",

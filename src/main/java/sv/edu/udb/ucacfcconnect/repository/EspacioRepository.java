@@ -1,12 +1,16 @@
 package sv.edu.udb.ucacfcconnect.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import sv.edu.udb.ucacfcconnect.entity.Espacio;
+
+import java.util.Optional;
 
 @Repository
 public interface EspacioRepository extends JpaRepository<Espacio, Long> {
@@ -28,6 +32,12 @@ public interface EspacioRepository extends JpaRepository<Espacio, Long> {
             """)
     Page<Espacio> buscar(@Param("texto") String texto, @Param("disponible") Boolean disponible,
                          @Param("capacidadMinima") Integer capacidadMinima, Pageable pageable);
+
     boolean existsByNombreIgnoreCase(String nombre);
+
     boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select e from Espacio e where e.id = :id")
+    Optional<Espacio> bloquear(@Param("id") Long id);
 }

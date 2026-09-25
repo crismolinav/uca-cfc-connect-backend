@@ -8,10 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import sv.edu.udb.ucacfcconnect.entity.Alquiler;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AlquilerRepository extends JpaRepository<Alquiler, Long> {
@@ -52,8 +53,18 @@ public interface AlquilerRepository extends JpaRepository<Alquiler, Long> {
     boolean existeCruce(@Param("idEspacio") Long idEspacio, @Param("fecha") LocalDate fecha,
                         @Param("horaInicio") LocalTime horaInicio, @Param("horaFin") LocalTime horaFin,
                         @Param("idExcluir") Long idExcluir);
+
+    @Query("""
+            select count(a) > 0 from Alquiler a
+            where a.espacio.id = :espacioId and a.fecha = :fecha and a.estado <> 'CANCELADO'
+              and a.horaInicio < :fin and a.horaFin > :inicio
+            """)
+    boolean existeCruce(Long espacioId, LocalDate fecha, LocalTime inicio, LocalTime fin);
+
     boolean existsByEspacio_Id(Long idEspacio);
 
     @EntityGraph(attributePaths = {"cliente", "espacio"})
     List<Alquiler> findByCliente_Usuario_IdOrderByFechaDescHoraInicioDesc(Long idUsuario);
+
+    List<Alquiler> findByFechaOrderByHoraInicioAsc(LocalDate fecha);
 }

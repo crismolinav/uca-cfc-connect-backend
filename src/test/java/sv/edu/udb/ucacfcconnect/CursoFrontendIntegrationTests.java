@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +21,19 @@ class CursoFrontendIntegrationTests {
     private MockMvc mockMvc;
 
     @Test
+    void cargaElGestorDeDocentesAntesDeLosPanelesQueLoUsan() throws Exception {
+        for (String panel : new String[]{"cursos", "diplomados"}) {
+            String html = mockMvc.perform(get("/admin/" + panel + ".html"))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+            assertThat(html.indexOf("/js/docente-asignaciones.js"))
+                    .isGreaterThan(-1)
+                    .isLessThan(html.indexOf("/js/" + panel + ".js"));
+            assertThat(html).contains("id=\"teacher-assignment-dialog\"");
+        }
+    }
+
+    @Test
     void sirveLaInterfazAdministrativaDeCursos() throws Exception {
         mockMvc.perform(get("/admin/cursos.html"))
                 .andExpect(status().isOk())
@@ -29,6 +43,8 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("name=\"diasHorario\"")))
                 .andExpect(content().string(containsString("type=\"time\"")))
                 .andExpect(content().string(containsString("name=\"cupoMaximo\" type=\"number\" min=\"1\" step=\"1\"")))
+                .andExpect(content().string(containsString("/js/docente-asignaciones.js")))
+                .andExpect(content().string(containsString("id=\"teacher-assignment-dialog\"")))
                 .andExpect(content().string(containsString("/js/cursos.js")));
 
         mockMvc.perform(get("/js/cursos.js"))
@@ -68,6 +84,8 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("+ Nuevo diplomado")))
                 .andExpect(content().string(containsString("id=\"sessions-dialog\"")))
                 .andExpect(content().string(containsString("id=\"session-progress\"")))
+                .andExpect(content().string(containsString("/js/docente-asignaciones.js")))
+                .andExpect(content().string(containsString("id=\"teacher-assignment-dialog\"")))
                 .andExpect(content().string(containsString("/js/diplomados.js")));
 
         mockMvc.perform(get("/cliente/index.html"))
@@ -106,7 +124,8 @@ class CursoFrontendIntegrationTests {
     @Test
     void todasLasPantallasAdministrativasCompartenLaMismaNavegacion() throws Exception {
         for (String ruta : new String[]{
-                "/admin/index.html", "/admin/cursos.html", "/admin/diplomados.html", "/admin/docentes.html",
+                "/admin/index.html", "/admin/cursos.html", "/admin/diplomados.html",
+                "/admin/docentes.html", "/admin/recepcionistas.html", "/admin/operaciones.html",
                 "/admin/espacios.html", "/admin/alquileres.html", "/admin/cotizaciones.html"
         }) {
             mockMvc.perform(get(ruta))
@@ -114,10 +133,12 @@ class CursoFrontendIntegrationTests {
                     .andExpect(content().string(containsString("href=\"/admin/index.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/cursos.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/diplomados.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/docentes.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/recepcionistas.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/espacios.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/alquileres.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/cotizaciones.html\"")))
-                    .andExpect(content().string(containsString("nav-pending\">Pagos <small>")));
+                    .andExpect(content().string(containsString("href=\"/admin/operaciones.html\"")));
         }
     }
 

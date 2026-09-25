@@ -32,6 +32,7 @@
 
     function rutaPorRol(usuario) {
         if (usuario?.rol === "ADMIN") return "/admin/index.html";
+        if (usuario?.rol === "RECEPCIONISTA") return "/recepcion/index.html";
         if (usuario?.rol === "CLIENTE") return "/cliente/index.html";
         return "/cuenta/perfil.html";
     }
@@ -222,6 +223,7 @@
             document.getElementById("profile-email").textContent = usuario.correo;
             document.getElementById("profile-role").textContent = usuario.rol;
             document.getElementById("admin-entry").hidden = usuario.rol !== "ADMIN";
+            document.getElementById("reception-entry").hidden = usuario.rol !== "RECEPCIONISTA";
             document.getElementById("profile-provider").textContent =
                 usuario.proveedor === "google" ? "Google" : "Correo y contraseña";
             mostrarDuiEnPerfil(usuario);

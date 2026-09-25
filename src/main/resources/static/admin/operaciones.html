@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Espacios, catering, pagos, cotizaciones y reportes de UCA CFC Connect.">
+    <title>Operaciones | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin-operaciones.css">
+    <script src="/js/admin-operaciones.js" defer></script>
+</head>
+<body>
+<!-- THESIS: Las tareas de supervisión conviven en una vista operativa sin interrumpir el trabajo de recepción.
+OWN-WORLD: Hereda la navegación oscura, superficies blancas y acento azul del panel administrativo.
+STORY: El administrador crea recursos, revisa decisiones y consulta resultados por periodo.
+FIRST VIEWPORT: Navegación lateral, título y accesos directos a las cinco funciones.
+FORM: Extensión de la interfaz administrativa existente. -->
+<a class="skip-link" href="#main-content">Ir al contenido</a>
+<div class="admin-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación de administración">
+        <button class="sidebar-close" id="sidebar-close" type="button">Cerrar menú</button>
+        <a class="sidebar-brand" href="/admin/index.html">UCA CFC<span>.</span></a>
+        <nav aria-label="Principal">
+            <span class="nav-group-label">Personas</span>
+            <a class="nav-link" href="/admin/index.html">Clientes</a>
+            <a class="nav-link" href="/admin/docentes.html">Docentes</a>
+            <a class="nav-link" href="/admin/recepcionistas.html">Recepcionistas</a>
+            <span class="nav-group-label nav-group-secondary">Oferta académica</span>
+            <a class="nav-link" href="/admin/cursos.html">Cursos</a>
+            <a class="nav-link" href="/admin/diplomados.html">Diplomados</a>
+            <span class="nav-group-label nav-group-secondary">Operaciones</span>
+            <a class="nav-link" href="/admin/espacios.html">Espacios</a>
+            <a class="nav-link" href="/admin/alquileres.html">Alquileres</a>
+            <a class="nav-link" href="/admin/cotizaciones.html">Cotizaciones</a>
+            <a class="nav-link" href="/admin/operaciones.html" aria-current="page">Operaciones</a>
+        </nav>
+        <div class="sidebar-footer">UCA CFC Connect<br><span>Panel de administración</span></div>
+    </aside>
+    <main class="admin-main" id="main-content">
+        <header class="topbar">
+            <button class="menu-button" id="menu-button" type="button" aria-controls="sidebar"
+                    aria-expanded="false" aria-label="Abrir menú">Menú</button>
+            <div class="topbar-spacer"></div>
+            <span id="admin-name" class="admin-name">Administrador</span>
+            <a class="account-link" href="/cuenta/perfil.html">Mi cuenta</a>
+            <button class="logout-button" id="logout-button" type="button">Cerrar sesión</button>
+        </header>
+        <div class="content operations-content">
+            <div class="page-intro">
+                <div><h1>Operaciones</h1><p class="breadcrumb">Administración <span aria-hidden="true">/</span> Operaciones</p></div>
+                <p class="page-description">Configura recursos, aprueba cotizaciones y consulta resultados.</p>
+            </div>
+            <nav class="operations-jump" aria-label="Secciones de operaciones">
+                <a href="#espacios">Espacios</a><a href="#catering">Catering</a>
+                <a href="#cotizaciones">Cotizaciones</a><a href="#pagos">Pagos</a><a href="#reportes">Reportes</a>
+            </nav>
+            <p id="page-status" class="operations-status" role="status"></p>
+
+            <section class="operations-section" id="espacios" aria-labelledby="spaces-title">
+                <div class="operations-heading"><div><h2 id="spaces-title">Espacios</h2><p>Registra aulas, cubículos y otros espacios para que recepción pueda reservarlos.</p></div></div>
+                <form id="space-form" class="operations-form">
+                    <label>Nombre<input name="nombre" type="text" maxlength="100" required></label>
+                    <label>Tipo<input name="tipo" type="text" maxlength="80" placeholder="Aula, auditorio..." required></label>
+                    <label>Capacidad<input name="capacidad" type="number" min="1" step="1" required></label>
+                    <label>Precio ($)<input name="precio" type="number" min="0" step="0.01" required></label>
+                    <label class="wide-field">Equipamiento<input name="equipamiento" type="text" maxlength="255" placeholder="Proyector, Wi-Fi..."></label>
+                    <label class="check-field"><input name="disponible" type="checkbox" checked> Disponible para reservas</label>
+                    <button class="new-button" type="submit">Crear espacio</button>
+                </form>
+                <p id="space-status" class="operations-status" role="status"></p>
+                <div id="space-list" class="operations-list" aria-label="Espacios registrados"></div>
+            </section>
+
+            <section class="operations-section" id="catering" aria-labelledby="catering-title">
+                <div class="operations-heading"><div><h2 id="catering-title">Servicios de catering</h2><p>Define los servicios que recepción podrá solicitar para un cliente.</p></div></div>
+                <form id="service-form" class="operations-form">
+                    <label>Nombre<input name="nombre" type="text" maxlength="100" required></label>
+                    <label>Tipo de servicio<input name="tipoServicio" type="text" maxlength="80" placeholder="Coffee break, almuerzo..." required></label>
+                    <label>Precio base ($)<input name="precioBase" type="number" min="0" step="0.01" required></label>
+                    <label class="wide-field">Descripción<input name="descripcion" type="text" maxlength="255"></label>
+                    <button class="new-button" type="submit">Crear servicio</button>
+                </form>
+                <p id="service-status" class="operations-status" role="status"></p>
+                <div id="service-list" class="operations-list" aria-label="Servicios registrados"></div>
+            </section>
+
+            <section class="operations-section" id="cotizaciones" aria-labelledby="quotes-title">
+                <div class="operations-heading"><div><h2 id="quotes-title">Cotizaciones</h2><p>Revisa las cotizaciones de recepción y aprueba las pendientes.</p></div></div>
+                <p id="quote-status" class="operations-status" role="status"></p>
+                <div id="quote-list" class="operations-list" aria-label="Cotizaciones registradas"></div>
+            </section>
+
+            <section class="operations-section" id="pagos" aria-labelledby="payments-title">
+                <div class="operations-heading"><div><h2 id="payments-title">Todos los pagos</h2><p>Consulta pagos pendientes y confirmados de todos los clientes.</p></div></div>
+                <p id="payment-status" class="operations-status" role="status"></p>
+                <div id="payment-list" class="operations-list" aria-label="Pagos registrados"></div>
+            </section>
+
+            <section class="operations-section" id="reportes" aria-labelledby="reports-title">
+                <div class="operations-heading"><div><h2 id="reports-title">Reportes</h2><p>Resumen de operaciones realizadas en el periodo seleccionado.</p></div></div>
+                <form id="report-form" class="operations-form report-filters">
+                    <label>Desde<input name="desde" type="date" required></label>
+                    <label>Hasta<input name="hasta" type="date" required></label>
+                    <button class="new-button" type="submit">Consultar reporte</button>
+                </form>
+                <p id="report-status" class="operations-status" role="status"></p>
+                <div id="report-results" class="report-results" aria-live="polite"></div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>
