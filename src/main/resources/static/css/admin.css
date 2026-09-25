@@ -218,7 +218,7 @@ dialog {
     box-shadow: 0 24px 80px rgba(17, 29, 43, .23);
 }
 dialog::backdrop { background: rgba(12, 21, 29, .58); }
-#client-form, #course-form { padding: 26px; }
+#client-form, #course-form, #diploma-form { padding: 26px; }
 .status-dialog { width: min(94vw, 460px); }
 .status-dialog-content { padding: 26px; }
 .status-dialog h2 { margin: 0; font-size: 1.25rem; }
@@ -257,7 +257,7 @@ dialog::backdrop { background: rgba(12, 21, 29, .58); }
     .page-description { text-align: left; }
     .search-wrap { width: 100%; }
     .dialog-fields { grid-template-columns: 1fr; }
-    #client-form { padding: 20px; }
+    #client-form, #diploma-form { padding: 20px; }
     .search-wrap input, .field input { font-size: 1rem; }
     .client-name-cell { min-width: 195px; white-space: normal; }
     .mobile-actions { display: flex; margin-top: 9px; }

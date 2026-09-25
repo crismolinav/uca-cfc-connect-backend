@@ -152,8 +152,12 @@
 
     async function loadCatalogs() {
         const [categories, modalities] = await Promise.all([
-            request(api + '/catalogos/categorias'), request(api + '/catalogos/modalidades')
+            request('/api/v1/cursos/catalogos/categorias'),
+            request('/api/v1/cursos/catalogos/modalidades')
         ]);
+        if (!categories.length || !modalities.length) {
+            throw new Error('Primero debe registrar al menos una categoría y una modalidad.');
+        }
         addOptions(categoryFilter, categories, 'Todas');
         addOptions(modalityFilter, modalities, 'Todas');
         addOptions(form.elements.namedItem('idCategoria'), categories, 'Selecciona una categoría');
