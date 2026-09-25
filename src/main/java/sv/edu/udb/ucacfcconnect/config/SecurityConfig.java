@@ -62,10 +62,20 @@ public class SecurityConfig {
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/csrf",
                                 "/api/v1/cursos/**",
-                                "/api/v1/diplomados/**").permitAll()
+                                "/api/v1/diplomados/**",
+                                "/api/v1/espacios/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/cotizaciones",
+                                "/api/v1/alquileres",
+                                "/api/v1/alquileres/solicitudes").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/alquileres/mios").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/alquileres/*/cancelar").authenticated()
                         .requestMatchers(
                                 "/api/v1/cursos/**",
                                 "/api/v1/diplomados/**",
+                                "/api/v1/espacios/**",
+                                "/api/v1/cotizaciones/**",
+                                "/api/v1/alquileres/**",
                                 "/api/v1/docentes/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,

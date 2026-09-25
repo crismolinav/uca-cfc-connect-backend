@@ -54,4 +54,19 @@ public class PageRedirectController {
     public String cursos() {
         return "redirect:/admin/cursos.html";
     }
+
+    @GetMapping("/espacios.html")
+    public String espacios() {
+        return "redirect:/admin/espacios.html";
+    }
+
+    @GetMapping("/alquileres.html")
+    public String alquileres() {
+        return "redirect:/admin/alquileres.html";
+    }
+
+    @GetMapping("/cotizaciones.html")
+    public String cotizaciones() {
+        return "redirect:/admin/cotizaciones.html";
+    }
 }

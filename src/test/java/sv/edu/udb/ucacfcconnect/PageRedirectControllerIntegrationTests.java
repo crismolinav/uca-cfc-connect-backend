@@ -28,7 +28,10 @@ class PageRedirectControllerIntegrationTests {
             "/aprendizaje.html, /cliente/aprendizaje.html",
             "/configuracion.html, /cliente/configuracion.html",
             "/admin.html, /admin/index.html",
-            "/cursos.html, /admin/cursos.html"
+            "/cursos.html, /admin/cursos.html",
+            "/espacios.html, /admin/espacios.html",
+            "/alquileres.html, /admin/alquileres.html",
+            "/cotizaciones.html, /admin/cotizaciones.html"
     })
     void redirigeLasRutasAnterioresALaNuevaEstructura(String rutaAnterior, String rutaNueva) throws Exception {
         mockMvc.perform(get(rutaAnterior))

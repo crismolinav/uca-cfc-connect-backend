@@ -24,6 +24,15 @@ $env:DB_PASSWORD='tu_contrasena'
 
 Las tablas `categorias` y `modalidades` deben contener registros antes de crear un curso, porque el API valida que ambas llaves foráneas existan. El archivo `database/datos_catalogo_cursos.sql` incluye datos iniciales idempotentes para ambos catálogos; puede ejecutarse desde MySQL Workbench. Los identificadores generados se consultan luego mediante los endpoints de catálogo.
 
+### Inicio de sesión con Google
+
+1. En Google Cloud crea un cliente OAuth 2.0 de tipo **Aplicación web**.
+2. Registra exactamente esta URI de redirección autorizada: `http://localhost:8080/login/oauth2/code/google`.
+3. Completa `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en `.env`.
+4. Activa `spring.profiles.active=google` en `.env` y reinicia la aplicación. Si configuras las variables directamente en IntelliJ, usa `SPRING_PROFILES_ACTIVE=google`.
+
+La ruta `/auth/callback.html` es la pantalla final interna de la aplicación; no es la URI que se registra como callback OAuth en Google.
+
 ## Ejecución
 
 Verifique primero que la terminal use Java 21:
@@ -81,6 +90,31 @@ GET /api/v1/cursos?texto=excel&idCategoria=1&activo=true&pagina=0&tamano=10&orde
 ```
 
 Los campos de ordenamiento permitidos son `idCurso`, `titulo`, `duracionHoras`, `cupoMaximo`, `costo`, `fechaInicio`, `fechaFin`, `horario`, `activo`, `categoria` y `modalidad`.
+
+## Módulo de cotizaciones
+
+Las cotizaciones se crean para un cliente y contienen uno o más detalles de cursos o espacios. El servidor toma el precio vigente del catálogo, calcula cada subtotal y el monto estimado total. Sus estados son `PENDIENTE`, `EN_PROCESO`, `APROBADA` y `RECHAZADA`.
+
+| Método | Ruta | Función |
+|---|---|---|
+| `GET` | `/api/v1/cotizaciones` | Lista, filtra y pagina cotizaciones |
+| `GET` | `/api/v1/cotizaciones/{id}` | Consulta una cotización y sus detalles |
+| `POST` | `/api/v1/cotizaciones` | Solicita una cotización |
+| `PUT` | `/api/v1/cotizaciones/{id}` | Actualiza una cotización pendiente |
+| `PATCH` | `/api/v1/cotizaciones/{id}/estado` | Cambia su estado |
+| `DELETE` | `/api/v1/cotizaciones/{id}` | Elimina la cotización si no posee pagos |
+
+## Módulo de alquiler de espacios
+
+El catálogo de espacios administra nombre, tipo, capacidad, precio, disponibilidad y equipamiento. Los alquileres relacionan un cliente con un espacio, fecha y horario; se rechazan automáticamente las reservas que se crucen con otra reserva activa. Sus estados son `PENDIENTE`, `CONFIRMADO`, `CANCELADO` y `FINALIZADO`.
+
+| Método | Ruta | Función |
+|---|---|---|
+| `GET/POST` | `/api/v1/espacios` | Lista o crea espacios |
+| `GET/PUT/DELETE` | `/api/v1/espacios/{id}` | Consulta, actualiza o elimina un espacio |
+| `GET/POST` | `/api/v1/alquileres` | Lista o solicita alquileres |
+| `GET/PUT/DELETE` | `/api/v1/alquileres/{id}` | Consulta, actualiza o elimina un alquiler |
+| `PATCH` | `/api/v1/alquileres/{id}/estado` | Cambia el estado del alquiler |
 
 ## Validaciones y errores
 

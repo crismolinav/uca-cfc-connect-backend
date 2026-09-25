@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Catálogo de cursos, diplomados y espacio de aprendizaje de UCA CFC Connect.">
     <title>Inicio | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/cliente.css">
+    <link rel="stylesheet" href="/css/cliente.css?v=20260925-2">
     <script src="/js/client-shell.js" defer></script>
     <script src="/js/auth.js" defer></script>
-    <script src="/js/cliente.js" defer></script>
+    <script src="/js/cliente.js?v=20260925-2" defer></script>
 </head>
 <body data-page="cliente">
 <!-- THESIS: El cliente entra a una página de descubrimiento, no a una ficha de perfil.
@@ -24,8 +24,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         <nav class="primary-nav" aria-label="Principal">
             <a href="#explorar">Cursos</a>
             <a href="#diplomados">Diplomados</a>
+            <a href="#espacios">Espacios</a>
             <a href="/cliente/aprendizaje.html">Mi aprendizaje</a>
-            <a href="#servicios">Servicios</a>
         </nav>
         <form id="client-search" class="site-search" role="search">
             <label class="visually-hidden" for="client-search-input">Buscar cursos o diplomados</label>
@@ -100,9 +100,24 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                 </nav>
             </section>
 
+            <section class="catalog-section space-catalog-section" id="espacios" aria-labelledby="space-catalog-title">
+                <div class="section-heading"><span class="section-eyebrow">Alquiler de espacios</span><h2 id="space-catalog-title">Encuentra el lugar para tu actividad</h2><p>Consulta capacidad, equipamiento y precio. Tu solicitud quedará pendiente de confirmación por el CFC.</p></div>
+                <p id="space-list-status" class="course-list-status" role="status">Cargando espacios disponibles...</p>
+                <div class="catalog-grid" id="space-grid" aria-live="polite"></div>
+                <nav id="space-pagination" class="course-pagination" aria-label="Páginas del catálogo de espacios" hidden>
+                    <button id="space-previous-page" type="button">Anterior</button><span id="space-page-indicator">Página 1 de 1</span><button id="space-next-page" type="button">Siguiente</button>
+                </nav>
+            </section>
+
+            <section class="my-rentals" id="mis-reservas" aria-labelledby="my-rentals-title">
+                <div class="section-heading"><span class="section-eyebrow">Mi actividad</span><h2 id="my-rentals-title">Mis reservas de espacios</h2><p>Revisa el estado de tus solicitudes y cancela las que ya no necesites.</p></div>
+                <p id="rental-list-status" class="course-list-status" role="status">Cargando tus reservas...</p>
+                <div id="rental-list" class="rental-list"></div>
+            </section>
+
             <section class="promo-grid" id="servicios" aria-label="Más formas de participar">
                 <div class="promo promo-magenta"><div><h2>Tu formación empieza aquí</h2><p>Consulta los cursos y diplomados activos del CFC.</p><a href="#explorar">Ver formación</a></div><span class="promo-figure" aria-hidden="true">CFC</span></div>
-                <div class="promo promo-navy"><div><h2>Espacios para tus encuentros</h2><p>Conoce los servicios que contempla el CFC.</p><a href="#servicios">Ver servicios</a></div><span class="promo-figure" aria-hidden="true">UCA</span></div>
+                <div class="promo promo-navy"><div><h2>Espacios para tus encuentros</h2><p>Reserva aulas, auditorios y salas según la capacidad que necesitas.</p><a href="#espacios">Ver espacios</a></div><span class="promo-figure" aria-hidden="true">UCA</span></div>
             </section>
 
             <section class="account-section" aria-labelledby="account-title"><div><h2 id="account-title">Tu cuenta</h2><p>Datos de tu acceso a UCA CFC Connect.</p></div><dl><div><dt>Nombre</dt><dd id="client-full-name"></dd></div><div><dt>Correo</dt><dd id="client-email"></dd></div><div><dt>Acceso</dt><dd id="client-provider"></dd></div><div id="profile-dui-row" hidden><dt>DUI</dt><dd id="profile-dui"></dd></div></dl></section>
@@ -146,6 +161,22 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         <ul id="diploma-session-list"></ul>
     </section>
     <p class="course-detail-note">La inscripción en línea todavía no está habilitada. Esta pantalla permite consultar el programa publicado.</p>
+</dialog>
+<dialog id="space-reservation-dialog" class="course-detail-dialog reservation-dialog" aria-labelledby="reservation-title">
+    <form id="reservation-form" novalidate>
+        <div class="course-detail-header reservation-header"><div><span class="course-detail-category">Solicitud de alquiler</span><h2 id="reservation-title">Reservar espacio</h2></div><button id="reservation-close" type="button">Cerrar</button></div>
+        <div class="reservation-summary"><strong id="reservation-space-name"></strong><span id="reservation-space-meta"></span></div>
+        <div class="reservation-fields">
+            <div class="field"><label for="reservation-date">Fecha *</label><input id="reservation-date" name="fecha" type="date" required></div>
+            <div class="field"><label for="reservation-start">Hora de inicio *</label><input id="reservation-start" name="horaInicio" type="time" required></div>
+            <div class="field"><label for="reservation-end">Hora de fin *</label><input id="reservation-end" name="horaFin" type="time" required></div>
+            <p id="reservation-limit" class="reservation-limit"></p>
+            <div class="field reservation-reason"><label for="reservation-reason">¿Para qué utilizarás el espacio?</label><input id="reservation-reason" name="motivo" maxlength="255" placeholder="Ej. Taller de planificación del equipo"></div>
+        </div>
+        <p class="reservation-note">La solicitud se crea como pendiente. El CFC confirmará la disponibilidad del horario.</p>
+        <p id="reservation-error" class="form-status" role="alert"></p>
+        <div class="reservation-actions"><button id="reservation-cancel" type="button">Volver</button><button id="reservation-submit" type="submit" data-idle-label="Enviar solicitud">Enviar solicitud</button></div>
+    </form>
 </dialog>
 </body>
 </html>

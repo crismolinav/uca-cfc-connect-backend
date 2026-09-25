@@ -218,7 +218,7 @@ dialog {
     box-shadow: 0 24px 80px rgba(17, 29, 43, .23);
 }
 dialog::backdrop { background: rgba(12, 21, 29, .58); }
-#client-form, #course-form, #diploma-form, #teacher-form { padding: 26px; }
+#client-form, #course-form, #diploma-form, #teacher-form, #item-form { padding: 26px; }
 .status-dialog { width: min(94vw, 460px); }
 .status-dialog-content { padding: 26px; }
 .status-dialog h2 { margin: 0; font-size: 1.25rem; }
@@ -367,6 +367,30 @@ dialog::backdrop { background: rgba(12, 21, 29, .58); }
     .time-range { grid-template-columns: 1fr; }
     .time-range > span { display: none; }
 }
+
+/* Módulos operativos: espacios, alquileres y cotizaciones */
+.operations-filters { grid-template-columns: minmax(260px, 2fr) repeat(2, minmax(150px, 1fr)); }
+.rental-filters { grid-template-columns: minmax(240px, 2fr) repeat(3, minmax(145px, 1fr)); }
+.quote-filters { grid-template-columns: minmax(280px, 2fr) minmax(170px, 1fr); }
+.operations-dialog { width: min(94vw, 760px); }
+.quote-dialog { width: min(96vw, 940px); }
+.operation-main-cell { min-width: 190px; color: #202a34; font-weight: 600; white-space: normal; }
+.operation-main-cell small { display: block; max-width: 280px; margin-top: 4px; color: #77818c; font-size: .65rem; font-weight: 400; line-height: 1.35; }
+.switch-field { display: flex; align-items: center; gap: 10px; color: #34404b; font-size: .74rem; }
+.switch-field input { width: 18px; height: 18px; min-height: 0; accent-color: var(--blue); }
+.state-pendiente { background: #fff5d8; color: #765700; }
+.state-en-proceso { background: #e8f0ff; color: #1e4e9b; }
+.state-aprobada, .state-confirmado, .state-finalizado, .state-disponible { background: #e7f5ea; color: #245c33; }
+.state-rechazada, .state-cancelado, .state-no-disponible { background: #fff0ec; color: #9b3d2e; }
+.detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 25px; }
+.detail-heading h3 { margin: 0; font-size: .92rem; }
+.detail-heading p { margin: 3px 0 0; color: var(--muted); font-size: .68rem; }
+.quote-details { display: grid; gap: 10px; margin-top: 12px; }
+.quote-detail { display: grid; grid-template-columns: 130px minmax(190px, 1.5fr) 90px minmax(150px, 1fr) auto; align-items: end; gap: 10px; padding: 13px; border: 1px solid #dfe5ec; border-radius: 9px; background: #fafbfc; }
+.detail-remove { min-height: 40px; padding: 7px 10px; border: 1px solid #e0b5bb; border-radius: 6px; background: #fff; color: #9d2f3d; }
+.quote-total { margin: 14px 0 0; padding: 12px 14px; border-radius: 8px; background: #edf4ff; color: #174b9b; font-size: .82rem; font-weight: 600; text-align: right; }
+@media (max-width: 900px) { .rental-filters { grid-template-columns: repeat(2, minmax(150px, 1fr)); } .quote-detail { grid-template-columns: 1fr 1fr; } .detail-remove { align-self: stretch; } }
+@media (max-width: 610px) { .operations-filters, .rental-filters, .quote-filters { grid-template-columns: 1fr; } .operations-filters .course-search, .rental-filters .course-search, .quote-filters .course-search { grid-column: auto; } .quote-detail { grid-template-columns: 1fr; } .detail-heading { align-items: stretch; flex-direction: column; } #item-form { padding: 20px; } }
 @media (max-width: 430px) {
     .filters-panel { grid-template-columns: 1fr; }
     .course-search { grid-column: auto; }
