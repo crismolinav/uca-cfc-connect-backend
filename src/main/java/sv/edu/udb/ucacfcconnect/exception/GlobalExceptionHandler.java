@@ -1,38 +1,111 @@
 package sv.edu.udb.ucacfcconnect.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import sv.edu.udb.ucacfcconnect.dto.ErrorResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.auth.ErrorResponse;
 
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
+    public ResponseEntity<Map<String, String>> manejarValidacion(MethodArgumentNotValidException ex) {
+        Map<String, String> errores = new LinkedHashMap<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errores.putIfAbsent(error.getField(), error.getDefaultMessage());
+        }
+        return ResponseEntity.badRequest().body(errores);
+    }
 
-        // Recorre todos los campos que fallaron y guarda el mensaje de error
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String nombreCampo = ((FieldError) error).getField();
-            String mensaje = error.getDefaultMessage();
-            errores.put(nombreCampo, mensaje);
-        });
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarRestricciones(
+            ConstraintViolationException ex,
+            HttpServletRequest request
+    ) {
+        Map<String, String> errores = new LinkedHashMap<>();
+        ex.getConstraintViolations().forEach(violation ->
+                errores.put(violation.getPropertyPath().toString(), violation.getMessage())
+        );
+        return construir(HttpStatus.BAD_REQUEST, "Parámetros inválidos", request, errores);
+    }
 
-        return new ResponseEntity<>(errores, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ErrorResponseDTO> manejarFormatoInvalido(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        return construir(
+                HttpStatus.BAD_REQUEST,
+                "El cuerpo o los parámetros de la solicitud tienen un formato inválido",
+                request,
+                Map.of()
+        );
+    }
+
+    @ExceptionHandler(SolicitudInvalidaException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarSolicitudInvalida(
+            SolicitudInvalidaException ex,
+            HttpServletRequest request
+    ) {
+        return construir(HttpStatus.BAD_REQUEST, ex.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarNoEncontrado(
+            RecursoNoEncontradoException ex,
+            HttpServletRequest request
+    ) {
+        return construir(HttpStatus.NOT_FOUND, ex.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarConflicto(
+            ConflictException ex,
+            HttpServletRequest request
+    ) {
+        return construir(HttpStatus.CONFLICT, ex.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(ReglaNegocioException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarReglaNegocio(
+            ReglaNegocioException ex,
+            HttpServletRequest request
+    ) {
+        return construir(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarIntegridad(
+            DataIntegrityViolationException ex,
+            HttpServletRequest request
+    ) {
+        return construir(
+                HttpStatus.CONFLICT,
+                "La operación viola una restricción de integridad de la base de datos",
+                request,
+                Map.of()
+        );
     }
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> manejarApiException(ApiException ex, HttpServletRequest request) {
         return ResponseEntity.status(ex.getStatus()).body(new ErrorResponse(
                 Instant.now(),
                 ex.getStatus().value(),
@@ -42,28 +115,34 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidBody(
-            HttpMessageNotReadableException ex,
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDTO> manejarErrorInesperado(
+            Exception ex,
             HttpServletRequest request
     ) {
-        return ResponseEntity.badRequest().body(new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "El cuerpo de la solicitud no es válido",
-                request.getRequestURI()
-        ));
+        LOGGER.error("Error inesperado procesando {}", request.getRequestURI(), ex);
+        return construir(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ocurrió un error interno al procesar la solicitud",
+                request,
+                Map.of()
+        );
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(
+    private ResponseEntity<ErrorResponseDTO> construir(
+            HttpStatus status,
+            String message,
+            HttpServletRequest request,
+            Map<String, String> fieldErrors
+    ) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
                 Instant.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "Ocurrió un error interno inesperado",
-                request.getRequestURI()
-        ));
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                request.getRequestURI(),
+                fieldErrors
+        );
+        return ResponseEntity.status(status).body(error);
     }
 }

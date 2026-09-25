@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Espacio de aprendizaje de UCA CFC Connect.">
+    <meta name="description" content="Catálogo de cursos, diplomados y espacio de aprendizaje de UCA CFC Connect.">
     <title>Inicio | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/cliente.css">
     <script src="/js/client-shell.js" defer></script>
@@ -22,14 +22,15 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <div class="header-inner">
         <a class="brand" href="/cliente/index.html" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
         <nav class="primary-nav" aria-label="Principal">
-            <a href="#explorar">Explorar</a>
+            <a href="#explorar">Cursos</a>
+            <a href="#diplomados">Diplomados</a>
             <a href="/cliente/aprendizaje.html">Mi aprendizaje</a>
             <a href="#servicios">Servicios</a>
         </nav>
         <form id="client-search" class="site-search" role="search">
-            <label class="visually-hidden" for="client-search-input">Buscar formatos y servicios</label>
-            <input id="client-search-input" type="search" placeholder="Buscar formatos y servicios" autocomplete="off">
-            <button type="submit" aria-label="Buscar formatos de formación"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
+            <label class="visually-hidden" for="client-search-input">Buscar cursos o diplomados</label>
+            <input id="client-search-input" type="search" placeholder="Buscar cursos o diplomados" autocomplete="off">
+            <button type="submit" aria-label="Buscar formación"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
         </form>
         <div class="account-control">
             <button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button>
@@ -50,16 +51,19 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
         <div class="page-shell dashboard-content">
             <section class="interest-panel" aria-labelledby="interest-title">
-                <h2 id="interest-title">¿Qué te interesa explorar?</h2>
-                <div class="interest-options" role="group" aria-label="Filtrar formatos de formación">
-                    <button type="button" data-interest="todos" aria-pressed="true">Todos</button>
-                    <button type="button" data-interest="cursos" aria-pressed="false">Cursos</button>
-                    <button type="button" data-interest="diplomados" aria-pressed="false">Diplomados</button>
-                    <button type="button" data-interest="seminarios" aria-pressed="false">Seminarios</button>
-                    <button type="button" data-interest="talleres" aria-pressed="false">Talleres</button>
-                    <button type="button" data-interest="servicios" aria-pressed="false">Servicios</button>
+                <h2 id="interest-title">Encuentra tu próxima formación</h2>
+                <div class="course-filter-grid">
+                    <div class="course-filter-field">
+                        <label for="course-category-filter">Categoría</label>
+                        <select id="course-category-filter"><option value="">Todas las categorías</option></select>
+                    </div>
+                    <div class="course-filter-field">
+                        <label for="course-modality-filter">Modalidad</label>
+                        <select id="course-modality-filter"><option value="">Todas las modalidades</option></select>
+                    </div>
+                    <button id="clear-course-filters" class="clear-course-filters" type="button">Limpiar filtros</button>
                 </div>
-                <p id="interest-status" class="interest-status" role="status">Elige un formato para ver opciones relacionadas.</p>
+                <p class="interest-status">Solo se muestran cursos y diplomados activos publicados por el CFC.</p>
             </section>
 
             <section class="resume-section" id="aprendizaje" aria-labelledby="resume-title">
@@ -67,30 +71,38 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                 <div class="resume-grid">
                     <div class="resume-box"><h3>Mi aprendizaje</h3><div class="resume-empty"><strong>Tu espacio para seguir aprendiendo</strong><p>El seguimiento de actividad aún no está disponible. Por ahora, conoce los formatos de formación del CFC.</p><a href="#explorar">Explorar formatos <span aria-hidden="true">→</span></a></div></div>
                     <div class="resume-box"><h3>Para comenzar</h3><div class="resume-list">
-                        <a href="#explorar" data-jump="cursos"><span class="mini-cover mini-cover-blue" aria-hidden="true">C</span><span><small>UCA CFC Connect</small><strong>Cursos</strong><small>Formación por temas y habilidades</small></span><span aria-hidden="true">→</span></a>
-                        <a href="#explorar" data-jump="diplomados"><span class="mini-cover mini-cover-gold" aria-hidden="true">D</span><span><small>UCA CFC Connect</small><strong>Diplomados</strong><small>Profundiza en un área</small></span><span aria-hidden="true">→</span></a>
-                        <a href="#explorar" data-jump="seminarios"><span class="mini-cover mini-cover-purple" aria-hidden="true">S</span><span><small>UCA CFC Connect</small><strong>Seminarios</strong><small>Comparte ideas y experiencias</small></span><span aria-hidden="true">→</span></a>
+                        <a href="#explorar"><span class="mini-cover mini-cover-blue" aria-hidden="true">C</span><span><small>Oferta académica</small><strong>Cursos disponibles</strong><small>Consulta fechas, horarios y costos</small></span><span aria-hidden="true">→</span></a>
+                        <a href="#course-category-filter"><span class="mini-cover mini-cover-gold" aria-hidden="true">T</span><span><small>Encuentra lo que buscas</small><strong>Categorías</strong><small>Filtra los cursos por temática</small></span><span aria-hidden="true">→</span></a>
+                        <a href="#course-modality-filter"><span class="mini-cover mini-cover-purple" aria-hidden="true">M</span><span><small>Elige cómo aprender</small><strong>Modalidades</strong><small>Presencial, virtual o híbrida</small></span><span aria-hidden="true">→</span></a>
                     </div></div>
                 </div>
             </section>
 
             <section class="catalog-section" id="explorar" aria-labelledby="catalog-title">
-                <div class="section-heading"><h2 id="catalog-title">Explora la formación continua</h2><p>Conoce los formatos del CFC. Los programas específicos aún no están publicados.</p></div>
-                <p id="search-status" class="search-status" role="status"></p>
-                <div class="catalog-grid" id="catalog-grid">
-                    <article class="catalog-card" data-category="cursos"><div class="card-cover"><img src="/assets/analytics-workshop.png" alt="Personas adultas aprendiendo con datos en un aula" width="1536" height="1024" loading="lazy"></div><div class="card-body"><span class="card-provider">UCA CFC Connect</span><h3>Cursos</h3><p>Aprende sobre temas y habilidades específicas.</p><span class="card-type">Formato de formación</span><a href="/#cursos">Conocer formato</a></div></article>
-                    <article class="catalog-card" data-category="diplomados"><div class="card-cover cover-diploma" aria-hidden="true"><span>DIPLOMADOS</span><span class="cover-mark">UCA CFC</span></div><div class="card-body"><span class="card-provider">UCA CFC Connect</span><h3>Diplomados</h3><p>Profundiza en un área de conocimiento.</p><span class="card-type">Formato de formación</span><a href="/#diplomados">Conocer formato</a></div></article>
-                    <article class="catalog-card" data-category="seminarios"><div class="card-cover"><img src="/assets/students-studying.png" alt="Estudiantes reunidos alrededor de un libro" width="1536" height="1024" loading="lazy"></div><div class="card-body"><span class="card-provider">UCA CFC Connect</span><h3>Seminarios</h3><p>Ideas y experiencias compartidas.</p><span class="card-type">Formato de formación</span><a href="/#seminarios">Conocer formato</a></div></article>
-                    <article class="catalog-card" data-category="talleres"><div class="card-cover"><img src="/assets/adult-workshop.png" alt="Participantes trabajando juntos en un taller" width="1536" height="1024" loading="lazy"></div><div class="card-body"><span class="card-provider">UCA CFC Connect</span><h3>Talleres</h3><p>Aprendizaje en espacios prácticos.</p><span class="card-type">Formato de formación</span><a href="/#talleres">Conocer formato</a></div></article>
-                    <article class="catalog-card" data-category="servicios" hidden><div class="card-cover cover-spaces" aria-hidden="true"><span>ESPACIOS</span><span class="cover-mark">UCA CFC</span></div><div class="card-body"><span class="card-provider">UCA CFC Connect</span><h3>Espacios</h3><p>Salas, auditorios y laboratorios.</p><span class="card-type">Servicio del CFC</span><a href="/#servicios">Conocer servicio</a></div></article>
-                    <article class="catalog-card" data-category="servicios" hidden><div class="card-cover cover-catering" aria-hidden="true"><span>CATERING</span><span class="cover-mark">UCA CFC</span></div><div class="card-body"><span class="card-provider">UCA CFC Connect</span><h3>Catering</h3><p>Un complemento para tus eventos.</p><span class="card-type">Servicio del CFC</span><a href="/#servicios">Conocer servicio</a></div></article>
-                </div>
-                <button id="show-more-client" class="show-more" type="button" aria-expanded="false" aria-controls="catalog-grid">Mostrar 2 más</button>
+                <div class="section-heading"><h2 id="catalog-title">Cursos disponibles</h2><p>Consulta la oferta activa, sus fechas, horarios, modalidad y costo.</p></div>
+                <p id="course-list-status" class="course-list-status" role="status">Cargando cursos disponibles...</p>
+                <div class="catalog-grid" id="course-grid" aria-live="polite"></div>
+                <nav id="course-pagination" class="course-pagination" aria-label="Páginas del catálogo" hidden>
+                    <button id="course-previous-page" type="button">Anterior</button>
+                    <span id="course-page-indicator">Página 1 de 1</span>
+                    <button id="course-next-page" type="button">Siguiente</button>
+                </nav>
+            </section>
+
+            <section class="catalog-section" id="diplomados" aria-labelledby="diploma-catalog-title">
+                <div class="section-heading"><h2 id="diploma-catalog-title">Diplomados disponibles</h2><p>Explora programas de formación extensos y consulta todas sus sesiones programadas.</p></div>
+                <p id="diploma-list-status" class="course-list-status" role="status">Cargando diplomados disponibles...</p>
+                <div class="catalog-grid" id="diploma-grid" aria-live="polite"></div>
+                <nav id="diploma-pagination" class="course-pagination" aria-label="Páginas del catálogo de diplomados" hidden>
+                    <button id="diploma-previous-page" type="button">Anterior</button>
+                    <span id="diploma-page-indicator">Página 1 de 1</span>
+                    <button id="diploma-next-page" type="button">Siguiente</button>
+                </nav>
             </section>
 
             <section class="promo-grid" id="servicios" aria-label="Más formas de participar">
-                <div class="promo promo-magenta"><div><h2>Tu formación empieza aquí</h2><p>Explora cursos, diplomados, seminarios y talleres.</p><a href="#explorar" data-jump="todos">Conocer la formación</a></div><span class="promo-figure" aria-hidden="true">CFC</span></div>
-                <div class="promo promo-navy"><div><h2>Espacios para tus encuentros</h2><p>Conoce los servicios que contempla el CFC.</p><a href="#explorar" data-jump="servicios">Ver servicios</a></div><span class="promo-figure" aria-hidden="true">UCA</span></div>
+                <div class="promo promo-magenta"><div><h2>Tu formación empieza aquí</h2><p>Consulta los cursos y diplomados activos del CFC.</p><a href="#explorar">Ver formación</a></div><span class="promo-figure" aria-hidden="true">CFC</span></div>
+                <div class="promo promo-navy"><div><h2>Espacios para tus encuentros</h2><p>Conoce los servicios que contempla el CFC.</p><a href="#servicios">Ver servicios</a></div><span class="promo-figure" aria-hidden="true">UCA</span></div>
             </section>
 
             <section class="account-section" aria-labelledby="account-title"><div><h2 id="account-title">Tu cuenta</h2><p>Datos de tu acceso a UCA CFC Connect.</p></div><dl><div><dt>Nombre</dt><dd id="client-full-name"></dd></div><div><dt>Correo</dt><dd id="client-email"></dd></div><div><dt>Acceso</dt><dd id="client-provider"></dd></div><div id="profile-dui-row" hidden><dt>DUI</dt><dd id="profile-dui"></dd></div></dl></section>
@@ -98,5 +110,40 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         </div>
     </div>
 </main>
+<dialog id="course-detail-dialog" class="course-detail-dialog" aria-labelledby="course-detail-title">
+    <div class="course-detail-header">
+        <div><span id="course-detail-category" class="course-detail-category"></span><h2 id="course-detail-title"></h2></div>
+        <button id="course-detail-close" type="button" aria-label="Cerrar detalle">Cerrar</button>
+    </div>
+    <p id="course-detail-description" class="course-detail-description"></p>
+    <dl class="course-detail-data">
+        <div><dt>Modalidad</dt><dd id="course-detail-modality"></dd></div>
+        <div><dt>Duración</dt><dd id="course-detail-duration"></dd></div>
+        <div><dt>Fechas</dt><dd id="course-detail-dates"></dd></div>
+        <div><dt>Horario</dt><dd id="course-detail-schedule"></dd></div>
+        <div><dt>Cupo máximo</dt><dd id="course-detail-capacity"></dd></div>
+        <div><dt>Costo</dt><dd id="course-detail-cost"></dd></div>
+    </dl>
+    <p class="course-detail-note">La inscripción en línea todavía no está habilitada. Esta pantalla permite consultar la oferta publicada.</p>
+</dialog>
+<dialog id="diploma-detail-dialog" class="course-detail-dialog" aria-labelledby="diploma-detail-title">
+    <div class="course-detail-header diploma-detail-header">
+        <div><span id="diploma-detail-category" class="course-detail-category"></span><h2 id="diploma-detail-title"></h2></div>
+        <button id="diploma-detail-close" type="button" aria-label="Cerrar detalle">Cerrar</button>
+    </div>
+    <p id="diploma-detail-description" class="course-detail-description"></p>
+    <dl class="course-detail-data">
+        <div><dt>Modalidad</dt><dd id="diploma-detail-modality"></dd></div>
+        <div><dt>Duración total</dt><dd id="diploma-detail-duration"></dd></div>
+        <div><dt>Fechas</dt><dd id="diploma-detail-dates"></dd></div>
+        <div><dt>Costo</dt><dd id="diploma-detail-cost"></dd></div>
+    </dl>
+    <section class="diploma-session-detail" aria-labelledby="diploma-sessions-title">
+        <h3 id="diploma-sessions-title">Sesiones programadas</h3>
+        <p id="diploma-sessions-status" role="status">Cargando sesiones...</p>
+        <ul id="diploma-session-list"></ul>
+    </section>
+    <p class="course-detail-note">La inscripción en línea todavía no está habilitada. Esta pantalla permite consultar el programa publicado.</p>
+</dialog>
 </body>
 </html>
