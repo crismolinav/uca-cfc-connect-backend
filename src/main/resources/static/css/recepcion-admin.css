@@ -1,0 +1,18 @@
+.staff-layout { display: grid; grid-template-columns: minmax(260px, 420px) minmax(0, 1fr); align-items: start; gap: 24px; }
+.staff-panel { padding: 25px; border: 1px solid #e2e7ee; border-radius: 12px; background: white; }
+.staff-panel h2 { margin: 0; font-size: 1.1rem; }
+.staff-panel > p { margin: 8px 0 22px; color: #5b6876; font-size: .76rem; line-height: 1.6; }
+.staff-panel form { display: grid; gap: 16px; }
+.staff-panel small { color: #637080; font-size: .68rem; line-height: 1.45; }
+.staff-panel .new-button { justify-self: start; }
+.staff-status { min-height: 1.3rem; margin: 0; color: #225c3c; font-size: .76rem; }
+.staff-status.is-error { color: #a52f3d; }
+.staff-list { display: grid; gap: 10px; }
+.staff-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 0; border-top: 1px solid #edf0f4; }
+.staff-row strong { display: block; font-size: .8rem; }
+.staff-row small { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.staff-actions { display: flex; align-items: center; gap: 10px; }
+.staff-actions button { min-height: 38px; padding: 7px 11px; border: 1px solid #cbd5e2; border-radius: 7px; background: white; color: #24364a; font: inherit; font-size: .72rem; }
+.staff-actions button:hover { border-color: #316bff; }
+@media (max-width: 760px) { .staff-layout { grid-template-columns: 1fr; } .staff-panel { padding: 20px; } }
+@media (max-width: 440px) { .staff-row { align-items: flex-start; flex-direction: column; } }
