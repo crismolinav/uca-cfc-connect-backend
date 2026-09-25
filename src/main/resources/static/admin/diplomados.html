@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Administración de diplomados de UCA CFC Connect.">
+    <title>Diplomados | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <script src="/js/diplomados.js" defer></script>
+</head>
+<body>
+<div class="admin-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación de administración">
+        <button class="sidebar-close" id="sidebar-close" type="button">Cerrar menú</button>
+        <a class="sidebar-brand" href="/admin/index.html">UCA CFC<span>.</span></a>
+        <nav aria-label="Principal">
+            <span class="nav-group-label">Administración</span>
+            <a class="nav-link" href="/admin/index.html">Clientes</a>
+            <a class="nav-link" href="/admin/cursos.html">Cursos</a>
+            <a class="nav-link" href="/admin/diplomados.html" aria-current="page">Diplomados</a>
+            <span class="nav-group-label nav-group-secondary">Otros módulos</span>
+            <span class="nav-pending">Agenda <small>Próximamente</small></span>
+            <span class="nav-pending">Cotizaciones <small>Próximamente</small></span>
+        </nav>
+        <div class="sidebar-footer">UCA CFC Connect<br><span>Panel de administración</span></div>
+    </aside>
+
+    <main class="admin-main" id="main-content">
+        <header class="topbar">
+            <button class="menu-button" id="menu-button" type="button" aria-controls="sidebar"
+                    aria-expanded="false" aria-label="Abrir menú">Menú</button>
+            <div class="topbar-spacer"></div>
+            <span id="admin-name" class="admin-name">Administrador</span>
+            <a class="account-link" href="/cuenta/perfil.html">Mi cuenta</a>
+            <button class="logout-button" id="logout-button" type="button">Cerrar sesión</button>
+        </header>
+
+        <section class="content" aria-labelledby="page-title">
+            <div class="page-intro">
+                <div>
+                    <h1 id="page-title">Diplomados</h1>
+                    <p class="breadcrumb"><a href="/admin/index.html">Administración</a> / Diplomados</p>
+                </div>
+                <p class="page-description">Gestiona programas, sesiones y publicación de diplomados.</p>
+            </div>
+
+            <div class="toolbar diploma-toolbar">
+                <button class="new-button" id="new-diploma-button" type="button">+ Nuevo diplomado</button>
+                <button id="clear-filters" class="secondary-button" type="button">Limpiar filtros</button>
+            </div>
+
+            <section class="filters-panel" aria-label="Filtros de diplomados">
+                <div class="filter-field course-search">
+                    <label for="diploma-search">Buscar diplomados</label>
+                    <input id="diploma-search" type="search" placeholder="Nombre o descripción" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="category-filter">Categoría</label>
+                    <select id="category-filter"><option value="">Todas</option></select>
+                </div>
+                <div class="filter-field">
+                    <label for="modality-filter">Modalidad</label>
+                    <select id="modality-filter"><option value="">Todas</option></select>
+                </div>
+                <div class="filter-field">
+                    <label for="status-filter">Estado</label>
+                    <select id="status-filter"><option value="">Todos</option><option value="true">Publicado</option><option value="false">Borrador</option></select>
+                </div>
+                <div class="filter-field">
+                    <label for="sort-filter">Ordenar por</label>
+                    <select id="sort-filter"><option value="nombre,asc">Nombre A-Z</option><option value="fechaInicio,asc">Fecha próxima</option><option value="costo,asc">Menor costo</option><option value="costo,desc">Mayor costo</option></select>
+                </div>
+            </section>
+            <p id="action-status" class="action-status" role="status"></p>
+
+            <section class="list-panel" aria-label="Lista de diplomados">
+                <p class="table-hint">Desliza la tabla para consultar todos los datos.</p>
+                <div class="table-scroll">
+                    <table class="course-table diploma-table">
+                        <thead><tr><th>#</th><th>Diplomado</th><th>Categoría</th><th>Modalidad</th><th>Fechas</th><th>Duración</th><th>Costo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="diplomas-body"></tbody>
+                    </table>
+                </div>
+                <p id="list-status" class="list-status" role="status">Cargando diplomados...</p>
+                <div id="pagination" class="pagination" hidden>
+                    <label for="page-size">Mostrar</label><select id="page-size"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select>
+                    <button id="previous-page" type="button">Anterior</button><span id="page-indicator"></span><button id="next-page" type="button">Siguiente</button><span id="total-count"></span>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+
+<dialog id="diploma-dialog" class="course-dialog" aria-labelledby="dialog-title">
+    <form id="diploma-form" novalidate>
+        <div class="dialog-header"><div><h2 id="dialog-title">Nuevo diplomado</h2><p id="dialog-description">Completa los datos generales. Después podrás programar sus sesiones.</p></div><button class="dialog-close" id="dialog-close" type="button">Cerrar</button></div>
+        <div class="dialog-fields course-fields">
+            <div class="field field-wide"><label for="diploma-name">Nombre *</label><input id="diploma-name" name="nombre" type="text" minlength="3" maxlength="150" required></div>
+            <div class="field field-wide"><label for="diploma-description">Descripción *</label><textarea id="diploma-description" name="descripcion" minlength="10" maxlength="5000" rows="3" required></textarea></div>
+            <div class="field"><label for="diploma-category">Categoría *</label><select id="diploma-category" name="idCategoria" required><option value="">Selecciona una categoría</option></select></div>
+            <div class="field"><label for="diploma-modality">Modalidad *</label><select id="diploma-modality" name="idModalidad" required><option value="">Selecciona una modalidad</option></select></div>
+            <div class="field"><label for="diploma-start">Fecha de inicio *</label><input id="diploma-start" name="fechaInicio" type="date" required><small class="field-help">Debe ser hoy o una fecha futura.</small></div>
+            <div class="field"><label for="diploma-end">Fecha de fin *</label><input id="diploma-end" name="fechaFin" type="date" required><small class="field-help">Debe ser igual o posterior al inicio.</small></div>
+            <div class="field"><label for="diploma-duration">Duración total en horas *</label><input id="diploma-duration" name="duracionHoras" type="number" min="1" step="1" required><small class="field-help">Las sesiones deben completar este total.</small></div>
+            <div class="field"><label for="diploma-cost">Costo en USD *</label><input id="diploma-cost" name="costo" type="number" min="0.01" step="0.01" required><small class="field-help">Mayor que $0, con máximo dos decimales.</small></div>
+        </div>
+        <p id="dialog-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions"><button class="secondary-button" id="dialog-cancel" type="button">Cancelar</button><button class="new-button" id="dialog-save" type="submit">Guardar diplomado</button></div>
+    </form>
+</dialog>
+
+<dialog id="sessions-dialog" class="sessions-dialog" aria-labelledby="sessions-title">
+    <div class="dialog-header"><div><h2 id="sessions-title">Sesiones</h2><p id="sessions-description"></p></div><button class="dialog-close" id="sessions-close" type="button">Cerrar</button></div>
+    <div class="session-progress"><div><span>Horas programadas</span><strong id="session-progress-text">0 de 0 horas</strong></div><progress id="session-progress" value="0" max="1"></progress></div>
+    <button id="new-session-button" class="new-button" type="button">+ Programar sesión</button>
+    <form id="session-form" class="session-form" hidden novalidate>
+        <h3 id="session-form-title">Nueva sesión</h3>
+        <div class="session-fields">
+            <div class="field session-title-field"><label for="session-title">Título *</label><input id="session-title" name="titulo" type="text" maxlength="150" required></div>
+            <div class="field"><label for="session-date">Fecha *</label><input id="session-date" name="fecha" type="date" required></div>
+            <div class="field"><label for="session-start">Hora de inicio *</label><input id="session-start" name="horaInicio" type="time" step="300" required></div>
+            <div class="field"><label for="session-end">Hora de fin *</label><input id="session-end" name="horaFin" type="time" step="300" required></div>
+            <div class="field"><label for="session-capacity">Cupo</label><input id="session-capacity" name="cupo" type="number" min="1" step="1"><small class="field-help">Opcional.</small></div>
+        </div>
+        <p id="session-form-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions"><button id="session-cancel" class="secondary-button" type="button">Cancelar</button><button id="session-save" class="new-button" type="submit">Guardar sesión</button></div>
+    </form>
+    <p id="sessions-status" class="list-status" role="status"></p>
+    <div class="table-scroll session-table-wrap"><table class="session-table"><thead><tr><th>Fecha</th><th>Sesión</th><th>Horario</th><th>Cupo</th><th>Acciones</th></tr></thead><tbody id="sessions-body"></tbody></table></div>
+</dialog>
+
+<dialog id="status-dialog" class="status-dialog" aria-labelledby="status-dialog-title"><div class="status-dialog-content"><h2 id="status-dialog-title">Cambiar estado</h2><p id="status-dialog-description"></p><p id="status-dialog-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="status-cancel" class="secondary-button" type="button">Cancelar</button><button id="status-confirm" class="new-button" type="button">Confirmar</button></div></div></dialog>
+<dialog id="delete-dialog" class="status-dialog" aria-labelledby="delete-dialog-title"><div class="status-dialog-content"><h2 id="delete-dialog-title">Eliminar diplomado</h2><p id="delete-dialog-description"></p><p class="dialog-note">Primero deben eliminarse sus sesiones. Si tiene inscripciones relacionadas, el sistema impedirá eliminarlo.</p><p id="delete-dialog-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="delete-cancel" class="secondary-button" type="button">Cancelar</button><button id="delete-confirm" class="new-button danger-button" type="button">Eliminar diplomado</button></div></div></dialog>
+</body>
+</html>

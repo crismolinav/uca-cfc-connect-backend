@@ -1,22 +1,27 @@
 (function () {
     'use strict';
 
-    const api = '/api/v1/cursos';
+    const courseApi = '/api/v1/cursos';
+    const diplomaApi = '/api/v1/diplomados';
     const searchForm = document.getElementById('client-search');
     const searchInput = document.getElementById('client-search-input');
     const categoryFilter = document.getElementById('course-category-filter');
     const modalityFilter = document.getElementById('course-modality-filter');
     const clearFilters = document.getElementById('clear-course-filters');
-    const grid = document.getElementById('course-grid');
-    const status = document.getElementById('course-list-status');
-    const pagination = document.getElementById('course-pagination');
-    const previousPage = document.getElementById('course-previous-page');
-    const nextPage = document.getElementById('course-next-page');
-    const pageIndicator = document.getElementById('course-page-indicator');
-    const detailDialog = document.getElementById('course-detail-dialog');
-    let page = 0;
+    const courseGrid = document.getElementById('course-grid');
+    const courseStatus = document.getElementById('course-list-status');
+    const coursePagination = document.getElementById('course-pagination');
+    const diplomaGrid = document.getElementById('diploma-grid');
+    const diplomaStatus = document.getElementById('diploma-list-status');
+    const diplomaPagination = document.getElementById('diploma-pagination');
+    const courseDetailDialog = document.getElementById('course-detail-dialog');
+    const diplomaDetailDialog = document.getElementById('diploma-detail-dialog');
     const size = 8;
-    let loadNumber = 0;
+    let coursePage = 0;
+    let diplomaPage = 0;
+    let courseLoadNumber = 0;
+    let diplomaLoadNumber = 0;
+    let diplomaDetailLoadNumber = 0;
     let detailTrigger = null;
 
     async function request(url) {
@@ -32,11 +37,16 @@
         return new Intl.NumberFormat('es-SV', {style: 'currency', currency: 'USD'}).format(value);
     }
 
-    function date(value) {
+    function date(value, weekday = false) {
         if (!value) return 'Por definir';
         return new Intl.DateTimeFormat('es-SV', {
+            ...(weekday ? {weekday: 'long'} : {}),
             day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'
         }).format(new Date(value + 'T00:00:00Z'));
+    }
+
+    function hours(value) {
+        return value + (value === 1 ? ' hora' : ' horas');
     }
 
     function element(tag, className, text) {
@@ -56,34 +66,39 @@
         return 'course-cover-tone-' + ((Number(id) || 0) % 4 + 1);
     }
 
-    function courseCard(course) {
+    function catalogCard(item, type) {
+        const isDiploma = type === 'diploma';
+        const title = isDiploma ? item.nombre : item.titulo;
         const card = element('article', 'catalog-card course-card');
-        const cover = element('div', 'course-cover ' + tone(course.idCategoria));
+        const cover = element('div', 'course-cover ' + tone(item.idCategoria + (isDiploma ? 1 : 0)));
         cover.append(
-            element('span', 'course-cover-category', course.categoria),
-            element('span', 'course-cover-mark', 'UCA CFC')
+            element('span', 'course-cover-category', item.categoria),
+            element('span', 'course-cover-mark', isDiploma ? 'DIPLOMADO · UCA CFC' : 'CURSO · UCA CFC')
         );
 
         const body = element('div', 'card-body');
         body.append(
-            element('span', 'card-provider', course.modalidad),
-            element('h3', '', course.titulo),
-            element('p', 'course-card-description', course.descripcion)
+            element('span', 'card-provider', item.modalidad),
+            element('h3', '', title),
+            element('p', 'course-card-description', item.descripcion)
         );
         const facts = element('ul', 'course-facts');
         facts.append(
-            fact('Inicio', date(course.fechaInicio)),
-            fact('Duración', course.duracionHoras + (course.duracionHoras === 1 ? ' hora' : ' horas')),
-            fact('Horario', course.horario)
+            fact('Inicio', date(item.fechaInicio)),
+            fact('Duración', hours(item.duracionHoras)),
+            isDiploma ? fact('Finaliza', date(item.fechaFin)) : fact('Horario', item.horario)
         );
         body.append(facts);
 
         const footer = element('div', 'course-card-footer');
-        footer.append(element('strong', 'course-price', money(course.costo)));
+        footer.append(element('strong', 'course-price', money(item.costo)));
         const detail = element('button', 'course-detail-button', 'Ver detalles');
         detail.type = 'button';
-        detail.setAttribute('aria-label', 'Ver detalles de ' + course.titulo);
-        detail.addEventListener('click', (event) => openDetail(course, event.currentTarget));
+        detail.setAttribute('aria-label', 'Ver detalles de ' + title);
+        detail.addEventListener('click', (event) => {
+            if (isDiploma) openDiplomaDetail(item, event.currentTarget);
+            else openCourseDetail(item, event.currentTarget);
+        });
         footer.append(detail);
         body.append(footer);
         card.append(cover, body);
@@ -100,8 +115,7 @@
     async function loadCatalogs() {
         try {
             const [categories, modalities] = await Promise.all([
-                request(api + '/catalogos/categorias'),
-                request(api + '/catalogos/modalidades')
+                request(courseApi + '/catalogos/categorias'), request(courseApi + '/catalogos/modalidades')
             ]);
             addOptions(categoryFilter, categories, 'Todas las categorías');
             addOptions(modalityFilter, modalities, 'Todas las modalidades');
@@ -111,94 +125,158 @@
         }
     }
 
-    function courseQuery() {
+    function query(pageNumber) {
         const params = new URLSearchParams({
-            activo: 'true',
-            pagina: String(page),
-            tamano: String(size),
-            ordenarPor: 'fechaInicio',
-            direccion: 'asc'
+            activo: 'true', pagina: String(pageNumber), tamano: String(size),
+            ordenarPor: 'fechaInicio', direccion: 'asc'
         });
-        const query = searchInput.value.trim();
-        if (query) params.set('texto', query);
+        const search = searchInput.value.trim();
+        if (search) params.set('texto', search);
         if (categoryFilter.value) params.set('idCategoria', categoryFilter.value);
         if (modalityFilter.value) params.set('idModalidad', modalityFilter.value);
         return params;
     }
 
-    async function loadCourses(scroll = false) {
-        const thisLoad = ++loadNumber;
-        status.textContent = 'Cargando cursos disponibles...';
-        status.classList.remove('is-error');
-        grid.replaceChildren();
-        pagination.hidden = true;
+    function renderPagination(data, previous, next, indicator, container) {
+        container.hidden = data.totalElementos === 0;
+        previous.disabled = data.primera;
+        next.disabled = data.ultima;
+        indicator.textContent = 'Página ' + (data.paginaActual + 1) + ' de ' + Math.max(data.totalPaginas, 1);
+    }
+
+    async function loadCourses() {
+        const thisLoad = ++courseLoadNumber;
+        courseStatus.textContent = 'Cargando cursos disponibles...';
+        courseStatus.classList.remove('is-error');
+        courseGrid.replaceChildren();
+        coursePagination.hidden = true;
         try {
-            const data = await request(api + '?' + courseQuery());
-            if (thisLoad !== loadNumber) return;
-            data.contenido.forEach((course) => grid.append(courseCard(course)));
-            status.textContent = data.totalElementos
+            const data = await request(courseApi + '?' + query(coursePage));
+            if (thisLoad !== courseLoadNumber) return;
+            data.contenido.forEach((course) => courseGrid.append(catalogCard(course, 'course')));
+            courseStatus.textContent = data.totalElementos
                 ? data.totalElementos + (data.totalElementos === 1 ? ' curso disponible.' : ' cursos disponibles.')
                 : 'No hay cursos activos que coincidan con los filtros seleccionados.';
-            pagination.hidden = data.totalElementos === 0;
-            previousPage.disabled = data.primera;
-            nextPage.disabled = data.ultima;
-            pageIndicator.textContent = 'Página ' + (data.paginaActual + 1) + ' de ' + Math.max(data.totalPaginas, 1);
-            if (scroll) document.getElementById('explorar').scrollIntoView({behavior: 'smooth', block: 'start'});
+            renderPagination(data,
+                document.getElementById('course-previous-page'), document.getElementById('course-next-page'),
+                document.getElementById('course-page-indicator'), coursePagination);
         } catch (error) {
-            if (thisLoad !== loadNumber) return;
-            status.classList.add('is-error');
-            status.textContent = error.message || 'No se pudo cargar el catálogo de cursos.';
+            if (thisLoad !== courseLoadNumber) return;
+            courseStatus.classList.add('is-error');
+            courseStatus.textContent = error.message || 'No se pudo cargar el catálogo de cursos.';
         }
     }
 
-    function openDetail(course, trigger) {
+    async function loadDiplomas() {
+        const thisLoad = ++diplomaLoadNumber;
+        diplomaStatus.textContent = 'Cargando diplomados disponibles...';
+        diplomaStatus.classList.remove('is-error');
+        diplomaGrid.replaceChildren();
+        diplomaPagination.hidden = true;
+        try {
+            const data = await request(diplomaApi + '?' + query(diplomaPage));
+            if (thisLoad !== diplomaLoadNumber) return;
+            data.contenido.forEach((diploma) => diplomaGrid.append(catalogCard(diploma, 'diploma')));
+            diplomaStatus.textContent = data.totalElementos
+                ? data.totalElementos + (data.totalElementos === 1 ? ' diplomado disponible.' : ' diplomados disponibles.')
+                : 'No hay diplomados activos que coincidan con los filtros seleccionados.';
+            renderPagination(data,
+                document.getElementById('diploma-previous-page'), document.getElementById('diploma-next-page'),
+                document.getElementById('diploma-page-indicator'), diplomaPagination);
+        } catch (error) {
+            if (thisLoad !== diplomaLoadNumber) return;
+            diplomaStatus.classList.add('is-error');
+            diplomaStatus.textContent = error.message || 'No se pudo cargar el catálogo de diplomados.';
+        }
+    }
+
+    async function loadAll(scroll = false) {
+        await Promise.all([loadCourses(), loadDiplomas()]);
+        if (scroll) document.getElementById('explorar').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    function openCourseDetail(course, trigger) {
         detailTrigger = trigger;
         document.getElementById('course-detail-category').textContent = course.categoria;
         document.getElementById('course-detail-title').textContent = course.titulo;
         document.getElementById('course-detail-description').textContent = course.descripcion;
         document.getElementById('course-detail-modality').textContent = course.modalidad;
-        document.getElementById('course-detail-duration').textContent =
-            course.duracionHoras + (course.duracionHoras === 1 ? ' hora' : ' horas');
-        document.getElementById('course-detail-dates').textContent =
-            date(course.fechaInicio) + ' – ' + date(course.fechaFin);
+        document.getElementById('course-detail-duration').textContent = hours(course.duracionHoras);
+        document.getElementById('course-detail-dates').textContent = date(course.fechaInicio) + ' – ' + date(course.fechaFin);
         document.getElementById('course-detail-schedule').textContent = course.horario;
         document.getElementById('course-detail-capacity').textContent = course.cupoMaximo + ' personas';
         document.getElementById('course-detail-cost').textContent = money(course.costo);
-        detailDialog.showModal();
+        courseDetailDialog.showModal();
+    }
+
+    async function openDiplomaDetail(diploma, trigger) {
+        detailTrigger = trigger;
+        const thisLoad = ++diplomaDetailLoadNumber;
+        document.getElementById('diploma-detail-category').textContent = diploma.categoria;
+        document.getElementById('diploma-detail-title').textContent = diploma.nombre;
+        document.getElementById('diploma-detail-description').textContent = diploma.descripcion;
+        document.getElementById('diploma-detail-modality').textContent = diploma.modalidad;
+        document.getElementById('diploma-detail-duration').textContent = hours(diploma.duracionHoras);
+        document.getElementById('diploma-detail-dates').textContent = date(diploma.fechaInicio) + ' – ' + date(diploma.fechaFin);
+        document.getElementById('diploma-detail-cost').textContent = money(diploma.costo);
+        const sessionStatus = document.getElementById('diploma-sessions-status');
+        const sessionList = document.getElementById('diploma-session-list');
+        sessionStatus.textContent = 'Cargando sesiones...';
+        sessionList.replaceChildren();
+        diplomaDetailDialog.showModal();
+        try {
+            const sessions = await request(diplomaApi + '/' + diploma.idDiplomado + '/actividades');
+            if (thisLoad !== diplomaDetailLoadNumber) return;
+            sessions.forEach((session) => {
+                const item = document.createElement('li');
+                const schedule = session.horaInicio.slice(0, 5) + ' – ' + session.horaFin.slice(0, 5);
+                const details = session.titulo + ' · ' + schedule + (session.cupo ? ' · Cupo: ' + session.cupo : '');
+                item.append(element('strong', '', date(session.fecha, true)), element('span', '', details));
+                sessionList.append(item);
+            });
+            sessionStatus.textContent = sessions.length
+                ? sessions.length + (sessions.length === 1 ? ' sesión programada.' : ' sesiones programadas.')
+                : 'No hay sesiones programadas.';
+        } catch (error) {
+            if (thisLoad === diplomaDetailLoadNumber) sessionStatus.textContent = error.message;
+        }
+    }
+
+    function restoreDetailFocus() {
+        if (detailTrigger?.isConnected) detailTrigger.focus();
+        detailTrigger = null;
     }
 
     searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
-        page = 0;
-        loadCourses(true);
+        coursePage = 0;
+        diplomaPage = 0;
+        loadAll(true);
     });
     [categoryFilter, modalityFilter].forEach((filter) => filter.addEventListener('change', () => {
-        page = 0;
-        loadCourses(true);
+        coursePage = 0;
+        diplomaPage = 0;
+        loadAll(true);
     }));
     clearFilters.addEventListener('click', () => {
         searchInput.value = '';
         categoryFilter.value = '';
         modalityFilter.value = '';
-        page = 0;
-        loadCourses(true);
+        coursePage = 0;
+        diplomaPage = 0;
+        loadAll(true);
     });
-    previousPage.addEventListener('click', () => {
-        page -= 1;
-        loadCourses(true);
-    });
-    nextPage.addEventListener('click', () => {
-        page += 1;
-        loadCourses(true);
-    });
-    document.getElementById('course-detail-close').addEventListener('click', () => detailDialog.close());
-    detailDialog.addEventListener('close', () => {
-        if (detailTrigger?.isConnected) detailTrigger.focus();
-        detailTrigger = null;
-    });
+    document.getElementById('course-previous-page').addEventListener('click', () => { coursePage -= 1; loadCourses(); });
+    document.getElementById('course-next-page').addEventListener('click', () => { coursePage += 1; loadCourses(); });
+    document.getElementById('diploma-previous-page').addEventListener('click', () => { diplomaPage -= 1; loadDiplomas(); });
+    document.getElementById('diploma-next-page').addEventListener('click', () => { diplomaPage += 1; loadDiplomas(); });
+    document.getElementById('course-detail-close').addEventListener('click', () => courseDetailDialog.close());
+    document.getElementById('diploma-detail-close').addEventListener('click', () => diplomaDetailDialog.close());
+    courseDetailDialog.addEventListener('close', restoreDetailFocus);
+    diplomaDetailDialog.addEventListener('close', restoreDetailFocus);
 
     const initialQuery = new URLSearchParams(window.location.search).get('q');
     if (initialQuery?.trim()) searchInput.value = initialQuery.trim();
     loadCatalogs();
-    loadCourses(Boolean(initialQuery?.trim()));
+    loadAll(Boolean(initialQuery?.trim()));
 })();

@@ -61,7 +61,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/csrf",
-                                "/api/v1/cursos/**").permitAll()
+                                "/api/v1/cursos/**",
+                                "/api/v1/diplomados/**").permitAll()
+                        .requestMatchers(
+                                "/api/v1/cursos/**",
+                                "/api/v1/diplomados/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/",

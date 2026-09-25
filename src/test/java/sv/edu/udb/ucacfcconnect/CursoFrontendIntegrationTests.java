@@ -58,4 +58,34 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("/catalogos/categorias")))
                 .andExpect(content().string(containsString("Ver detalles")));
     }
+
+    @Test
+    void sirveLaAdministracionYElCatalogoDeDiplomados() throws Exception {
+        mockMvc.perform(get("/admin/diplomados.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("<h1 id=\"page-title\">Diplomados</h1>")))
+                .andExpect(content().string(containsString("+ Nuevo diplomado")))
+                .andExpect(content().string(containsString("id=\"sessions-dialog\"")))
+                .andExpect(content().string(containsString("id=\"session-progress\"")))
+                .andExpect(content().string(containsString("/js/diplomados.js")));
+
+        mockMvc.perform(get("/cliente/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<h2 id=\"diploma-catalog-title\">Diplomados disponibles</h2>")))
+                .andExpect(content().string(containsString("id=\"diploma-grid\"")))
+                .andExpect(content().string(containsString("id=\"diploma-detail-dialog\"")));
+
+        mockMvc.perform(get("/js/diplomados.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/javascript"))
+                .andExpect(content().string(containsString("/api/v1/diplomados")))
+                .andExpect(content().string(containsString("/actividades")))
+                .andExpect(content().string(containsString("Number.isInteger")));
+
+        mockMvc.perform(get("/js/cliente.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("const diplomaApi = '/api/v1/diplomados'")))
+                .andExpect(content().string(containsString("openDiplomaDetail")));
+    }
 }

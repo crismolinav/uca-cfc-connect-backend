@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Catálogo de cursos y espacio de aprendizaje de UCA CFC Connect.">
+    <meta name="description" content="Catálogo de cursos, diplomados y espacio de aprendizaje de UCA CFC Connect.">
     <title>Inicio | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/cliente.css">
     <script src="/js/client-shell.js" defer></script>
@@ -23,13 +23,14 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         <a class="brand" href="/cliente/index.html" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
         <nav class="primary-nav" aria-label="Principal">
             <a href="#explorar">Cursos</a>
+            <a href="#diplomados">Diplomados</a>
             <a href="/cliente/aprendizaje.html">Mi aprendizaje</a>
             <a href="#servicios">Servicios</a>
         </nav>
         <form id="client-search" class="site-search" role="search">
-            <label class="visually-hidden" for="client-search-input">Buscar cursos</label>
-            <input id="client-search-input" type="search" placeholder="Buscar cursos" autocomplete="off">
-            <button type="submit" aria-label="Buscar cursos"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
+            <label class="visually-hidden" for="client-search-input">Buscar cursos o diplomados</label>
+            <input id="client-search-input" type="search" placeholder="Buscar cursos o diplomados" autocomplete="off">
+            <button type="submit" aria-label="Buscar formación"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
         </form>
         <div class="account-control">
             <button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button>
@@ -50,7 +51,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
         <div class="page-shell dashboard-content">
             <section class="interest-panel" aria-labelledby="interest-title">
-                <h2 id="interest-title">Encuentra tu próximo curso</h2>
+                <h2 id="interest-title">Encuentra tu próxima formación</h2>
                 <div class="course-filter-grid">
                     <div class="course-filter-field">
                         <label for="course-category-filter">Categoría</label>
@@ -62,7 +63,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                     </div>
                     <button id="clear-course-filters" class="clear-course-filters" type="button">Limpiar filtros</button>
                 </div>
-                <p class="interest-status">Solo se muestran cursos activos publicados por el CFC.</p>
+                <p class="interest-status">Solo se muestran cursos y diplomados activos publicados por el CFC.</p>
             </section>
 
             <section class="resume-section" id="aprendizaje" aria-labelledby="resume-title">
@@ -88,8 +89,19 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                 </nav>
             </section>
 
+            <section class="catalog-section" id="diplomados" aria-labelledby="diploma-catalog-title">
+                <div class="section-heading"><h2 id="diploma-catalog-title">Diplomados disponibles</h2><p>Explora programas de formación extensos y consulta todas sus sesiones programadas.</p></div>
+                <p id="diploma-list-status" class="course-list-status" role="status">Cargando diplomados disponibles...</p>
+                <div class="catalog-grid" id="diploma-grid" aria-live="polite"></div>
+                <nav id="diploma-pagination" class="course-pagination" aria-label="Páginas del catálogo de diplomados" hidden>
+                    <button id="diploma-previous-page" type="button">Anterior</button>
+                    <span id="diploma-page-indicator">Página 1 de 1</span>
+                    <button id="diploma-next-page" type="button">Siguiente</button>
+                </nav>
+            </section>
+
             <section class="promo-grid" id="servicios" aria-label="Más formas de participar">
-                <div class="promo promo-magenta"><div><h2>Tu formación empieza aquí</h2><p>Consulta los cursos activos del CFC.</p><a href="#explorar">Ver cursos</a></div><span class="promo-figure" aria-hidden="true">CFC</span></div>
+                <div class="promo promo-magenta"><div><h2>Tu formación empieza aquí</h2><p>Consulta los cursos y diplomados activos del CFC.</p><a href="#explorar">Ver formación</a></div><span class="promo-figure" aria-hidden="true">CFC</span></div>
                 <div class="promo promo-navy"><div><h2>Espacios para tus encuentros</h2><p>Conoce los servicios que contempla el CFC.</p><a href="#servicios">Ver servicios</a></div><span class="promo-figure" aria-hidden="true">UCA</span></div>
             </section>
 
@@ -113,6 +125,25 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         <div><dt>Costo</dt><dd id="course-detail-cost"></dd></div>
     </dl>
     <p class="course-detail-note">La inscripción en línea todavía no está habilitada. Esta pantalla permite consultar la oferta publicada.</p>
+</dialog>
+<dialog id="diploma-detail-dialog" class="course-detail-dialog" aria-labelledby="diploma-detail-title">
+    <div class="course-detail-header diploma-detail-header">
+        <div><span id="diploma-detail-category" class="course-detail-category"></span><h2 id="diploma-detail-title"></h2></div>
+        <button id="diploma-detail-close" type="button" aria-label="Cerrar detalle">Cerrar</button>
+    </div>
+    <p id="diploma-detail-description" class="course-detail-description"></p>
+    <dl class="course-detail-data">
+        <div><dt>Modalidad</dt><dd id="diploma-detail-modality"></dd></div>
+        <div><dt>Duración total</dt><dd id="diploma-detail-duration"></dd></div>
+        <div><dt>Fechas</dt><dd id="diploma-detail-dates"></dd></div>
+        <div><dt>Costo</dt><dd id="diploma-detail-cost"></dd></div>
+    </dl>
+    <section class="diploma-session-detail" aria-labelledby="diploma-sessions-title">
+        <h3 id="diploma-sessions-title">Sesiones programadas</h3>
+        <p id="diploma-sessions-status" role="status">Cargando sesiones...</p>
+        <ul id="diploma-session-list"></ul>
+    </section>
+    <p class="course-detail-note">La inscripción en línea todavía no está habilitada. Esta pantalla permite consultar el programa publicado.</p>
 </dialog>
 </body>
 </html>
