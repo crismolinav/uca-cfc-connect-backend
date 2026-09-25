@@ -3,6 +3,8 @@
 
     const courseApi = '/api/v1/cursos';
     const diplomaApi = '/api/v1/diplomados';
+    const spaceApi = '/api/v1/espacios';
+    const rentalApi = '/api/v1/alquileres';
     const searchForm = document.getElementById('client-search');
     const searchInput = document.getElementById('client-search-input');
     const categoryFilter = document.getElementById('course-category-filter');
@@ -23,6 +25,9 @@
     let diplomaLoadNumber = 0;
     let diplomaDetailLoadNumber = 0;
     let detailTrigger = null;
+    let spacePage = 0;
+    let selectedSpace = null;
+    let csrfToken = null;
 
     async function request(url) {
         const response = await fetch(url, {credentials: 'same-origin'});
@@ -30,6 +35,21 @@
         if (!response.ok) {
             throw new Error(data.message || data.mensaje || 'No se pudo cargar la información.');
         }
+        return data;
+    }
+
+    async function secureRequest(url, options = {}) {
+        if (!csrfToken) {
+            const csrfResponse = await fetch('/api/v1/auth/csrf', {credentials: 'same-origin'});
+            if (!csrfResponse.ok) throw new Error('No se pudo iniciar una solicitud segura.');
+            csrfToken = (await csrfResponse.json()).token;
+        }
+        const response = await fetch(url, {
+            ...options, credentials: 'same-origin',
+            headers: {...options.headers, 'X-CSRF-TOKEN': csrfToken}
+        });
+        const data = response.status === 204 ? null : await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.mensaje || data.message || 'No se pudo completar la solicitud.');
         return data;
     }
 
@@ -68,6 +88,77 @@
 
     function tone(id) {
         return 'course-cover-tone-' + ((Number(id) || 0) % 4 + 1);
+    }
+
+    function spaceCard(space) {
+        const card = element('article', 'catalog-card course-card space-card');
+        const cover = element('div', 'space-cover ' + tone(space.idEspacio));
+        cover.append(element('span', 'space-type', space.tipo), element('span', 'course-cover-mark', 'ESPACIO · UCA CFC'));
+        const content = element('div', 'card-body');
+        const limit = space.duracionMaximaHoras == null ? 'horario por confirmar' : 'máximo ' + Number(space.duracionMaximaHoras) + ' h';
+        content.append(element('span', 'card-provider', space.capacidad + ' personas · ' + limit), element('h3', '', space.nombre),
+            element('p', 'course-card-description', space.equipamiento || 'Espacio sin equipamiento especificado.'));
+        const footer = element('div', 'course-card-footer'); footer.append(element('strong', 'course-price', money(space.precio)));
+        const reserve = element('button', 'course-detail-button', 'Solicitar reserva'); reserve.type = 'button'; reserve.addEventListener('click', event => openReservation(space, event.currentTarget)); footer.append(reserve); content.append(footer); card.append(cover, content); return card;
+    }
+
+    async function loadSpaces() {
+        const status = document.getElementById('space-list-status'), grid = document.getElementById('space-grid'), pagination = document.getElementById('space-pagination');
+        status.textContent = 'Cargando espacios disponibles...'; grid.replaceChildren(); pagination.hidden = true;
+        try {
+            const params = new URLSearchParams({disponible: 'true', pagina: String(spacePage), tamano: '8', ordenarPor: 'capacidad', direccion: 'asc'});
+            const data = await request(spaceApi + '?' + params); data.contenido.forEach(space => grid.append(spaceCard(space)));
+            status.textContent = data.totalElementos ? data.totalElementos + (data.totalElementos === 1 ? ' espacio disponible.' : ' espacios disponibles.') : 'Por ahora no hay espacios disponibles para reservar.';
+            renderPagination(data, document.getElementById('space-previous-page'), document.getElementById('space-next-page'), document.getElementById('space-page-indicator'), pagination);
+        } catch (error) { status.classList.add('is-error'); status.textContent = error.message; }
+    }
+
+    function rentalBadge(state) { return element('span', 'rental-state state-' + state.toLowerCase(), ({PENDIENTE:'Pendiente',CONFIRMADO:'Confirmada',CANCELADO:'Cancelada',FINALIZADO:'Finalizada'}[state] || state)); }
+
+    async function loadMyRentals() {
+        const status = document.getElementById('rental-list-status'), list = document.getElementById('rental-list'); list.replaceChildren();
+        try {
+            const rentals = await request(rentalApi + '/mios');
+            rentals.forEach(rental => {
+                const item = element('article', 'rental-item'); const copy = element('div', 'rental-copy');
+                copy.append(element('strong', '', rental.nombreEspacio), element('span', '', date(rental.fecha) + ' · ' + rental.horaInicio.slice(0,5) + '–' + rental.horaFin.slice(0,5)), element('small', '', rental.motivo || 'Sin motivo especificado'));
+                const controls = element('div', 'rental-controls'); controls.append(rentalBadge(rental.estado));
+                if (['PENDIENTE','CONFIRMADO'].includes(rental.estado)) { const cancel = element('button', 'rental-cancel', 'Cancelar'); cancel.type = 'button'; cancel.addEventListener('click', () => cancelRental(rental, cancel)); controls.append(cancel); }
+                item.append(copy, controls); list.append(item);
+            });
+            status.textContent = rentals.length ? rentals.length + (rentals.length === 1 ? ' reserva registrada.' : ' reservas registradas.') : 'Aún no has solicitado ningún espacio. Elige uno del catálogo para comenzar.';
+        } catch (error) { status.classList.add('is-error'); status.textContent = error.message; }
+    }
+
+    function openReservation(space, trigger) {
+        selectedSpace = space; detailTrigger = trigger; const form = document.getElementById('reservation-form'); form.reset();
+        document.getElementById('reservation-date').min = new Date().toISOString().slice(0,10); document.getElementById('reservation-space-name').textContent = space.nombre;
+        document.getElementById('reservation-space-meta').textContent = space.tipo + ' · ' + space.capacidad + ' personas · máximo ' + Number(space.duracionMaximaHoras) + ' h · ' + money(space.precio);
+        document.getElementById('reservation-limit').textContent = 'Puedes reservar este espacio por un máximo de ' + Number(space.duracionMaximaHoras) + ' horas continuas.';
+        document.getElementById('reservation-error').textContent = ''; document.getElementById('space-reservation-dialog').showModal();
+    }
+
+    async function submitReservation(event) {
+        event.preventDefault(); const form = event.currentTarget; if (!form.reportValidity()) return;
+        if (form.horaFin.value <= form.horaInicio.value) { document.getElementById('reservation-error').textContent = 'La hora de fin debe ser posterior a la hora de inicio.'; return; }
+        const [startHour, startMinute] = form.horaInicio.value.split(':').map(Number), [endHour, endMinute] = form.horaFin.value.split(':').map(Number);
+        const requestedMinutes = endHour * 60 + endMinute - startHour * 60 - startMinute;
+        if (requestedMinutes > Number(selectedSpace.duracionMaximaHoras) * 60) {
+            document.getElementById('reservation-error').textContent = 'Este espacio admite reservas de máximo ' + Number(selectedSpace.duracionMaximaHoras) + ' horas.';
+            return;
+        }
+        const button = document.getElementById('reservation-submit'); button.disabled = true; button.textContent = 'Enviando...'; document.getElementById('reservation-error').textContent = '';
+        try {
+            await secureRequest(rentalApi + '/solicitudes', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({idEspacio:selectedSpace.idEspacio,fecha:form.fecha.value,horaInicio:form.horaInicio.value,horaFin:form.horaFin.value,motivo:form.motivo.value.trim()})});
+            document.getElementById('space-reservation-dialog').close(); await loadMyRentals(); document.getElementById('mis-reservas').scrollIntoView({behavior:'smooth'});
+        } catch (error) { document.getElementById('reservation-error').textContent = error.message; }
+        finally { button.disabled = false; button.textContent = button.dataset.idleLabel; }
+    }
+
+    async function cancelRental(rental, button) {
+        if (!window.confirm('¿Cancelar la reserva de ' + rental.nombreEspacio + '?')) return; button.disabled = true;
+        try { await secureRequest(rentalApi + '/' + rental.idAlquiler + '/cancelar', {method:'PATCH'}); await loadMyRentals(); }
+        catch (error) { document.getElementById('rental-list-status').textContent = error.message; button.disabled = false; }
     }
 
     function catalogCard(item, type) {
@@ -276,13 +367,21 @@
     document.getElementById('course-next-page').addEventListener('click', () => { coursePage += 1; loadCourses(); });
     document.getElementById('diploma-previous-page').addEventListener('click', () => { diplomaPage -= 1; loadDiplomas(); });
     document.getElementById('diploma-next-page').addEventListener('click', () => { diplomaPage += 1; loadDiplomas(); });
+    document.getElementById('space-previous-page').addEventListener('click', () => { spacePage -= 1; loadSpaces(); });
+    document.getElementById('space-next-page').addEventListener('click', () => { spacePage += 1; loadSpaces(); });
     document.getElementById('course-detail-close').addEventListener('click', () => courseDetailDialog.close());
     document.getElementById('diploma-detail-close').addEventListener('click', () => diplomaDetailDialog.close());
     courseDetailDialog.addEventListener('close', restoreDetailFocus);
     diplomaDetailDialog.addEventListener('close', restoreDetailFocus);
+    document.getElementById('reservation-form').addEventListener('submit', submitReservation);
+    document.getElementById('reservation-close').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());
+    document.getElementById('reservation-cancel').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());
+    document.getElementById('space-reservation-dialog').addEventListener('close', restoreDetailFocus);
 
     const initialQuery = new URLSearchParams(window.location.search).get('q');
     if (initialQuery?.trim()) searchInput.value = initialQuery.trim();
     loadCatalogs();
     loadAll(Boolean(initialQuery?.trim()));
+    loadSpaces();
+    loadMyRentals();
 })();

@@ -94,6 +94,13 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("id=\"diploma-grid\"")))
                 .andExpect(content().string(containsString("id=\"diploma-detail-dialog\"")));
 
+        mockMvc.perform(get("/cliente/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"space-grid\"")))
+                .andExpect(content().string(containsString("id=\"space-reservation-dialog\"")))
+                .andExpect(content().string(containsString("id=\"rental-list\"")))
+                .andExpect(content().string(containsString("Enviar solicitud")));
+
         mockMvc.perform(get("/js/diplomados.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/javascript"))
@@ -105,13 +112,21 @@ class CursoFrontendIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("const diplomaApi = '/api/v1/diplomados'")))
                 .andExpect(content().string(containsString("openDiplomaDetail")));
+
+        mockMvc.perform(get("/js/cliente.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("/api/v1/espacios")))
+                .andExpect(content().string(containsString("/api/v1/alquileres")))
+                .andExpect(content().string(containsString("submitReservation")))
+                .andExpect(content().string(containsString("loadMyRentals")));
     }
 
     @Test
     void todasLasPantallasAdministrativasCompartenLaMismaNavegacion() throws Exception {
         for (String ruta : new String[]{
                 "/admin/index.html", "/admin/cursos.html", "/admin/diplomados.html",
-                "/admin/docentes.html", "/admin/recepcionistas.html", "/admin/operaciones.html"
+                "/admin/docentes.html", "/admin/recepcionistas.html", "/admin/operaciones.html",
+                "/admin/espacios.html", "/admin/alquileres.html", "/admin/cotizaciones.html"
         }) {
             mockMvc.perform(get(ruta))
                     .andExpect(status().isOk())
@@ -120,7 +135,39 @@ class CursoFrontendIntegrationTests {
                     .andExpect(content().string(containsString("href=\"/admin/diplomados.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/docentes.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/recepcionistas.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/espacios.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/alquileres.html\"")))
+                    .andExpect(content().string(containsString("href=\"/admin/cotizaciones.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/operaciones.html\"")));
         }
+    }
+
+    @Test
+    void sirveLasInterfacesDeEspaciosAlquileresYCotizaciones() throws Exception {
+        mockMvc.perform(get("/admin/espacios.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<h1 id=\"page-title\">Espacios</h1>")))
+                .andExpect(content().string(containsString("+ Nuevo espacio")))
+                .andExpect(content().string(containsString("name=\"duracionMaximaHoras\"")))
+                .andExpect(content().string(containsString("name=\"equipamiento\"")));
+
+        mockMvc.perform(get("/admin/alquileres.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<h1 id=\"page-title\">Alquileres</h1>")))
+                .andExpect(content().string(containsString("+ Nuevo alquiler")))
+                .andExpect(content().string(containsString("name=\"horaInicio\"")));
+
+        mockMvc.perform(get("/admin/cotizaciones.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<h1 id=\"page-title\">Cotizaciones</h1>")))
+                .andExpect(content().string(containsString("+ Nueva cotización")))
+                .andExpect(content().string(containsString("id=\"quote-details\"")));
+
+        mockMvc.perform(get("/js/operaciones.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/javascript"))
+                .andExpect(content().string(containsString("/api/v1/")))
+                .andExpect(content().string(containsString("addDetail")))
+                .andExpect(content().string(containsString("saveState")));
     }
 }
