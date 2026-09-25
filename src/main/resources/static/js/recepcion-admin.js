@@ -124,7 +124,8 @@
         try {
             const user = await request('/api/v1/auth/me');
             if (user.rol !== 'ADMIN') {
-                window.location.replace('/cuenta/perfil.html');
+                window.location.replace(user.rol === 'RECEPCIONISTA'
+                    ? '/recepcion/index.html' : '/cliente/index.html');
                 return;
             }
             document.getElementById('admin-name').textContent = user.nombre;

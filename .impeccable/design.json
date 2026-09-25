@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T18:18:01Z",
+  "title": "Design System: UCA CFC Connect Operational Panels",
+  "extensions": {
+    "shadows": [
+      { "name": "admin-shell", "value": "0 12px 50px rgba(20, 33, 48, .12)", "purpose": "Separate the centered admin shell from the page background." },
+      { "name": "reception-shell", "value": "0 15px 60px rgba(22, 37, 59, .1)", "purpose": "Separate the centered reception shell from the page background." },
+      { "name": "admin-dialog", "value": "0 24px 80px rgba(17, 29, 43, .23)", "purpose": "Raise an open admin dialog." }
+    ],
+    "breakpoints": [
+      { "name": "admin-drawer", "value": "950px" },
+      { "name": "reception-drawer", "value": "1050px" },
+      { "name": "reception-columns", "value": "760px" },
+      { "name": "reception-forms", "value": "540px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "primary-button",
+      "description": "Shared solid-blue action used by admin and reception forms.",
+      "html": "<button class=\"ds-primary\">Guardar</button>",
+      "css": ".ds-primary{min-height:40px;padding:8px 16px;border:1px solid #316bff;border-radius:7px;background:#316bff;color:#fff;font:600 .75rem Poppins,'Segoe UI',sans-serif;cursor:pointer}.ds-primary:hover{background:#1652df}.ds-primary:focus-visible{outline:3px solid #316bff;outline-offset:3px}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "description": "Quiet bordered action for a row or dialog.",
+      "html": "<button class=\"ds-secondary\">Cancelar</button>",
+      "css": ".ds-secondary{min-height:40px;padding:8px 16px;border:1px solid #d7dde5;border-radius:6px;background:#fff;color:#34404b;font:400 .69rem Poppins,'Segoe UI',sans-serif;cursor:pointer}.ds-secondary:hover{border-color:#316bff;color:#1652df}.ds-secondary:focus-visible{outline:3px solid #316bff;outline-offset:3px}"
+    },
+    {
+      "name": "Sidebar navigation",
+      "kind": "nav",
+      "refersTo": "sidebar-link-active",
+      "description": "Current task in the charcoal operational rail.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" href=\"#\" aria-current=\"page\">Agenda y alquileres</a></nav>",
+      "css": ".ds-nav{padding:16px;background:#24282b}.ds-nav-link{display:block;min-height:43px;padding:10px 12px;border-radius:7px;color:#cfd7df;font:400 .76rem Poppins,'Segoe UI',sans-serif;text-decoration:none}.ds-nav-link:hover,.ds-nav-link[aria-current]{background:#3a4045;color:#fff}.ds-nav-link[aria-current]{font-weight:600}.ds-nav-link:focus-visible{outline:3px solid #316bff;outline-offset:3px}"
+    },
+    {
+      "name": "Reception field",
+      "kind": "input",
+      "description": "Labeled input from the reception form grid.",
+      "html": "<label class=\"ds-field\">Fecha<input type=\"date\"></label>",
+      "css": ".ds-field{display:grid;gap:6px;color:#405066;font:500 .72rem Poppins,'Segoe UI',sans-serif}.ds-field input{min-height:41px;padding:9px 10px;border:1px solid #cbd6e3;border-radius:7px;background:#fff;color:#263340;font:400 .78rem Poppins,'Segoe UI',sans-serif}.ds-field input:focus-visible{outline:3px solid #316bff;outline-offset:3px}"
+    },
+    {
+      "name": "Reception card",
+      "kind": "card",
+      "description": "Bordered white container for agenda, forms, and lists.",
+      "html": "<section class=\"ds-card\"><h3>Reservas del día</h3></section>",
+      "css": ".ds-card{padding:22px;border:1px solid #e1e7ef;border-radius:12px;background:#fff;color:#263340;font-family:Poppins,'Segoe UI',sans-serif}.ds-card h3{margin:0;font-size:.94rem}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Daily Operations Desk",
+    "overview": "This documents the implemented admin and receptionist workspaces. Both use a dark navigation rail, a compact white top bar, pale work area, restrained white panels, and blue for primary actions and focus. The receptionist screen extends that language with an agenda as its first and most prominent tool. The public landing and client pages have separate styles and are outside this document's scope.",
+    "keyCharacteristics": [
+      "Dense, readable operational information in a calm light workspace.",
+      "Persistent dark navigation on wide screens; a dismissible drawer on narrow screens.",
+      "Blue actions and focus, with status colors reserved for meaning."
+    ],
+    "rules": [
+      { "name": "The Operational Blue Rule", "body": "Use blue for primary actions, focus, and selected informational treatments; keep the sidebar charcoal and the content surfaces light.", "section": "colors" }
+    ],
+    "dos": [
+      "Do continue the dark rail, light workspace, white card, and blue action pattern on new operational screens.",
+      "Do place availability and its legend before reservation entry when extending the reception agenda.",
+      "Do retain visible focus outlines, readable status text, and local scrolling for dense schedules or tables."
+    ],
+    "donts": [
+      "Don't import the public landing page's brighter palette or typography into these operational panels.",
+      "Don't use card shadows as the ordinary separation method; the existing panels use borders and surface contrast."
+    ]
+  }
+}

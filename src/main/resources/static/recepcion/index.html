@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Agenda y operaciones de recepción de UCA CFC Connect.">
+    <title>Recepción | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/recepcion.css">
+    <script src="/js/recepcion.js" defer></script>
+</head>
+<body>
+<!-- THESIS: La jornada de recepción se organiza desde una agenda visible y tareas directas.
+OWN-WORLD: Conserva la navegación oscura y el azul operativo de los paneles actuales.
+STORY: Consultar disponibilidad, registrar una operación y comprobar su estado.
+FIRST VIEWPORT: Menú lateral, cabecera compacta y agenda como herramienta principal.
+FORM: Panel operativo con secciones accesibles; recepción local.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md -->
+<div class="reception-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación de recepción">
+        <a class="brand" href="/recepcion/index.html">UCA CFC<span>.</span></a>
+        <button type="button" class="menu-dismiss" id="menu-dismiss">Cerrar menú</button>
+        <p class="sidebar-caption">Panel de recepción</p>
+        <nav aria-label="Funciones de recepción">
+            <button type="button" class="nav-link is-current" data-panel="agenda" aria-current="page">Agenda y alquileres</button>
+            <button type="button" class="nav-link" data-panel="clientes">Clientes</button>
+            <button type="button" class="nav-link" data-panel="participantes">Participantes</button>
+            <button type="button" class="nav-link" data-panel="inscripciones">Inscripciones</button>
+            <button type="button" class="nav-link" data-panel="catering">Catering</button>
+            <button type="button" class="nav-link" data-panel="cotizaciones">Cotizaciones</button>
+            <button type="button" class="nav-link" data-panel="actividades">Actividades</button>
+            <button type="button" class="nav-link" data-panel="pagos">Pagos</button>
+        </nav>
+        <p class="sidebar-bottom">UCA CFC Connect<br><span>Operación diaria</span></p>
+    </aside>
+    <button type="button" class="menu-backdrop" id="menu-backdrop" aria-label="Cerrar menú" hidden></button>
+    <main class="main" id="main">
+        <header class="topbar">
+            <button type="button" class="menu-button" id="menu-button" aria-controls="sidebar" aria-expanded="false">Menú</button>
+            <span class="topbar-title">Recepción</span>
+            <span class="topbar-spacer"></span>
+            <span id="user-name" class="user-name">Cargando...</span>
+            <button type="button" class="logout-button" id="logout-button">Cerrar sesión</button>
+        </header>
+        <div class="workspace">
+            <div class="workspace-heading">
+                <div><h1 id="panel-title">Agenda y alquileres</h1><p id="panel-description">Consulta espacios y asigna reservas sin cruces de horario.</p></div>
+                <span class="role-badge">Recepcionista</span>
+            </div>
+            <p id="flash" class="flash" role="status" aria-live="polite"></p>
+
+            <section id="panel-agenda" class="panel" aria-labelledby="agenda-title">
+                <div class="section-heading"><div><h2 id="agenda-title">Reserva de espacios</h2><p>Selecciona un día para ver las ocupaciones y crear una reserva.</p></div><label class="date-filter" for="agenda-date">Fecha de la agenda<input id="agenda-date" type="date"></label></div>
+                <div class="stats"><div><strong id="space-count">0</strong><span>Espacios</span></div><div><strong id="available-count">0</strong><span>Habilitados</span></div><div><strong id="booking-count">0</strong><span>Reservas del día</span></div></div>
+                <div class="agenda-card"><div class="agenda-key"><span class="key-booked">Reservado</span><span class="key-free">Horario libre</span></div><div class="agenda-scroll"><div id="schedule" class="schedule" role="img" aria-label="Agenda de espacios"></div></div><p id="agenda-empty" class="empty" hidden></p></div>
+                <section class="list-card"><h3>Reservas del día</h3><div id="bookings-list" class="item-list"></div></section>
+                <div class="two-columns">
+                    <section class="form-card"><h3>Nueva reserva</h3><p>Asigna un espacio disponible a un cliente.</p><form id="booking-form" class="form-grid">
+                        <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
+                        <label>Espacio<select name="espacioId" data-options="espacios" required></select></label>
+                        <label>Fecha<input name="fecha" type="date" required></label>
+                        <label>Hora de inicio<input name="horaInicio" type="time" step="600" required></label>
+                        <label>Hora de fin<input name="horaFin" type="time" step="600" required></label>
+                        <label class="full">Motivo<input name="motivo" maxlength="255" placeholder="Ej. reunión de equipo"></label>
+                        <button type="submit">Registrar reserva</button>
+                    </form></section>
+                    <section class="form-card"><h3>Registrar espacio</h3><p>Auditorio, aula, cubículo u otro lugar disponible.</p><form id="space-form" class="form-grid">
+                        <label>Nombre<input name="nombre" required maxlength="100" placeholder="Ej. Cubículo 1"></label>
+                        <label>Tipo<select name="tipo" required><option value="">Seleccionar</option><option>Auditorio</option><option>Sala de reuniones</option><option>Laboratorio</option><option>Aula</option><option>Sala multimedia</option><option>Cubículo</option><option>Otro</option></select></label>
+                        <label>Capacidad<input name="capacidad" type="number" min="1" step="1" required></label>
+                        <label>Precio<input name="precio" type="number" min="0" step="0.01" required></label>
+                        <label class="full">Equipamiento<input name="equipamiento" maxlength="255" placeholder="Ej. proyector, mesas, Wi-Fi"></label>
+                        <label class="check-row full"><input name="disponible" type="checkbox" checked> Habilitado para reservas</label>
+                        <button type="submit">Guardar espacio</button>
+                    </form></section>
+                </div>
+                <section class="list-card"><h3>Espacios registrados</h3><div id="spaces-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-clientes" class="panel" aria-labelledby="clientes-title" hidden>
+                <div class="section-heading"><div><h2 id="clientes-title">Clientes</h2><p>Registra a la persona o empresa a quien se asignará un servicio.</p></div></div>
+                <section class="form-card"><h3>Nuevo cliente</h3><form id="client-form" class="form-grid">
+                    <label>Nombre completo<input name="nombre" required maxlength="120"></label>
+                    <label>DUI o NIT<input name="duiNit" maxlength="20"></label>
+                    <label>Empresa<input name="empresa" maxlength="150"></label>
+                    <label>Correo<input name="correo" type="email" maxlength="120"></label>
+                    <label>Teléfono<input name="telefono" type="tel" maxlength="20"></label>
+                    <label>Dirección<input name="direccion" maxlength="255"></label>
+                    <button type="submit">Guardar cliente</button>
+                </form></section>
+                <section class="list-card"><h3>Clientes registrados</h3><div id="clients-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-participantes" class="panel" aria-labelledby="participants-title" hidden>
+                <div class="section-heading"><div><h2 id="participants-title">Participantes</h2><p>Vincula participantes con el cliente responsable.</p></div></div>
+                <section class="form-card"><h3>Nuevo participante</h3><form id="participant-form" class="form-grid">
+                    <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
+                    <label>Nombre<input name="nombre" required maxlength="100"></label>
+                    <label>Apellido<input name="apellido" required maxlength="100"></label>
+                    <label>Correo<input name="correo" type="email" maxlength="120"></label>
+                    <label>Teléfono<input name="telefono" type="tel" maxlength="20"></label>
+                    <button type="submit">Guardar participante</button>
+                </form></section>
+                <section class="list-card"><h3>Participantes registrados</h3><div id="participants-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-inscripciones" class="panel" aria-labelledby="enroll-title" hidden>
+                <div class="section-heading"><div><h2 id="enroll-title">Inscripciones</h2><p>Inscribe a un participante en un curso o diplomado activo.</p></div></div>
+                <section class="form-card"><h3>Nueva inscripción</h3><form id="enrollment-form" class="form-grid">
+                    <label>Participante<select name="participanteId" data-options="participantes" required></select></label>
+                    <label>Tipo de programa<select name="programaTipo" data-dependent="programaId" required><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option></select></label>
+                    <label>Programa<select name="programaId" required></select></label>
+                    <button type="submit">Crear inscripción</button>
+                </form></section>
+                <section class="list-card"><h3>Inscripciones recientes</h3><div id="enrollments-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-catering" class="panel" aria-labelledby="catering-title" hidden>
+                <div class="section-heading"><div><h2 id="catering-title">Catering</h2><p>Registra servicios y solicitudes con menú, asistentes, fecha y lugar.</p></div></div>
+                <div class="two-columns">
+                    <section class="form-card"><h3>Nueva solicitud</h3><form id="catering-form" class="form-grid">
+                        <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
+                        <label>Servicio<select name="servicioId" data-options="servicios" required></select></label>
+                        <label>Fecha<input name="fecha" type="date" required></label>
+                        <label>Hora<input name="hora" type="time" required></label>
+                        <label>Asistentes<input name="numeroAsistentes" type="number" min="1" step="1" required></label>
+                        <label>Lugar<input name="lugar" maxlength="150" required></label>
+                        <label class="full">Menú<textarea name="menu" maxlength="255" required></textarea></label>
+                        <button type="submit">Registrar solicitud</button>
+                    </form></section>
+                    <section class="form-card"><h3>Nuevo servicio</h3><form id="service-form" class="form-grid">
+                        <label>Nombre<input name="nombre" maxlength="100" required placeholder="Ej. coffee break"></label>
+                        <label>Tipo<select name="tipoServicio" required><option value="">Seleccionar</option><option>Coffee Break</option><option>Desayuno</option><option>Almuerzo</option><option>Cena</option><option>Refrigerio</option></select></label>
+                        <label>Precio base<input name="precioBase" type="number" min="0" step="0.01" required></label>
+                        <label class="full">Descripción<input name="descripcion" maxlength="255"></label>
+                        <button type="submit">Guardar servicio</button>
+                    </form></section>
+                </div>
+                <section class="list-card"><h3>Solicitudes registradas</h3><div id="catering-list" class="item-list"></div></section>
+                <section class="list-card"><h3>Servicios disponibles</h3><div id="services-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-cotizaciones" class="panel" aria-labelledby="quotes-title" hidden>
+                <div class="section-heading"><div><h2 id="quotes-title">Cotizaciones</h2><p>Calcula un monto estimado a partir del precio registrado.</p></div></div>
+                <section class="form-card"><h3>Nueva cotización</h3><form id="quote-form" class="form-grid">
+                    <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
+                    <label>Concepto<select name="conceptoTipo" data-dependent="conceptoId" required><option value="ESPACIO">Espacio</option><option value="CATERING">Catering</option><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option></select></label>
+                    <label>Elemento<select name="conceptoId" required></select></label>
+                    <label>Cantidad<input name="cantidad" type="number" min="1" step="1" required></label>
+                    <label class="full">Observaciones<input name="observaciones" maxlength="255"></label>
+                    <button type="submit">Crear cotización</button>
+                </form></section>
+                <section class="list-card"><h3>Cotizaciones recientes</h3><div id="quotes-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-actividades" class="panel" aria-labelledby="activities-title" hidden>
+                <div class="section-heading"><div><h2 id="activities-title">Actividades</h2><p>Programa actividades ligadas a cursos, diplomados o solicitudes.</p></div></div>
+                <section class="form-card"><h3>Nueva actividad</h3><form id="activity-form" class="form-grid">
+                    <label class="full">Título<input name="titulo" required maxlength="150"></label>
+                    <label>Fecha<input name="fecha" type="date" required></label>
+                    <label>Hora de inicio<input name="horaInicio" type="time" required></label>
+                    <label>Hora de fin<input name="horaFin" type="time" required></label>
+                    <label>Cupo<input name="cupo" type="number" min="1" step="1"></label>
+                    <label>Vincular a<select name="vinculacionTipo" data-dependent="vinculacionId" required><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option><option value="ALQUILER">Reserva</option><option value="CATERING">Catering</option></select></label>
+                    <label>Registro<select name="vinculacionId" required></select></label>
+                    <button type="submit">Programar actividad</button>
+                </form></section>
+                <section class="list-card"><h3>Actividades registradas</h3><div id="activities-list" class="item-list"></div></section>
+            </section>
+
+            <section id="panel-pagos" class="panel" aria-labelledby="payments-title" hidden>
+                <div class="section-heading"><div><h2 id="payments-title">Pagos</h2><p>Registra un pago pendiente y confírmalo al verificarlo.</p></div></div>
+                <section class="form-card"><h3>Nuevo pago</h3><form id="payment-form" class="form-grid">
+                    <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
+                    <label>Concepto<select name="conceptoTipo" data-dependent="conceptoId" required><option value="INSCRIPCION">Inscripción</option><option value="ALQUILER">Reserva</option><option value="CATERING">Catering</option><option value="COTIZACION">Cotización</option></select></label>
+                    <label>Registro<select name="conceptoId" required></select></label>
+                    <label>Monto<input name="monto" type="number" min="0.01" step="0.01" required></label>
+                    <label>Método<select name="metodo" required><option value="">Seleccionar</option><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option><option value="TARJETA">Tarjeta</option></select></label>
+                    <label>Referencia<input name="referencia" maxlength="100"></label>
+                    <button type="submit">Registrar pago pendiente</button>
+                </form></section>
+                <section class="list-card"><h3>Pagos registrados</h3><div id="payments-list" class="item-list"></div></section>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -259,6 +259,10 @@
                 window.location.replace('/cliente/index.html');
                 return;
             }
+            if (user.rol === 'RECEPCIONISTA') {
+                window.location.replace('/recepcion/index.html');
+                return;
+            }
             if (user.rol !== 'ADMIN') {
                 status.textContent = 'Esta sección es solo para administradores. Tu cuenta no tiene acceso.';
                 document.getElementById('new-client-button').hidden = true;
