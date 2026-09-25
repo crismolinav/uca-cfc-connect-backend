@@ -11,6 +11,7 @@ import sv.edu.udb.ucacfcconnect.dto.ActividadResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.CatalogoResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.DiplomadoDTO;
 import sv.edu.udb.ucacfcconnect.dto.DiplomadoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.DocenteResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.entity.Actividad;
 import sv.edu.udb.ucacfcconnect.entity.Categoria;
@@ -27,6 +28,7 @@ import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -51,17 +53,20 @@ public class DiplomadoService {
     private final ActividadRepository actividadRepository;
     private final CategoriaRepository categoriaRepository;
     private final ModalidadRepository modalidadRepository;
+    private final DocenteDisponibilidadService docenteDisponibilidadService;
 
     public DiplomadoService(
             DiplomadoRepository diplomadoRepository,
             ActividadRepository actividadRepository,
             CategoriaRepository categoriaRepository,
-            ModalidadRepository modalidadRepository
+            ModalidadRepository modalidadRepository,
+            DocenteDisponibilidadService docenteDisponibilidadService
     ) {
         this.diplomadoRepository = diplomadoRepository;
         this.actividadRepository = actividadRepository;
         this.categoriaRepository = categoriaRepository;
         this.modalidadRepository = modalidadRepository;
+        this.docenteDisponibilidadService = docenteDisponibilidadService;
     }
 
     @Transactional(readOnly = true)
@@ -265,6 +270,10 @@ public class DiplomadoService {
             throw new ReglaNegocioException("La fecha de la sesión no puede estar en el pasado");
         }
 
+        docenteDisponibilidadService.validarActividadDiplomado(
+                diplomado, dto.fecha(), dto.horaInicio(), dto.horaFin()
+        );
+
         Long idExcluir = actual == null ? null : actual.getId();
         List<Actividad> conflictos = actividadRepository.buscarConflictos(
                 dto.fecha(), dto.horaInicio(), dto.horaFin(), idExcluir
@@ -366,7 +375,14 @@ public class DiplomadoService {
                 diplomado.getCategoria().getIdCategoria(),
                 diplomado.getCategoria().getNombre(),
                 diplomado.getModalidad().getIdModalidad(),
-                diplomado.getModalidad().getNombre()
+                diplomado.getModalidad().getNombre(),
+                diplomado.getDocentes().stream()
+                        .map(asignacion -> asignacion.getDocente())
+                        .sorted(Comparator.comparing(docente -> docente.getNombre(), String.CASE_INSENSITIVE_ORDER))
+                        .map(docente -> new DocenteResumenDTO(
+                                docente.getId(), docente.getNombre(), docente.getEspecialidad()
+                        ))
+                        .toList()
         );
     }
 

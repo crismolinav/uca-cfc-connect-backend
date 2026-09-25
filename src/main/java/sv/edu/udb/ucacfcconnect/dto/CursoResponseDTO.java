@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Schema(name = "CursoResponse", description = "Representación completa de un curso")
 public record CursoResponseDTO(
@@ -20,6 +21,7 @@ public record CursoResponseDTO(
         @Schema(example = "1") Long idCategoria,
         @Schema(example = "Tecnología") String categoria,
         @Schema(example = "1") Long idModalidad,
-        @Schema(example = "Presencial") String modalidad
+        @Schema(example = "Presencial") String modalidad,
+        List<DocenteResumenDTO> docentes
 ) {
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.CatalogoResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.DocenteResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.entity.Categoria;
 import sv.edu.udb.ucacfcconnect.entity.Curso;
@@ -28,6 +29,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -62,15 +64,18 @@ public class CursoService {
     private final CursoRepository cursoRepository;
     private final CategoriaRepository categoriaRepository;
     private final ModalidadRepository modalidadRepository;
+    private final DocenteDisponibilidadService docenteDisponibilidadService;
 
     public CursoService(
             CursoRepository cursoRepository,
             CategoriaRepository categoriaRepository,
-            ModalidadRepository modalidadRepository
+            ModalidadRepository modalidadRepository,
+            DocenteDisponibilidadService docenteDisponibilidadService
     ) {
         this.cursoRepository = cursoRepository;
         this.categoriaRepository = categoriaRepository;
         this.modalidadRepository = modalidadRepository;
+        this.docenteDisponibilidadService = docenteDisponibilidadService;
     }
 
     @Transactional(readOnly = true)
@@ -148,6 +153,7 @@ public class CursoService {
         validarFechas(dto, curso.getFechaInicio());
         validarHorarioYDuracion(dto);
         asignarDatos(curso, dto);
+        docenteDisponibilidadService.validarCursoConDocentesAsignados(curso);
         return aRespuesta(cursoRepository.save(curso));
     }
 
@@ -308,7 +314,14 @@ public class CursoService {
                 categoria.getIdCategoria(),
                 categoria.getNombre(),
                 modalidad.getIdModalidad(),
-                modalidad.getNombre()
+                modalidad.getNombre(),
+                curso.getDocentes().stream()
+                        .map(asignacion -> asignacion.getDocente())
+                        .sorted(Comparator.comparing(docente -> docente.getNombre(), String.CASE_INSENSITIVE_ORDER))
+                        .map(docente -> new DocenteResumenDTO(
+                                docente.getId(), docente.getNombre(), docente.getEspecialidad()
+                        ))
+                        .toList()
         );
     }
 }

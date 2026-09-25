@@ -46,6 +46,8 @@ class CursoServiceTest {
     private CategoriaRepository categoriaRepository;
     @Mock
     private ModalidadRepository modalidadRepository;
+    @Mock
+    private DocenteDisponibilidadService docenteDisponibilidadService;
     @InjectMocks
     private CursoService cursoService;
 

@@ -65,7 +65,8 @@ public class SecurityConfig {
                                 "/api/v1/diplomados/**").permitAll()
                         .requestMatchers(
                                 "/api/v1/cursos/**",
-                                "/api/v1/diplomados/**").hasRole("ADMIN")
+                                "/api/v1/diplomados/**",
+                                "/api/v1/docentes/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/",

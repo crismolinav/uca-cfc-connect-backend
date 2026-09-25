@@ -218,7 +218,7 @@ dialog {
     box-shadow: 0 24px 80px rgba(17, 29, 43, .23);
 }
 dialog::backdrop { background: rgba(12, 21, 29, .58); }
-#client-form, #course-form, #diploma-form { padding: 26px; }
+#client-form, #course-form, #diploma-form, #teacher-form { padding: 26px; }
 .status-dialog { width: min(94vw, 460px); }
 .status-dialog-content { padding: 26px; }
 .status-dialog h2 { margin: 0; font-size: 1.25rem; }
@@ -257,7 +257,7 @@ dialog::backdrop { background: rgba(12, 21, 29, .58); }
     .page-description { text-align: left; }
     .search-wrap { width: 100%; }
     .dialog-fields { grid-template-columns: 1fr; }
-    #client-form, #diploma-form { padding: 20px; }
+    #client-form, #diploma-form, #teacher-form { padding: 20px; }
     .search-wrap input, .field input { font-size: 1rem; }
     .client-name-cell { min-width: 195px; white-space: normal; }
     .mobile-actions { display: flex; margin-top: 9px; }
@@ -418,4 +418,56 @@ dialog::backdrop { background: rgba(12, 21, 29, .58); }
     .diploma-table th:nth-child(n+3):not(:last-child),
     .diploma-table td:nth-child(n+3):not(:last-child) { display: none; }
     .diploma-table th:last-child, .diploma-table td:last-child { display: none; }
+}
+
+/* Módulo de docentes y asignaciones */
+.teacher-filters { grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr); }
+.teacher-mobile-meta { display: none; margin-top: 6px; color: #687584; font-size: .67rem; }
+.assignment-dialog { width: min(94vw, 620px); padding: 26px; }
+.assignment-empty {
+    margin: 20px 0 0;
+    padding: 14px;
+    border: 1px solid #dce3eb;
+    border-radius: 8px;
+    background: #f7f9fb;
+    color: #596675;
+    font-size: .74rem;
+    line-height: 1.55;
+}
+.assignment-empty a { color: var(--blue-dark); font-weight: 600; }
+.teacher-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    max-height: 330px;
+    margin-top: 20px;
+    overflow-y: auto;
+}
+.teacher-option {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px;
+    border: 1px solid #dce2e9;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+.teacher-option:has(input:checked) { border-color: #80aafb; background: #edf4ff; }
+.teacher-option input { flex: none; width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--blue); }
+.teacher-option span { min-width: 0; }
+.teacher-option strong, .teacher-option small { display: block; overflow-wrap: anywhere; }
+.teacher-option strong { color: #283440; font-size: .73rem; }
+.teacher-option small { margin-top: 3px; color: #6f7b87; font-size: .65rem; }
+
+@media (max-width: 700px) {
+    .teacher-filters { grid-template-columns: 1fr; }
+    .teacher-filters .course-search { grid-column: auto; }
+    .teacher-table th:nth-child(n+3):not(:last-child),
+    .teacher-table td:nth-child(n+3):not(:last-child) { display: none; }
+    .teacher-table th:last-child, .teacher-table td:last-child { display: none; }
+    .teacher-mobile-meta, .teacher-table .mobile-actions { display: flex; }
+    .teacher-options { grid-template-columns: 1fr; }
+    .assignment-dialog { padding: 20px; }
 }

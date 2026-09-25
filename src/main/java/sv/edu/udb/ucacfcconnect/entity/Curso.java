@@ -3,6 +3,8 @@ package sv.edu.udb.ucacfcconnect.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "cursos")
@@ -49,6 +51,9 @@ public class Curso {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_modalidad", nullable = false)
     private Modalidad modalidad;
+
+    @OneToMany(mappedBy = "curso")
+    private List<CursoDocente> docentes = new ArrayList<>();
 
     public Long getIdCurso() {
         return idCurso;
@@ -144,5 +149,13 @@ public class Curso {
 
     public void setModalidad(Modalidad modalidad) {
         this.modalidad = modalidad;
+    }
+
+    public List<CursoDocente> getDocentes() {
+        return docentes;
+    }
+
+    public void setDocentes(List<CursoDocente> docentes) {
+        this.docentes = docentes;
     }
 }

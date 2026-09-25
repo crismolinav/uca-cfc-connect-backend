@@ -37,6 +37,10 @@
         return new Intl.NumberFormat('es-SV', {style: 'currency', currency: 'USD'}).format(value);
     }
 
+    function teacherNames(teachers) {
+        return teachers?.length ? teachers.map((teacher) => teacher.nombre).join(', ') : 'Por asignar';
+    }
+
     function date(value, weekday = false) {
         if (!value) return 'Por definir';
         return new Intl.DateTimeFormat('es-SV', {
@@ -206,6 +210,7 @@
         document.getElementById('course-detail-schedule').textContent = course.horario;
         document.getElementById('course-detail-capacity').textContent = course.cupoMaximo + ' personas';
         document.getElementById('course-detail-cost').textContent = money(course.costo);
+        document.getElementById('course-detail-teachers').textContent = teacherNames(course.docentes);
         courseDetailDialog.showModal();
     }
 
@@ -219,6 +224,7 @@
         document.getElementById('diploma-detail-duration').textContent = hours(diploma.duracionHoras);
         document.getElementById('diploma-detail-dates').textContent = date(diploma.fechaInicio) + ' – ' + date(diploma.fechaFin);
         document.getElementById('diploma-detail-cost').textContent = money(diploma.costo);
+        document.getElementById('diploma-detail-teachers').textContent = teacherNames(diploma.docentes);
         const sessionStatus = document.getElementById('diploma-sessions-status');
         const sessionList = document.getElementById('diploma-session-list');
         sessionStatus.textContent = 'Cargando sesiones...';

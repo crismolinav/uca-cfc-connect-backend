@@ -17,6 +17,7 @@
     const modalityFilter = document.getElementById('modality-filter');
     const statusFilter = document.getElementById('status-filter');
     const sortFilter = document.getElementById('sort-filter');
+    const teacherAssignments = window.crearGestorDocentes('diplomados');
     let page = 0;
     let size = 10;
     let editingId = null;
@@ -113,6 +114,8 @@
         wrap.className = 'row-actions';
         wrap.append(
             button('Sesiones', (event) => openSessions(diploma, event.currentTarget), 'Gestionar sesiones de ' + diploma.nombre),
+            button('Docentes', (event) => teacherAssignments.open(diploma, event.currentTarget),
+                'Asignar docentes a ' + diploma.nombre),
             button('Editar', () => openForm(diploma), 'Editar ' + diploma.nombre),
             button(diploma.activo ? 'Retirar' : 'Publicar', (event) => openStatus(diploma, event.currentTarget),
                 (diploma.activo ? 'Retirar ' : 'Publicar ') + diploma.nombre),

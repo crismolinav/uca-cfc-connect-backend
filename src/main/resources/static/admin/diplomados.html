@@ -6,7 +6,8 @@
     <meta name="description" content="Administración de diplomados de UCA CFC Connect.">
     <title>Diplomados | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/admin.css?v=20260925-2">
-    <script src="/js/diplomados.js?v=20260925-2" defer></script>
+    <script src="/js/docente-asignaciones.js?v=20260925-3" defer></script>
+    <script src="/js/diplomados.js?v=20260925-3" defer></script>
 </head>
 <body>
 <div class="admin-shell">
@@ -18,6 +19,7 @@
             <a class="nav-link" href="/admin/index.html">Clientes</a>
             <a class="nav-link" href="/admin/cursos.html">Cursos</a>
             <a class="nav-link" href="/admin/diplomados.html" aria-current="page">Diplomados</a>
+            <a class="nav-link" href="/admin/docentes.html">Docentes</a>
             <span class="nav-group-label nav-group-secondary">Otros módulos</span>
             <span class="nav-pending">Agenda <small>Próximamente</small></span>
             <span class="nav-pending">Cotizaciones <small>Próximamente</small></span>
@@ -128,6 +130,14 @@
     </form>
     <p id="sessions-status" class="list-status" role="status"></p>
     <div class="table-scroll session-table-wrap"><table class="session-table"><thead><tr><th>Fecha</th><th>Sesión</th><th>Horario</th><th>Cupo</th><th>Acciones</th></tr></thead><tbody id="sessions-body"></tbody></table></div>
+</dialog>
+
+<dialog id="teacher-assignment-dialog" class="assignment-dialog" aria-labelledby="teacher-assignment-title">
+    <div class="dialog-header"><div><h2 id="teacher-assignment-title">Asignar docentes</h2><p id="teacher-assignment-description"></p></div><button id="teacher-assignment-close" class="dialog-close" type="button">Cerrar</button></div>
+    <div id="teacher-assignment-options" class="teacher-options"></div>
+    <p id="teacher-assignment-empty" class="assignment-empty" hidden>No hay docentes registrados. <a href="/admin/docentes.html">Registra el primer docente</a> y vuelve para asignarlo.</p>
+    <p id="teacher-assignment-error" class="dialog-error" role="alert"></p>
+    <div class="dialog-actions"><button id="teacher-assignment-cancel" class="secondary-button" type="button">Cancelar</button><button id="teacher-assignment-save" class="new-button" type="button">Guardar asignación</button></div>
 </dialog>
 
 <dialog id="status-dialog" class="status-dialog" aria-labelledby="status-dialog-title"><div class="status-dialog-content"><h2 id="status-dialog-title">Cambiar estado</h2><p id="status-dialog-description"></p><p id="status-dialog-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="status-cancel" class="secondary-button" type="button">Cancelar</button><button id="status-confirm" class="new-button" type="button">Confirmar</button></div></div></dialog>
