@@ -96,6 +96,24 @@ class CursoIntegrationTest {
         assertTrue(camposInvalidos.contains("idModalidad"));
     }
 
+    @Test
+    void dtoRechazaCuposCostosYHorarioInvalidos() {
+        CursoDTO dto = cursoValido();
+        dto.setCupoMaximo(-10);
+        dto.setDuracionHoras(0);
+        dto.setCosto(new BigDecimal("-10.555"));
+        dto.setHorario("cuando se pueda");
+
+        var camposInvalidos = validator.validate(dto).stream()
+                .map(violacion -> violacion.getPropertyPath().toString())
+                .collect(java.util.stream.Collectors.toSet());
+
+        assertTrue(camposInvalidos.contains("cupoMaximo"));
+        assertTrue(camposInvalidos.contains("duracionHoras"));
+        assertTrue(camposInvalidos.contains("costo"));
+        assertTrue(camposInvalidos.contains("horario"));
+    }
+
     private CursoDTO cursoValido() {
         CursoDTO dto = new CursoDTO();
         dto.setTitulo("Excel avanzado para negocios");
@@ -105,7 +123,7 @@ class CursoIntegrationTest {
         dto.setCosto(new BigDecimal("125.00"));
         dto.setFechaInicio(LocalDate.of(2026, 10, 5));
         dto.setFechaFin(LocalDate.of(2026, 11, 5));
-        dto.setHorario("Lunes y miércoles 18:00-20:00");
+        dto.setHorario("Lunes, Miércoles | 18:00-20:00");
         dto.setIdCategoria(idCategoria);
         dto.setIdModalidad(idModalidad);
         return dto;

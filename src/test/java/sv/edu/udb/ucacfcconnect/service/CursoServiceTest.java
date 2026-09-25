@@ -63,7 +63,7 @@ class CursoServiceTest {
         solicitud.setCosto(new BigDecimal("125.00"));
         solicitud.setFechaInicio(LocalDate.of(2026, 10, 5));
         solicitud.setFechaFin(LocalDate.of(2026, 11, 5));
-        solicitud.setHorario("  Lunes y miércoles 18:00-20:00  ");
+        solicitud.setHorario("Lunes, Miércoles | 18:00-20:00");
         solicitud.setIdCategoria(1L);
         solicitud.setIdModalidad(2L);
 
@@ -106,6 +106,33 @@ class CursoServiceTest {
         );
 
         assertTrue(error.getMessage().contains("fecha de fin"));
+        verify(cursoRepository, never()).save(any());
+    }
+
+    @Test
+    void crearCursoRechazaFechaInicioPasada() {
+        solicitud.setFechaInicio(LocalDate.now().minusDays(1));
+        solicitud.setFechaFin(LocalDate.now().plusDays(1));
+
+        ReglaNegocioException error = assertThrows(
+                ReglaNegocioException.class,
+                () -> cursoService.crear(solicitud)
+        );
+
+        assertTrue(error.getMessage().contains("pasado"));
+        verify(cursoRepository, never()).save(any());
+    }
+
+    @Test
+    void crearCursoRechazaHoraFinAnteriorAlInicio() {
+        solicitud.setHorario("Lunes | 20:00-18:00");
+
+        ReglaNegocioException error = assertThrows(
+                ReglaNegocioException.class,
+                () -> cursoService.crear(solicitud)
+        );
+
+        assertTrue(error.getMessage().contains("hora de fin"));
         verify(cursoRepository, never()).save(any());
     }
 
@@ -195,7 +222,7 @@ class CursoServiceTest {
         curso.setCosto(new BigDecimal("125.00"));
         curso.setFechaInicio(LocalDate.of(2026, 10, 5));
         curso.setFechaFin(LocalDate.of(2026, 11, 5));
-        curso.setHorario("Lunes y miércoles 18:00-20:00");
+        curso.setHorario("Lunes, Miércoles | 18:00-20:00");
         curso.setActivo(true);
         curso.setCategoria(categoria);
         curso.setModalidad(modalidad);

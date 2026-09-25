@@ -94,6 +94,7 @@
                             <th scope="col">Categoría</th>
                             <th scope="col">Modalidad</th>
                             <th scope="col">Fechas</th>
+                            <th scope="col">Horario</th>
                             <th scope="col">Costo</th>
                             <th scope="col">Cupo</th>
                             <th scope="col">Estado</th>
@@ -156,28 +157,52 @@
             <div class="field">
                 <label for="course-start">Fecha de inicio *</label>
                 <input id="course-start" name="fechaInicio" type="date" required>
+                <small class="field-help">Al crear, debe ser hoy o una fecha futura.</small>
             </div>
             <div class="field">
                 <label for="course-end">Fecha de fin *</label>
                 <input id="course-end" name="fechaFin" type="date" required>
+                <small class="field-help">Debe ser igual o posterior al inicio.</small>
             </div>
             <div class="field">
                 <label for="course-duration">Duración en horas *</label>
                 <input id="course-duration" name="duracionHoras" type="number" min="1" step="1" required>
+                <small class="field-help">Número entero mayor que cero.</small>
             </div>
             <div class="field">
                 <label for="course-capacity">Cupo máximo *</label>
                 <input id="course-capacity" name="cupoMaximo" type="number" min="1" step="1" required>
+                <small class="field-help">Solo personas completas: 1, 2, 3...</small>
             </div>
             <div class="field">
                 <label for="course-cost">Costo en USD *</label>
                 <input id="course-cost" name="costo" type="number" min="0.01" step="0.01" required>
+                <small class="field-help">Mayor que $0, con máximo dos decimales.</small>
             </div>
-            <div class="field">
-                <label for="course-schedule">Horario *</label>
-                <input id="course-schedule" name="horario" type="text" maxlength="100"
-                       placeholder="Lunes y miércoles, 18:00-20:00" required>
-            </div>
+            <fieldset class="field field-wide schedule-field">
+                <legend>Horario *</legend>
+                <p class="field-help schedule-help">Selecciona uno o varios días y el rango de horas.</p>
+                <div class="weekday-options" role="group" aria-label="Días del curso">
+                    <label><input name="diasHorario" type="checkbox" value="Lunes">Lunes</label>
+                    <label><input name="diasHorario" type="checkbox" value="Martes">Martes</label>
+                    <label><input name="diasHorario" type="checkbox" value="Miércoles">Miércoles</label>
+                    <label><input name="diasHorario" type="checkbox" value="Jueves">Jueves</label>
+                    <label><input name="diasHorario" type="checkbox" value="Viernes">Viernes</label>
+                    <label><input name="diasHorario" type="checkbox" value="Sábado">Sábado</label>
+                    <label><input name="diasHorario" type="checkbox" value="Domingo">Domingo</label>
+                </div>
+                <div class="time-range">
+                    <div class="field">
+                        <label for="course-time-start">Hora de inicio *</label>
+                        <input id="course-time-start" name="horaInicio" type="time" step="300" required>
+                    </div>
+                    <span aria-hidden="true">hasta</span>
+                    <div class="field">
+                        <label for="course-time-end">Hora de fin *</label>
+                        <input id="course-time-end" name="horaFin" type="time" step="300" required>
+                    </div>
+                </div>
+            </fieldset>
         </div>
         <p id="dialog-error" class="dialog-error" role="alert"></p>
         <div class="dialog-actions">

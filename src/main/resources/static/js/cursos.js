@@ -17,8 +17,11 @@
     const sortFilter = document.getElementById('sort-filter');
     const formFields = [
         'titulo', 'descripcion', 'idCategoria', 'idModalidad', 'fechaInicio',
-        'fechaFin', 'duracionHoras', 'cupoMaximo', 'costo', 'horario'
+        'fechaFin', 'duracionHoras', 'cupoMaximo', 'costo'
     ];
+    const scheduleDays = [...form.querySelectorAll('input[name="diasHorario"]')];
+    const scheduleStart = form.elements.namedItem('horaInicio');
+    const scheduleEnd = form.elements.namedItem('horaFin');
 
     let page = 0;
     let size = 10;
@@ -27,6 +30,7 @@
     let dialogTrigger = null;
     let csrfToken;
     let loadNumber = 0;
+    let originalStartDate = null;
 
     async function obtenerCsrf() {
         if (csrfToken) return csrfToken;
@@ -137,12 +141,17 @@
         const mobileMeta = document.createElement('span');
         mobileMeta.className = 'course-mobile-meta';
         mobileMeta.textContent = curso.categoria + ' · ' + curso.modalidad + ' · ' + moneda(curso.costo);
-        titleCell.append(title, description, mobileMeta, estado(curso, 'mobile-state'), acciones(curso, 'mobile-actions'));
+        const mobileSchedule = document.createElement('span');
+        mobileSchedule.className = 'course-mobile-schedule';
+        mobileSchedule.textContent = curso.horario;
+        titleCell.append(title, description, mobileMeta, mobileSchedule,
+            estado(curso, 'mobile-state'), acciones(curso, 'mobile-actions'));
         row.append(titleCell);
 
         celda(row, curso.categoria);
         celda(row, curso.modalidad);
         celda(row, fecha(curso.fechaInicio) + ' - ' + fecha(curso.fechaFin), 'date-cell');
+        celda(row, curso.horario, 'schedule-cell');
         celda(row, moneda(curso.costo));
         celda(row, String(curso.cupoMaximo));
         const stateCell = document.createElement('td');
@@ -160,6 +169,91 @@
             const value = curso?.[field];
             control.value = value ?? '';
         });
+        llenarHorario(curso?.horario);
+    }
+
+    function llenarHorario(horario) {
+        scheduleDays.forEach((day) => { day.checked = false; });
+        scheduleStart.value = '';
+        scheduleEnd.value = '';
+        if (!horario) return;
+
+        const horarioNormalizado = horario.toLocaleLowerCase('es');
+        scheduleDays.forEach((day) => {
+            day.checked = horarioNormalizado.includes(day.value.toLocaleLowerCase('es'));
+        });
+        const rango = horario.match(/([01]\d|2[0-3]):[0-5]\d\s*-\s*([01]\d|2[0-3]):[0-5]\d/);
+        if (rango) {
+            scheduleStart.value = rango[1];
+            scheduleEnd.value = rango[2];
+        }
+    }
+
+    function construirHorario() {
+        const dias = scheduleDays.filter((day) => day.checked).map((day) => day.value);
+        return dias.join(', ') + ' | ' + scheduleStart.value + '-' + scheduleEnd.value;
+    }
+
+    function fechaLocalActual() {
+        const ahora = new Date();
+        const year = ahora.getFullYear();
+        const month = String(ahora.getMonth() + 1).padStart(2, '0');
+        const day = String(ahora.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    function actualizarLimiteFechaFin() {
+        const inicio = form.elements.namedItem('fechaInicio').value;
+        form.elements.namedItem('fechaFin').min = inicio || '';
+    }
+
+    function validarFormulario() {
+        const error = document.getElementById('dialog-error');
+        if (!form.reportValidity()) return false;
+
+        const inicio = form.elements.namedItem('fechaInicio');
+        const fin = form.elements.namedItem('fechaFin');
+        const hoy = fechaLocalActual();
+        if (inicio.value < hoy && (editingId === null || inicio.value !== originalStartDate)) {
+            error.textContent = 'La fecha de inicio no puede estar en el pasado.';
+            inicio.focus();
+            return false;
+        }
+        if (fin.value < inicio.value) {
+            error.textContent = 'La fecha de fin no puede ser anterior a la fecha de inicio.';
+            fin.focus();
+            return false;
+        }
+
+        for (const [name, label] of [['duracionHoras', 'La duración'], ['cupoMaximo', 'El cupo máximo']]) {
+            const control = form.elements.namedItem(name);
+            const value = Number(control.value);
+            if (!Number.isInteger(value) || value <= 0) {
+                error.textContent = label + ' debe ser un número entero mayor que cero.';
+                control.focus();
+                return false;
+            }
+        }
+
+        const cost = form.elements.namedItem('costo');
+        if (Number(cost.value) <= 0 || !/^\d+(?:\.\d{1,2})?$/.test(cost.value)) {
+            error.textContent = 'El costo debe ser mayor que cero y tener máximo dos decimales.';
+            cost.focus();
+            return false;
+        }
+
+        const firstSelectedDay = scheduleDays.find((day) => day.checked);
+        if (!firstSelectedDay) {
+            error.textContent = 'Selecciona al menos un día para el horario.';
+            scheduleDays[0].focus();
+            return false;
+        }
+        if (scheduleEnd.value <= scheduleStart.value) {
+            error.textContent = 'La hora de fin debe ser posterior a la hora de inicio.';
+            scheduleEnd.focus();
+            return false;
+        }
+        return true;
     }
 
     function abrirFormulario(mode, curso = null) {
@@ -167,6 +261,7 @@
         document.getElementById('dialog-error').textContent = '';
         llenarFormulario(curso);
         editingId = mode === 'new' ? null : curso.idCurso;
+        originalStartDate = curso?.fechaInicio ?? null;
         const readOnly = mode === 'view';
         document.getElementById('dialog-title').textContent =
             mode === 'new' ? 'Nuevo curso' : mode === 'edit' ? 'Editar curso' : 'Detalle del curso';
@@ -174,9 +269,11 @@
             mode === 'new' ? 'Completa la información de la oferta académica.' :
                 mode === 'edit' ? 'Actualiza los datos académicos y comerciales.' :
                     'Información registrada en el sistema.';
-        formFields.forEach((field) => {
-            form.elements.namedItem(field).disabled = readOnly;
+        form.querySelectorAll('input[name], textarea[name], select[name]').forEach((control) => {
+            control.disabled = readOnly;
         });
+        form.elements.namedItem('fechaInicio').min = mode === 'new' ? fechaLocalActual() : '';
+        actualizarLimiteFechaFin();
         document.getElementById('dialog-save').hidden = readOnly;
         document.getElementById('dialog-cancel').textContent = readOnly ? 'Cerrar' : 'Cancelar';
         document.getElementById('dialog-save').textContent = mode === 'new' ? 'Guardar curso' : 'Guardar cambios';
@@ -329,12 +426,7 @@
         event.preventDefault();
         const error = document.getElementById('dialog-error');
         error.textContent = '';
-        if (!form.reportValidity()) return;
-        if (form.elements.namedItem('fechaFin').value < form.elements.namedItem('fechaInicio').value) {
-            error.textContent = 'La fecha de fin no puede ser anterior a la fecha de inicio.';
-            form.elements.namedItem('fechaFin').focus();
-            return;
-        }
+        if (!validarFormulario()) return;
 
         const save = document.getElementById('dialog-save');
         const label = save.textContent;
@@ -351,7 +443,7 @@
                 duracionHoras: Number(form.elements.namedItem('duracionHoras').value),
                 cupoMaximo: Number(form.elements.namedItem('cupoMaximo').value),
                 costo: Number(form.elements.namedItem('costo').value),
-                horario: form.elements.namedItem('horario').value.trim()
+                horario: construirHorario()
             };
             await request(editingId ? api + '/' + editingId : api, {
                 method: editingId ? 'PUT' : 'POST',
@@ -421,6 +513,8 @@
         searchTimer = setTimeout(() => { page = 0; cargar(); }, 250);
     });
     form.addEventListener('submit', guardar);
+    form.elements.namedItem('fechaInicio').addEventListener('change', actualizarLimiteFechaFin);
+    scheduleStart.addEventListener('change', () => { scheduleEnd.min = scheduleStart.value; });
     [statusDialog, deleteDialog].forEach((modal) => modal.addEventListener('close', () => {
         if (dialogTrigger?.isConnected) dialogTrigger.focus();
         selectedCourse = null;

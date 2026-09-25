@@ -1,8 +1,10 @@
 package sv.edu.udb.ucacfcconnect.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,6 +32,7 @@ public class CursoDTO {
 
     @NotNull(message = "El costo es obligatorio")
     @DecimalMin(value = "0.0", inclusive = false, message = "El costo debe ser mayor a 0")
+    @Digits(integer = 8, fraction = 2, message = "El costo debe tener como máximo 8 enteros y 2 decimales")
     @Schema(example = "125.00")
     private BigDecimal costo;
 
@@ -48,7 +51,11 @@ public class CursoDTO {
 
     @NotBlank(message = "El horario es obligatorio")
     @Size(max = 100, message = "El horario no puede exceder 100 caracteres")
-    @Schema(example = "Lunes y miércoles, 18:00-20:00")
+    @Pattern(
+            regexp = "^(?:Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)(?:, (?:Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo))* \\| (?:[01]\\d|2[0-3]):[0-5]\\d-(?:[01]\\d|2[0-3]):[0-5]\\d$",
+            message = "El horario debe incluir días y un rango válido, por ejemplo: Lunes, Miércoles | 18:00-20:00"
+    )
+    @Schema(example = "Lunes, Miércoles | 18:00-20:00")
     private String horario;
 
     @NotNull(message = "Debe seleccionar una categoría")

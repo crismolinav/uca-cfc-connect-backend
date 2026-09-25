@@ -21,8 +21,11 @@ import sv.edu.udb.ucacfcconnect.repository.CategoriaRepository;
 import sv.edu.udb.ucacfcconnect.repository.CursoRepository;
 import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
 
-import java.util.Locale;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -117,7 +120,8 @@ public class CursoService {
 
     @Transactional
     public CursoResponseDTO crear(CursoDTO dto) {
-        validarFechas(dto);
+        validarFechas(dto, null);
+        validarHorario(dto.getHorario());
         Curso curso = new Curso();
         asignarDatos(curso, dto);
         curso.setActivo(true);
@@ -126,8 +130,9 @@ public class CursoService {
 
     @Transactional
     public CursoResponseDTO actualizar(Long id, CursoDTO dto) {
-        validarFechas(dto);
         Curso curso = buscarCurso(id);
+        validarFechas(dto, curso.getFechaInicio());
+        validarHorario(dto.getHorario());
         asignarDatos(curso, dto);
         return aRespuesta(cursoRepository.save(curso));
     }
@@ -175,11 +180,39 @@ public class CursoService {
         curso.setModalidad(modalidad);
     }
 
-    private void validarFechas(CursoDTO dto) {
+    private void validarFechas(CursoDTO dto, LocalDate fechaInicioActual) {
         if (dto.getFechaInicio() != null
                 && dto.getFechaFin() != null
                 && dto.getFechaFin().isBefore(dto.getFechaInicio())) {
             throw new ReglaNegocioException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+        if (dto.getFechaInicio() != null
+                && dto.getFechaInicio().isBefore(LocalDate.now())
+                && !dto.getFechaInicio().equals(fechaInicioActual)) {
+            throw new ReglaNegocioException("La fecha de inicio no puede estar en el pasado");
+        }
+    }
+
+    private void validarHorario(String horario) {
+        if (horario == null || horario.isBlank()) {
+            throw new ReglaNegocioException("Debe seleccionar al menos un día y un rango de horas");
+        }
+        int separador = horario.lastIndexOf(" | ");
+        if (separador < 1) {
+            throw new ReglaNegocioException("El horario no tiene el formato esperado");
+        }
+        String[] horas = horario.substring(separador + 3).split("-", -1);
+        if (horas.length != 2) {
+            throw new ReglaNegocioException("El horario no tiene el formato esperado");
+        }
+        try {
+            LocalTime inicio = LocalTime.parse(horas[0]);
+            LocalTime fin = LocalTime.parse(horas[1]);
+            if (!fin.isAfter(inicio)) {
+                throw new ReglaNegocioException("La hora de fin debe ser posterior a la hora de inicio");
+            }
+        } catch (DateTimeParseException ex) {
+            throw new ReglaNegocioException("Las horas deben utilizar el formato HH:mm");
         }
     }
 

@@ -26,12 +26,17 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("<h1 id=\"page-title\">Cursos</h1>")))
                 .andExpect(content().string(containsString("+ Nuevo curso")))
+                .andExpect(content().string(containsString("name=\"diasHorario\"")))
+                .andExpect(content().string(containsString("type=\"time\"")))
+                .andExpect(content().string(containsString("name=\"cupoMaximo\" type=\"number\" min=\"1\" step=\"1\"")))
                 .andExpect(content().string(containsString("/js/cursos.js")));
 
         mockMvc.perform(get("/js/cursos.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/javascript"))
                 .andExpect(content().string(containsString("/api/v1/cursos")))
-                .andExpect(content().string(containsString("cargarCatalogos")));
+                .andExpect(content().string(containsString("cargarCatalogos")))
+                .andExpect(content().string(containsString("construirHorario")))
+                .andExpect(content().string(containsString("Number.isInteger")));
     }
 }
