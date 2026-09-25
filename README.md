@@ -40,6 +40,8 @@ Si IntelliJ ya tiene un JDK 21 configurado, puede ejecutar `UcaCfcConnectApplica
 
 La API queda disponible en `http://localhost:8080`. La documentación interactiva está en `http://localhost:8080/swagger-ui.html` y el contrato OpenAPI en `http://localhost:8080/v3/api-docs`.
 
+La interfaz administrativa de cursos está disponible en `http://localhost:8080/admin/cursos.html`. Requiere iniciar sesión con una cuenta que tenga el rol `ADMIN`.
+
 ## Módulo de cursos
 
 | Método | Ruta | Función |

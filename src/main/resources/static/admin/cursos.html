@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Administración de cursos de UCA CFC Connect.">
+    <title>Cursos | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <script src="/js/cursos.js" defer></script>
+</head>
+<body>
+<div class="admin-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación de administración">
+        <button class="sidebar-close" id="sidebar-close" type="button">Cerrar menú</button>
+        <a class="sidebar-brand" href="/admin/index.html">UCA CFC<span>.</span></a>
+        <nav aria-label="Principal">
+            <span class="nav-group-label">Administración</span>
+            <a class="nav-link" href="/admin/index.html">Clientes</a>
+            <a class="nav-link" href="/admin/cursos.html" aria-current="page">Cursos</a>
+            <span class="nav-group-label nav-group-secondary">Otros módulos</span>
+            <span class="nav-pending">Cotizaciones <small>Próximamente</small></span>
+            <span class="nav-pending">Pagos <small>Próximamente</small></span>
+        </nav>
+        <div class="sidebar-footer">UCA CFC Connect<br><span>Panel de administración</span></div>
+    </aside>
+
+    <main class="admin-main" id="main-content">
+        <header class="topbar">
+            <button class="menu-button" id="menu-button" type="button" aria-controls="sidebar"
+                    aria-expanded="false" aria-label="Abrir menú">Menú</button>
+            <div class="topbar-spacer"></div>
+            <span id="admin-name" class="admin-name">Administrador</span>
+            <a class="account-link" href="/cuenta/perfil.html">Mi cuenta</a>
+            <button class="logout-button" id="logout-button" type="button">Cerrar sesión</button>
+        </header>
+
+        <section class="content" aria-labelledby="page-title">
+            <div class="page-intro">
+                <div>
+                    <h1 id="page-title">Cursos</h1>
+                    <p class="breadcrumb">Administración <span aria-hidden="true">/</span> Cursos</p>
+                </div>
+                <p class="page-description">Gestiona la oferta académica, fechas, cupos, costos y disponibilidad.</p>
+            </div>
+
+            <div class="toolbar course-toolbar">
+                <button class="new-button" id="new-course-button" type="button">+ Nuevo curso</button>
+                <button class="secondary-button" id="clear-filters" type="button">Limpiar filtros</button>
+            </div>
+
+            <section class="filters-panel" aria-label="Filtros de cursos">
+                <div class="search-wrap course-search">
+                    <label for="course-search">Buscar cursos</label>
+                    <input id="course-search" type="search" placeholder="Título o descripción" autocomplete="off">
+                </div>
+                <div class="filter-field">
+                    <label for="category-filter">Categoría</label>
+                    <select id="category-filter"><option value="">Todas</option></select>
+                </div>
+                <div class="filter-field">
+                    <label for="modality-filter">Modalidad</label>
+                    <select id="modality-filter"><option value="">Todas</option></select>
+                </div>
+                <div class="filter-field">
+                    <label for="status-filter">Estado</label>
+                    <select id="status-filter">
+                        <option value="">Todos</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="sort-filter">Ordenar por</label>
+                    <select id="sort-filter">
+                        <option value="titulo,asc">Título A-Z</option>
+                        <option value="fechaInicio,asc">Fecha más cercana</option>
+                        <option value="fechaInicio,desc">Fecha más lejana</option>
+                        <option value="costo,asc">Menor costo</option>
+                        <option value="costo,desc">Mayor costo</option>
+                        <option value="cupoMaximo,desc">Mayor cupo</option>
+                    </select>
+                </div>
+            </section>
+            <p id="action-status" class="action-status" role="status"></p>
+
+            <section class="list-panel" aria-label="Lista de cursos">
+                <p class="table-hint">Desliza la tabla para consultar todos los datos del curso.</p>
+                <div class="table-scroll">
+                    <table class="course-table">
+                        <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Curso</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col">Modalidad</th>
+                            <th scope="col">Fechas</th>
+                            <th scope="col">Costo</th>
+                            <th scope="col">Cupo</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody id="courses-body"></tbody>
+                    </table>
+                </div>
+                <p id="list-status" class="list-status" role="status">Cargando cursos...</p>
+                <div class="pagination" id="pagination" hidden>
+                    <div class="pagination-buttons">
+                        <button id="previous-page" type="button">Anterior</button>
+                        <span id="page-indicator" aria-live="polite"></span>
+                        <button id="next-page" type="button">Siguiente</button>
+                    </div>
+                    <label for="page-size">Mostrar</label>
+                    <select id="page-size">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span id="total-count"></span>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+
+<dialog id="course-dialog" class="course-dialog" aria-labelledby="dialog-title">
+    <form id="course-form" novalidate>
+        <div class="dialog-header">
+            <div>
+                <h2 id="dialog-title">Nuevo curso</h2>
+                <p id="dialog-description">Completa la información de la oferta académica.</p>
+            </div>
+            <button class="dialog-close" id="dialog-close" type="button" aria-label="Cerrar">Cerrar</button>
+        </div>
+        <div class="dialog-fields course-fields">
+            <div class="field field-wide">
+                <label for="course-title">Título *</label>
+                <input id="course-title" name="titulo" type="text" minlength="3" maxlength="150" required>
+            </div>
+            <div class="field field-wide">
+                <label for="course-description">Descripción *</label>
+                <textarea id="course-description" name="descripcion" minlength="10" maxlength="5000" rows="3" required></textarea>
+            </div>
+            <div class="field">
+                <label for="course-category">Categoría *</label>
+                <select id="course-category" name="idCategoria" required>
+                    <option value="">Selecciona una categoría</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="course-modality">Modalidad *</label>
+                <select id="course-modality" name="idModalidad" required>
+                    <option value="">Selecciona una modalidad</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="course-start">Fecha de inicio *</label>
+                <input id="course-start" name="fechaInicio" type="date" required>
+            </div>
+            <div class="field">
+                <label for="course-end">Fecha de fin *</label>
+                <input id="course-end" name="fechaFin" type="date" required>
+            </div>
+            <div class="field">
+                <label for="course-duration">Duración en horas *</label>
+                <input id="course-duration" name="duracionHoras" type="number" min="1" step="1" required>
+            </div>
+            <div class="field">
+                <label for="course-capacity">Cupo máximo *</label>
+                <input id="course-capacity" name="cupoMaximo" type="number" min="1" step="1" required>
+            </div>
+            <div class="field">
+                <label for="course-cost">Costo en USD *</label>
+                <input id="course-cost" name="costo" type="number" min="0.01" step="0.01" required>
+            </div>
+            <div class="field">
+                <label for="course-schedule">Horario *</label>
+                <input id="course-schedule" name="horario" type="text" maxlength="100"
+                       placeholder="Lunes y miércoles, 18:00-20:00" required>
+            </div>
+        </div>
+        <p id="dialog-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions">
+            <button class="secondary-button" id="dialog-cancel" type="button">Cancelar</button>
+            <button class="new-button" id="dialog-save" type="submit">Guardar curso</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="status-dialog" class="status-dialog" aria-labelledby="status-dialog-title"
+        aria-describedby="status-dialog-description">
+    <div class="status-dialog-content">
+        <h2 id="status-dialog-title">Cambiar estado</h2>
+        <p id="status-dialog-description"></p>
+        <p id="status-dialog-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions">
+            <button id="status-cancel" class="secondary-button" type="button">Cancelar</button>
+            <button id="status-confirm" class="new-button" type="button">Confirmar</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="delete-dialog" class="status-dialog" aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description">
+    <div class="status-dialog-content">
+        <h2 id="delete-dialog-title">Eliminar curso</h2>
+        <p id="delete-dialog-description"></p>
+        <p class="dialog-note">Si el curso tiene inscripciones o actividades relacionadas, el sistema impedirá eliminarlo.</p>
+        <p id="delete-dialog-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions">
+            <button id="delete-cancel" class="secondary-button" type="button">Cancelar</button>
+            <button id="delete-confirm" class="new-button danger-button" type="button">Eliminar curso</button>
+        </div>
+    </div>
+</dialog>
+</body>
+</html>

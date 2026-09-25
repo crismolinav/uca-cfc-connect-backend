@@ -74,6 +74,7 @@ public class SecurityConfig {
                                 "/aprendizaje.html",
                                 "/configuracion.html",
                                 "/admin.html",
+                                "/cursos.html",
                                 "/auth/**",
                                 "/cuenta/**",
                                 "/cliente/**",

@@ -49,4 +49,9 @@ public class PageRedirectController {
     public String administracion() {
         return "redirect:/admin/index.html";
     }
+
+    @GetMapping("/cursos.html")
+    public String cursos() {
+        return "redirect:/admin/cursos.html";
+    }
 }
