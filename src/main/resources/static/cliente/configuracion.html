@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Configuración de apariencia de UCA CFC Connect.">
+    <title>Configuración | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/cliente.css">
+    <script src="/js/client-shell.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+</head>
+<body data-page="configuracion">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="/cliente/index.html" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
+        <nav class="primary-nav" aria-label="Principal">
+            <a href="/cliente/index.html#explorar">Explorar</a>
+            <a href="/cliente/aprendizaje.html">Mi aprendizaje</a>
+            <a href="/cliente/index.html#servicios">Servicios</a>
+        </nav>
+        <form class="site-search" role="search" action="/cliente/index.html" method="get">
+            <label class="visually-hidden" for="client-search-input">Buscar formatos y servicios</label>
+            <input id="client-search-input" name="q" type="search" placeholder="Buscar formatos y servicios" autocomplete="off">
+            <button type="submit" aria-label="Buscar formatos de formación"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
+        </form>
+        <div class="account-control">
+            <button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button>
+            <nav id="account-menu" class="account-menu" aria-label="Cuenta" hidden>
+                <a href="/cliente/aprendizaje.html">Mi aprendizaje</a>
+                <a href="/cliente/configuracion.html" aria-current="page">Configuración</a>
+                <button id="logout-button" type="button">Cerrar sesión</button>
+            </nav>
+        </div>
+    </div>
+</header>
+<main id="contenido" class="page-shell inner-page settings-page">
+    <p id="client-loading" class="loading" role="status">Cargando configuración...</p>
+    <p id="client-error" class="error-message" role="alert"></p>
+    <div id="client-content" hidden>
+        <h1>Configuración de cuenta</h1>
+        <p class="settings-lead">Personaliza cómo se muestra tu espacio de aprendizaje.</p>
+        <section class="settings-card personal-card" aria-labelledby="personal-title">
+            <div class="settings-card-heading"><h2 id="personal-title">Datos personales</h2><p>Consulta tus datos de cuenta y la zona horaria de este navegador.</p></div>
+            <div class="personal-fields">
+                <div><label for="settings-name">Nombre completo</label><input id="settings-name" type="text" readonly></div>
+                <div><label for="settings-email">Dirección de correo electrónico</label><input id="settings-email" type="email" readonly></div>
+                <div><label for="settings-timezone">Zona horaria del navegador</label><select id="settings-timezone" disabled><option>Zona local del navegador</option></select></div>
+                <div><label for="settings-language">Idioma</label><select id="settings-language" disabled><option>Español</option></select></div>
+            </div>
+            <button class="settings-save" type="button" disabled>Guardar cambios</button>
+            <p class="settings-availability">La edición de datos personales estará disponible próximamente.</p>
+        </section>
+        <section class="settings-card" aria-labelledby="appearance-title">
+            <div><h2 id="appearance-title">Apariencia</h2><p>El modo oscuro estará disponible próximamente.</p></div>
+            <div class="appearance-control"><label class="visually-hidden" for="appearance-select">Apariencia</label><select id="appearance-select" aria-describedby="appearance-hint"><option value="light">Modo claro</option><option value="dark" disabled>Modo oscuro · próximamente</option></select><span id="appearance-hint" class="visually-hidden">Por ahora solo está disponible el modo claro.</span></div>
+        </section>
+        <section class="settings-card delete-card" aria-labelledby="delete-title">
+            <div class="delete-card-row"><div><h2 id="delete-title">Eliminar cuenta</h2><p>Eliminar una cuenta es una acción permanente. Por ahora, esta función no está habilitada.</p></div><button type="button" disabled>Eliminar cuenta</button></div>
+            <p class="delete-notice"><span aria-hidden="true">!</span> La eliminación de cuentas estará disponible próximamente.</p>
+        </section>
+    </div>
+</main>
+</body>
+</html>

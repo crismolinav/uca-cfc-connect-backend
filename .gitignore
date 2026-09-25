@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Database dumps ###
+*.sql
+
+### Local secrets ###
+.env
+.env.*
+!.env.example

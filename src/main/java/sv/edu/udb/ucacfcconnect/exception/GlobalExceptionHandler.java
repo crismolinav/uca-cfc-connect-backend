@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import sv.edu.udb.ucacfcconnect.dto.ErrorResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.auth.ErrorResponse;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -25,15 +26,12 @@ public class GlobalExceptionHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> manejarValidacion(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<Map<String, String>> manejarValidacion(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new LinkedHashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errores.putIfAbsent(error.getField(), error.getDefaultMessage());
         }
-        return construir(HttpStatus.BAD_REQUEST, "La solicitud contiene datos inválidos", request, errores);
+        return ResponseEntity.badRequest().body(errores);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -104,6 +102,17 @@ public class GlobalExceptionHandler {
                 request,
                 Map.of()
         );
+    }
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> manejarApiException(ApiException ex, HttpServletRequest request) {
+        return ResponseEntity.status(ex.getStatus()).body(new ErrorResponse(
+                Instant.now(),
+                ex.getStatus().value(),
+                ex.getStatus().getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        ));
     }
 
     @ExceptionHandler(Exception.class)

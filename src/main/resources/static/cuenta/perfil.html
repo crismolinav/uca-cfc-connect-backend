@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Perfil de UCA CFC Connect.">
+    <title>Mi cuenta | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body data-page="perfil">
+<main class="profile-layout">
+    <section class="profile-card" aria-labelledby="profile-title">
+        <div class="profile-topline">
+            <a class="brand" href="/cuenta/perfil.html" aria-label="UCA CFC Connect, perfil">
+                <span class="brand-mark" aria-hidden="true">U</span>
+                <span>UCA CFC Connect</span>
+            </a>
+            <button id="logout-button" class="text-button" type="button">Cerrar sesión</button>
+        </div>
+
+        <div id="profile-loading" class="profile-loading" role="status">Cargando tu cuenta...</div>
+        <div id="profile-content" hidden>
+            <p class="profile-label">Sesión iniciada</p>
+            <h1 id="profile-title">Hola, <span id="profile-name"></span></h1>
+            <p class="profile-intro">Tu autenticación está funcionando correctamente.</p>
+
+            <dl class="profile-data">
+                <div><dt>Correo</dt><dd id="profile-email"></dd></div>
+                <div id="profile-dui-row" hidden><dt>DUI</dt><dd id="profile-dui"></dd></div>
+                <div><dt>Rol</dt><dd id="profile-role"></dd></div>
+                <div><dt>Acceso</dt><dd id="profile-provider"></dd></div>
+            </dl>
+
+            <p id="admin-entry" class="admin-entry" hidden>
+                <a class="primary-button" href="/admin/index.html">Abrir administración</a>
+            </p>
+
+            <form id="complete-dui-form" class="auth-form profile-completion" hidden novalidate>
+                <div>
+                    <h2>Completa tu registro</h2>
+                    <p class="profile-intro">Google no comparte tu DUI. Agrégalo para completar tu perfil de cliente.</p>
+                </div>
+                <div class="field">
+                    <label for="dui">DUI</label>
+                    <input id="dui" name="dui" type="text" inputmode="numeric" autocomplete="off"
+                           placeholder="12345678-9" maxlength="10" pattern="[0-9]{8}-[0-9]" required
+                           aria-describedby="dui-help dui-error">
+                    <p id="dui-help" class="field-help">Escríbelo con guion, como aparece en tu documento.</p>
+                    <p id="dui-error" class="field-error" aria-live="polite"></p>
+                </div>
+                <p id="form-status" class="form-status" role="alert"></p>
+                <button class="primary-button" type="submit" data-idle-label="Guardar DUI">Guardar DUI</button>
+            </form>
+        </div>
+        <p id="profile-error" class="form-status" role="alert"></p>
+    </section>
+    <aside class="profile-visual" aria-hidden="true">
+        <img src="/assets/students-studying.png" alt="">
+    </aside>
+</main>
+</body>
+</html>

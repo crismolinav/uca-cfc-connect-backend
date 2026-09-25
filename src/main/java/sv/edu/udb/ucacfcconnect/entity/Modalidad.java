@@ -41,3 +41,4 @@ public class Modalidad {
         this.descripcion = descripcion;
     }
 }
+

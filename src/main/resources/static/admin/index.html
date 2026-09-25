@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Administración de clientes de UCA CFC Connect.">
+    <title>Clientes | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <script src="/js/admin.js" defer></script>
+</head>
+<body>
+<div class="admin-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación de administración">
+        <button class="sidebar-close" id="sidebar-close" type="button">Cerrar menú</button>
+        <a class="sidebar-brand" href="/admin/index.html">UCA CFC<span>.</span></a>
+        <nav aria-label="Principal">
+            <span class="nav-group-label">Administración</span>
+            <a class="nav-link" href="/admin/index.html" aria-current="page">Clientes</a>
+            <span class="nav-group-label nav-group-secondary">Otros módulos</span>
+            <span class="nav-pending">Cursos <small>Próximamente</small></span>
+            <span class="nav-pending">Cotizaciones <small>Próximamente</small></span>
+            <span class="nav-pending">Pagos <small>Próximamente</small></span>
+        </nav>
+        <div class="sidebar-footer">UCA CFC Connect<br><span>Panel de administración</span></div>
+    </aside>
+
+    <main class="admin-main" id="main-content">
+        <header class="topbar">
+            <button class="menu-button" id="menu-button" type="button" aria-controls="sidebar"
+                    aria-expanded="false" aria-label="Abrir menú">Menú</button>
+            <div class="topbar-spacer"></div>
+            <span id="admin-name" class="admin-name">Administrador</span>
+            <a class="account-link" href="/cuenta/perfil.html">Mi cuenta</a>
+            <button class="logout-button" id="logout-button" type="button">Cerrar sesión</button>
+        </header>
+
+        <section class="content" aria-labelledby="page-title">
+            <div class="page-intro">
+                <div>
+                    <h1 id="page-title">Clientes</h1>
+                    <p class="breadcrumb">Administración <span aria-hidden="true">/</span> Clientes</p>
+                </div>
+                <p class="page-description">Consulta y administra los datos de personas y empresas.</p>
+            </div>
+
+            <div class="toolbar">
+                <button class="new-button" id="new-client-button" type="button">+ Nuevo cliente</button>
+                <div class="search-wrap">
+                    <label for="client-search">Buscar clientes</label>
+                    <input id="client-search" type="search" placeholder="Nombre, correo, DUI o empresa"
+                           autocomplete="off">
+                </div>
+            </div>
+            <p id="action-status" class="action-status" role="status"></p>
+
+            <section class="list-panel" aria-label="Lista de clientes">
+                <p class="table-hint">Desliza la tabla para ver más datos del cliente.</p>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">DUI / NIT</th>
+                            <th scope="col">Empresa</th>
+                            <th scope="col">Correo</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Estado de acceso</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody id="clients-body"></tbody>
+                    </table>
+                </div>
+                <p id="list-status" class="list-status" role="status">Cargando clientes...</p>
+                <div class="pagination" id="pagination" hidden>
+                    <div class="pagination-buttons">
+                        <button id="previous-page" type="button">Anterior</button>
+                        <span id="page-indicator" aria-live="polite"></span>
+                        <button id="next-page" type="button">Siguiente</button>
+                    </div>
+                    <label for="page-size">Mostrar</label>
+                    <select id="page-size">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span id="total-count"></span>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+
+<dialog id="client-dialog" aria-labelledby="dialog-title">
+    <form id="client-form" novalidate>
+        <div class="dialog-header">
+            <div>
+                <h2 id="dialog-title">Nuevo cliente</h2>
+                <p id="dialog-description">Completa los datos para registrar un cliente.</p>
+            </div>
+            <button class="dialog-close" id="dialog-close" type="button" aria-label="Cerrar">Cerrar</button>
+        </div>
+        <div class="dialog-fields">
+            <div class="field"><label for="client-name">Nombre completo *</label>
+                <input id="client-name" name="nombre" type="text" maxlength="120" autocomplete="name" required></div>
+            <div class="field"><label for="client-document">DUI / NIT</label>
+                <input id="client-document" name="duiNit" type="text" maxlength="20" autocomplete="off"></div>
+            <div class="field"><label for="client-company">Empresa</label>
+                <input id="client-company" name="empresa" type="text" maxlength="150" autocomplete="organization"></div>
+            <div class="field"><label for="client-email">Correo electrónico</label>
+                <input id="client-email" name="correo" type="email" maxlength="120" autocomplete="email"></div>
+            <div class="field"><label for="client-phone">Teléfono</label>
+                <input id="client-phone" name="telefono" type="tel" maxlength="20" autocomplete="tel"></div>
+            <div class="field field-wide"><label for="client-address">Dirección</label>
+                <input id="client-address" name="direccion" type="text" maxlength="255" autocomplete="street-address"></div>
+        </div>
+        <p id="dialog-note" class="dialog-note" hidden></p>
+        <p id="dialog-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions">
+            <button class="secondary-button" id="dialog-cancel" type="button">Cancelar</button>
+            <button class="new-button" id="dialog-save" type="submit">Guardar cliente</button>
+        </div>
+    </form>
+</dialog>
+<dialog id="status-dialog" class="status-dialog" aria-labelledby="status-dialog-title" aria-describedby="status-dialog-description">
+    <div class="status-dialog-content">
+        <h2 id="status-dialog-title">Cambiar estado de acceso</h2>
+        <p id="status-dialog-description"></p>
+        <p id="status-dialog-error" class="dialog-error" role="alert"></p>
+        <div class="dialog-actions">
+            <button id="status-cancel" class="secondary-button" type="button">Cancelar</button>
+            <button id="status-confirm" class="new-button" type="button">Confirmar</button>
+        </div>
+    </div>
+</dialog>
+</body>
+</html>
