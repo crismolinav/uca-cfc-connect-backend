@@ -110,7 +110,8 @@ class CursoFrontendIntegrationTests {
     @Test
     void todasLasPantallasAdministrativasCompartenLaMismaNavegacion() throws Exception {
         for (String ruta : new String[]{
-                "/admin/index.html", "/admin/cursos.html", "/admin/diplomados.html"
+                "/admin/index.html", "/admin/cursos.html", "/admin/diplomados.html",
+                "/admin/docentes.html", "/admin/recepcionistas.html", "/admin/operaciones.html"
         }) {
             mockMvc.perform(get(ruta))
                     .andExpect(status().isOk())
@@ -119,9 +120,7 @@ class CursoFrontendIntegrationTests {
                     .andExpect(content().string(containsString("href=\"/admin/diplomados.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/docentes.html\"")))
                     .andExpect(content().string(containsString("href=\"/admin/recepcionistas.html\"")))
-                    .andExpect(content().string(containsString("nav-pending\">Agenda <small>")))
-                    .andExpect(content().string(containsString("nav-pending\">Cotizaciones <small>")))
-                    .andExpect(content().string(containsString("nav-pending\">Pagos <small>")));
+                    .andExpect(content().string(containsString("href=\"/admin/operaciones.html\"")));
         }
     }
 }
