@@ -39,4 +39,23 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("construirHorario")))
                 .andExpect(content().string(containsString("Number.isInteger")));
     }
+
+    @Test
+    void sirveElCatalogoRealDeCursosParaClientes() throws Exception {
+        mockMvc.perform(get("/cliente/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(containsString("<h2 id=\"catalog-title\">Cursos disponibles</h2>")))
+                .andExpect(content().string(containsString("id=\"course-category-filter\"")))
+                .andExpect(content().string(containsString("id=\"course-modality-filter\"")))
+                .andExpect(content().string(containsString("id=\"course-detail-dialog\"")))
+                .andExpect(content().string(containsString("/js/cliente.js")));
+
+        mockMvc.perform(get("/js/cliente.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/javascript"))
+                .andExpect(content().string(containsString("activo: 'true'")))
+                .andExpect(content().string(containsString("/catalogos/categorias")))
+                .andExpect(content().string(containsString("Ver detalles")));
+    }
 }
