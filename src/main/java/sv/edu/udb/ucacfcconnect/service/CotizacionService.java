@@ -137,7 +137,7 @@ public class CotizacionService {
             }
             detalle.setSubtotal(detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad())));
             return detalles.save(detalle);
-        }).toList();
+        }).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
     }
 
     private Cotizacion buscar(Long id) {

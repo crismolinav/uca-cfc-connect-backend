@@ -14,6 +14,7 @@ import sv.edu.udb.ucacfcconnect.entity.Cliente;
 import sv.edu.udb.ucacfcconnect.entity.Rol;
 import sv.edu.udb.ucacfcconnect.entity.Usuario;
 import sv.edu.udb.ucacfcconnect.repository.ClienteRepository;
+import sv.edu.udb.ucacfcconnect.repository.EspacioRepository;
 import sv.edu.udb.ucacfcconnect.repository.RolRepository;
 import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 import sv.edu.udb.ucacfcconnect.service.JwtService;
@@ -25,6 +26,7 @@ import java.time.ZoneId;
 import java.util.Map;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +41,7 @@ class AdminOperacionesIntegrationTests {
     @Autowired RolRepository roles;
     @Autowired UsuarioRepository usuarios;
     @Autowired ClienteRepository clientes;
+    @Autowired EspacioRepository espacios;
     @Autowired JwtService jwt;
     @Autowired RecepcionOperacionesService operaciones;
 
@@ -58,6 +61,7 @@ class AdminOperacionesIntegrationTests {
                         .header("Authorization", "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON).content(espacio))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.nombre").value("Sala de reuniones"));
+        assertEquals(new BigDecimal("24.00"), espacios.findAll().getFirst().getDuracionMaximaHoras());
         mvc.perform(get("/api/v1/admin/operaciones/espacios")
                         .header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].nombre").value("Sala de reuniones"));

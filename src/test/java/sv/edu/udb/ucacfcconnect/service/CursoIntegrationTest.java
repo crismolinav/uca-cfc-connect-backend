@@ -17,6 +17,8 @@ import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -121,8 +123,10 @@ class CursoIntegrationTest {
         dto.setDuracionHoras(20);
         dto.setCupoMaximo(25);
         dto.setCosto(new BigDecimal("125.00"));
-        dto.setFechaInicio(LocalDate.of(2026, 10, 5));
-        dto.setFechaFin(LocalDate.of(2026, 11, 5));
+        LocalDate inicio = LocalDate.now().plusDays(7)
+                .with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY));
+        dto.setFechaInicio(inicio);
+        dto.setFechaFin(inicio.plusWeeks(4).plusDays(2));
         dto.setHorario("Lunes, Miércoles | 18:00-20:00");
         dto.setIdCategoria(idCategoria);
         dto.setIdModalidad(idModalidad);

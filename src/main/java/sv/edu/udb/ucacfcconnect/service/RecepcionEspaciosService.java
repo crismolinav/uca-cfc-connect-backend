@@ -24,6 +24,7 @@ import java.util.List;
 @Service
 public class RecepcionEspaciosService {
     private static final ZoneId ZONA = ZoneId.of("America/El_Salvador");
+    private static final BigDecimal DURACION_MAXIMA_PREDETERMINADA = new BigDecimal("24.00");
     private final EspacioRepository espacios;
     private final AlquilerRepository alquileres;
     private final ClienteRepository clientes;
@@ -53,6 +54,9 @@ public class RecepcionEspaciosService {
         espacio.setPrecio(request.precio());
         espacio.setEquipamiento(opcional(request.equipamiento()));
         espacio.setDisponible(request.disponible());
+        if (espacio.getDuracionMaximaHoras() == null) {
+            espacio.setDuracionMaximaHoras(DURACION_MAXIMA_PREDETERMINADA);
+        }
         return EspacioView.from(espacios.save(espacio));
     }
 
