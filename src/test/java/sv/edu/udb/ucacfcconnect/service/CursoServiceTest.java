@@ -24,6 +24,8 @@ import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 import java.util.List;
 
@@ -63,8 +65,10 @@ class CursoServiceTest {
         solicitud.setDuracionHoras(20);
         solicitud.setCupoMaximo(25);
         solicitud.setCosto(new BigDecimal("125.00"));
-        solicitud.setFechaInicio(LocalDate.of(2026, 10, 5));
-        solicitud.setFechaFin(LocalDate.of(2026, 11, 5));
+        LocalDate inicio = LocalDate.now().plusDays(7)
+                .with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY));
+        solicitud.setFechaInicio(inicio);
+        solicitud.setFechaFin(inicio.plusWeeks(4).plusDays(2));
         solicitud.setHorario("Lunes, Miércoles | 18:00-20:00");
         solicitud.setIdCategoria(1L);
         solicitud.setIdModalidad(2L);
@@ -100,7 +104,7 @@ class CursoServiceTest {
 
     @Test
     void crearCursoRechazaFechaFinAnterior() {
-        solicitud.setFechaFin(LocalDate.of(2026, 10, 4));
+        solicitud.setFechaFin(solicitud.getFechaInicio().minusDays(1));
 
         ReglaNegocioException error = assertThrows(
                 ReglaNegocioException.class,
@@ -236,8 +240,8 @@ class CursoServiceTest {
         curso.setDuracionHoras(20);
         curso.setCupoMaximo(25);
         curso.setCosto(new BigDecimal("125.00"));
-        curso.setFechaInicio(LocalDate.of(2026, 10, 5));
-        curso.setFechaFin(LocalDate.of(2026, 11, 5));
+        curso.setFechaInicio(solicitud.getFechaInicio());
+        curso.setFechaFin(solicitud.getFechaFin());
         curso.setHorario("Lunes, Miércoles | 18:00-20:00");
         curso.setActivo(true);
         curso.setCategoria(categoria);

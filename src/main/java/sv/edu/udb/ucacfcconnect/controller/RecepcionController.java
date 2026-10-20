@@ -20,6 +20,7 @@ import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.*;
 import sv.edu.udb.ucacfcconnect.service.AdminClienteService;
 import sv.edu.udb.ucacfcconnect.service.RecepcionEspaciosService;
 import sv.edu.udb.ucacfcconnect.service.RecepcionOperacionesService;
+import sv.edu.udb.ucacfcconnect.service.InvitacionClienteService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,12 +32,14 @@ public class RecepcionController {
     private final RecepcionEspaciosService espacios;
     private final RecepcionOperacionesService operaciones;
     private final AdminClienteService clientes;
+    private final InvitacionClienteService invitaciones;
 
     public RecepcionController(RecepcionEspaciosService espacios, RecepcionOperacionesService operaciones,
-                               AdminClienteService clientes) {
+                               AdminClienteService clientes, InvitacionClienteService invitaciones) {
         this.espacios = espacios;
         this.operaciones = operaciones;
         this.clientes = clientes;
+        this.invitaciones = invitaciones;
     }
 
     @GetMapping("/catalogos")
@@ -52,6 +55,11 @@ public class RecepcionController {
     @PostMapping("/clientes")
     @ResponseStatus(HttpStatus.CREATED)
     public ClienteResumen crearCliente(@Valid @RequestBody ClienteRequest request) { return clientes.crear(request); }
+
+    @PostMapping("/clientes/{id}/invitacion")
+    public InvitacionClienteService.InvitacionEnviada invitarCliente(@PathVariable Long id) {
+        return invitaciones.invitar(id);
+    }
 
     @GetMapping("/espacios")
     public List<RecepcionEspaciosService.EspacioView> espacios() { return espacios.espacios(); }

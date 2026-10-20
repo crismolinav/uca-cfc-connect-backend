@@ -89,7 +89,7 @@
             const key = select.dataset.options;
             let items = key === 'espacios' ? state.espacios.filter((e) => e.disponible) : state.catalogos[key];
             if (key === 'servicios') items = items.filter((s) => s.activo);
-            opciones(select, items || [], (item) => key === 'participantes'
+            opciones(select, items || [], (item) => key === 'participantes' || key === 'participantesInscribibles'
                 ? item.nombre + ' ' + item.apellido + ' · ' + item.cliente
                 : item.nombre);
         });
@@ -238,8 +238,47 @@
 
     function pintarClientes() {
         mostrarLista('clients-list', state.catalogos.clientes,
-            (client) => fila(client.nombre, client.duiNit ? 'DUI / NIT: ' + client.duiNit : 'Sin documento'),
+            (client) => {
+                const button = !client.tieneCuenta && client.correo
+                    ? texto('button', 'Enviar invitación', 'item-action') : null;
+                if (button) {
+                    button.type = 'button';
+                    button.addEventListener('click', async () => {
+                        button.disabled = true;
+                        try {
+                            const result = await request(api + '/clientes/' + client.id + '/invitacion', {method: 'POST'});
+                            mostrarInvitacion(result);
+                        } catch (error) { aviso(error.message, true); }
+                        finally { button.disabled = false; }
+                    });
+                }
+                return fila(client.nombre, (client.duiNit ? 'DUI / NIT: ' + client.duiNit : 'Sin documento') +
+                    (client.correo ? ' · ' + client.correo : '') +
+                    (client.tieneCuenta ? ' · Cuenta creada' : ' · Sin cuenta'), null, button);
+            },
             'Todavía no hay clientes registrados.');
+    }
+
+    function mostrarInvitacion(result) {
+        aviso(result.mensaje);
+        const target = document.getElementById('invitation-result');
+        target.replaceChildren(texto('span', result.mensaje));
+        if (result.enlaceLocal) {
+            const hint = texto('span', 'Copia el enlace y ábrelo en una ventana privada para no cambiar la sesión de recepción.');
+            const input = document.createElement('input');
+            input.className = 'invitation-link';
+            input.type = 'text';
+            input.readOnly = true;
+            input.value = result.enlaceLocal;
+            input.setAttribute('aria-label', 'Enlace de invitación local');
+            const copy = texto('button', 'Copiar enlace', 'item-action');
+            copy.type = 'button';
+            copy.addEventListener('click', async () => {
+                try { await navigator.clipboard.writeText(input.value); aviso('Enlace copiado. Ábrelo en una ventana privada.'); }
+                catch { input.select(); aviso('Copia el enlace seleccionado y ábrelo en una ventana privada.'); }
+            });
+            target.append(hint, input, copy);
+        }
     }
 
     function pintarParticipantes() {
@@ -357,7 +396,7 @@
             });
             try {
                 const editingId = form.dataset.editingId;
-                await request(api + path + (editingId ? '/' + editingId : ''), {
+                const saved = await request(api + path + (editingId ? '/' + editingId : ''), {
                     method: editingId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 });
@@ -379,6 +418,17 @@
                 feedback.textContent = success;
                 await cargarCatalogos();
                 await cargarPanel(document.querySelector('.nav-link.is-current').dataset.panel);
+                if (id === 'client-form' && !editingId && data.correo) {
+                    try {
+                        const invitation = await request(api + '/clientes/' + saved.id + '/invitacion', {method: 'POST'});
+                        mostrarInvitacion(invitation);
+                        feedback.textContent = 'Cliente guardado. ' + invitation.mensaje;
+                    } catch (error) {
+                        aviso('Cliente guardado, pero no se pudo enviar la invitación: ' + error.message, true);
+                        feedback.textContent = 'Cliente guardado. Usa “Enviar invitación” para reintentar: ' + error.message;
+                        feedback.classList.add('is-error');
+                    }
+                }
             } catch (error) {
                 aviso(error.message, true);
                 feedback.textContent = error.message;

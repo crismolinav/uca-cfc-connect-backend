@@ -77,16 +77,17 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             </section>
 
             <section id="panel-clientes" class="panel" aria-labelledby="clientes-title" hidden>
-                <div class="section-heading"><div><h2 id="clientes-title">Clientes</h2><p>Registra a la persona o empresa a quien se asignará un servicio.</p></div></div>
+                <div class="section-heading"><div><h2 id="clientes-title">Clientes</h2><p>Registra a la persona o empresa a quien se asignará un servicio. Si proporcionas un correo, podrá recibir una invitación para crear su cuenta.</p></div></div>
                 <section class="form-card"><h3>Nuevo cliente</h3><form id="client-form" class="form-grid">
                     <label>Nombre completo<input name="nombre" required maxlength="120"></label>
                     <label>DUI o NIT<input name="duiNit" maxlength="20"></label>
                     <label>Empresa<input name="empresa" maxlength="150"></label>
-                    <label>Correo<input name="correo" type="email" maxlength="120"></label>
+                    <label>Correo para la invitación<input name="correo" type="email" autocomplete="email" maxlength="120"></label>
                     <label>Teléfono<input name="telefono" type="tel" maxlength="20"></label>
                     <label>Dirección<input name="direccion" maxlength="255"></label>
                     <button type="submit">Guardar cliente</button>
                 </form></section>
+                <p id="invitation-result" role="status" aria-live="polite"></p>
                 <section class="list-card"><h3>Clientes registrados</h3><div id="clients-list" class="item-list"></div></section>
             </section>
 
@@ -104,9 +105,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             </section>
 
             <section id="panel-inscripciones" class="panel" aria-labelledby="enroll-title" hidden>
-                <div class="section-heading"><div><h2 id="enroll-title">Inscripciones</h2><p>Inscribe a un participante en un curso o diplomado activo.</p></div></div>
+                <div class="section-heading"><div><h2 id="enroll-title">Inscripciones</h2><p>Solo aparecen participantes con una cuenta de cliente activa vinculada a su correo. No necesitan tener la sesión abierta en este momento.</p></div></div>
                 <section class="form-card"><h3>Nueva inscripción</h3><form id="enrollment-form" class="form-grid">
-                    <label>Participante<select name="participanteId" data-options="participantes" required></select></label>
+                    <label>Participante<select name="participanteId" data-options="participantesInscribibles" required></select></label>
                     <label>Tipo de programa<select name="programaTipo" data-dependent="programaId" required><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option></select></label>
                     <label>Programa<select name="programaId" required></select></label>
                     <button type="submit">Crear inscripción</button>

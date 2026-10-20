@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sv.edu.udb.ucacfcconnect.dto.auth.AceptarInvitacionRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.AuthResponse;
 import sv.edu.udb.ucacfcconnect.dto.auth.DuiRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.LoginRequest;
@@ -23,6 +25,7 @@ import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.security.AuthCookieService;
 import sv.edu.udb.ucacfcconnect.service.AuthService;
 import sv.edu.udb.ucacfcconnect.service.AuthSession;
+import sv.edu.udb.ucacfcconnect.service.InvitacionClienteService;
 
 import java.net.URI;
 import java.util.Map;
@@ -33,15 +36,18 @@ public class AuthController {
     private final AuthService authService;
     private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
     private final AuthCookieService authCookies;
+    private final InvitacionClienteService invitaciones;
 
     public AuthController(
             AuthService authService,
             ObjectProvider<ClientRegistrationRepository> clientRegistrations,
-            AuthCookieService authCookies
+            AuthCookieService authCookies,
+            InvitacionClienteService invitaciones
     ) {
         this.authService = authService;
         this.clientRegistrations = clientRegistrations;
         this.authCookies = authCookies;
+        this.invitaciones = invitaciones;
     }
 
     @PostMapping("/registro")
@@ -50,6 +56,20 @@ public class AuthController {
             HttpServletResponse response
     ) {
         AuthSession sesion = authService.registrar(request);
+        authCookies.crear(response, sesion.token(), false);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new AuthResponse(sesion.expiraEnSegundos(), sesion.usuario()));
+    }
+
+    @GetMapping("/invitacion")
+    public InvitacionClienteService.DatosInvitacion invitacion(@RequestParam String token) {
+        return invitaciones.consultar(token);
+    }
+
+    @PostMapping("/aceptar-invitacion")
+    public ResponseEntity<AuthResponse> aceptarInvitacion(
+            @Valid @RequestBody AceptarInvitacionRequest request, HttpServletResponse response) {
+        AuthSession sesion = invitaciones.aceptar(request);
         authCookies.crear(response, sesion.token(), false);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new AuthResponse(sesion.expiraEnSegundos(), sesion.usuario()));
