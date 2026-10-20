@@ -56,11 +56,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/registro",
+                                "/api/v1/auth/aceptar-invitacion",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/csrf",
+                                "/api/v1/auth/invitacion",
                                 "/api/v1/cursos/**",
                                 "/api/v1/diplomados/**",
                                 "/api/v1/espacios/**").permitAll()

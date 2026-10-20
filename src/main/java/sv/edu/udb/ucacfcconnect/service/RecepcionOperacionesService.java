@@ -65,9 +65,12 @@ public class RecepcionOperacionesService {
     @Transactional(readOnly = true)
     public Map<String, Object> catalogos() {
         return item("clientes", clientes.findAll(Sort.by("nombre")).stream()
-                        .map(c -> item("id", c.getId(), "nombre", c.getNombre(), "duiNit", c.getDuiNit())).toList(),
+                        .map(c -> item("id", c.getId(), "nombre", c.getNombre(), "duiNit", c.getDuiNit(),
+                                "correo", c.getCorreo(), "tieneCuenta", c.getUsuario() != null)).toList(),
                 "participantes", participantes.findAll(Sort.by("apellido", "nombre")).stream()
                         .map(this::participanteView).toList(),
+                "participantesInscribibles", participantes.findAll(Sort.by("apellido", "nombre")).stream()
+                        .filter(this::puedeInscribirse).map(this::participanteView).toList(),
                 "cursos", cursos.findAll(Sort.by("titulo")).stream().filter(c -> Boolean.TRUE.equals(c.getActivo()))
                         .map(c -> item("id", c.getIdCurso(), "nombre", c.getTitulo(), "precio", c.getCosto())).toList(),
                 "diplomados", diplomados.findAll(Sort.by("nombre")).stream().filter(Diplomado::isActivo)
@@ -100,6 +103,9 @@ public class RecepcionOperacionesService {
     public Map<String, Object> inscribir(InscripcionRequest request) {
         Participante participante = participantes.findById(request.participanteId())
                 .orElseThrow(() -> notFound("participante"));
+        if (!puedeInscribirse(participante)) {
+            throw conflicto("El participante debe tener una cuenta de cliente activa vinculada a su correo antes de inscribirse");
+        }
         Inscripcion inscripcion = new Inscripcion();
         inscripcion.setParticipante(participante);
         if ("CURSO".equals(request.programaTipo())) {
@@ -342,6 +348,14 @@ public class RecepcionOperacionesService {
 
     private Cliente cliente(Long id) {
         return clientes.findById(id).orElseThrow(() -> notFound("cliente"));
+    }
+
+    private boolean puedeInscribirse(Participante participante) {
+        Usuario usuario = participante.getCliente().getUsuario();
+        return usuario != null && usuario.isActivo() &&
+                "CLIENTE".equalsIgnoreCase(usuario.getRol().getNombre()) &&
+                participante.getCorreo() != null &&
+                participante.getCorreo().equalsIgnoreCase(usuario.getCorreo());
     }
 
     private void validarDinero(BigDecimal valor, boolean mayorQueCero) {

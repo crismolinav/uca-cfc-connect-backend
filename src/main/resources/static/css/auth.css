@@ -265,6 +265,10 @@ input {
     line-height: 1.5;
 }
 
+.form-status.is-success {
+    color: var(--accent);
+}
+
 .primary-button,
 .google-button {
     display: inline-flex;

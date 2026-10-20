@@ -92,6 +92,7 @@ h3 { margin: 0 0 5px; font-size: .94rem; }
 .status-pill.is-muted { background: #f0f1f3; color: #626b76; }
 .item-action { min-height: 35px; padding: 6px 10px; border: 1px solid #bdcbdc; border-radius: 6px; background: white; color: #28486f; font-size: .7rem; }
 .item-action:hover { border-color: var(--blue); }
+.invitation-link { display: block; width: min(100%, 640px); min-height: 38px; margin: 8px 0; padding: 7px 9px; border: 1px solid #cbd6e3; border-radius: 6px; background: white; color: var(--ink); font-size: .72rem; }
 .list-empty { margin: 0; padding: 10px 0; color: #6b7888; font-size: .75rem; }
 @media (max-width: 1050px) { .reception-shell { grid-template-columns: 1fr; } .sidebar { position: fixed; z-index: 10; inset: 0 auto 0 0; width: min(80vw, 250px); visibility: hidden; transform: translateX(-100%); transition: transform .2s ease, visibility .2s ease; } .sidebar.is-open { visibility: visible; transform: translateX(0); box-shadow: 18px 0 40px rgba(10,20,30,.25); } .menu-button { display: inline-block; } .menu-dismiss { display: block; margin: 0 8px 12px; padding: 7px 9px; border: 1px solid #68737d; border-radius: 6px; background: transparent; color: white; font-size: .72rem; } .menu-backdrop:not([hidden]) { display: block; position: fixed; z-index: 9; inset: 0; width: 100%; border: 0; background: rgba(10,20,30,.45); } }
 @media (max-width: 760px) { .two-columns { grid-template-columns: 1fr; } .workspace-heading { flex-direction: column; } .role-badge { display: none; } }

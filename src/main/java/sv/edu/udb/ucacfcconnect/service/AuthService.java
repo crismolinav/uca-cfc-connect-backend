@@ -53,6 +53,10 @@ public class AuthService {
         if (usuarioRepository.existsByCorreoIgnoreCase(correo)) {
             throw new ApiException(HttpStatus.CONFLICT, "Ya existe una cuenta con ese correo");
         }
+        if (clienteRepository.existsByCorreoIgnoreCase(correo)) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Recepción ya registró este correo. Solicita y abre tu enlace de invitación para crear la cuenta vinculada");
+        }
         if (clienteRepository.existsByDuiNit(request.dui())) {
             throw new ApiException(HttpStatus.CONFLICT, "Ya existe un cliente registrado con ese DUI");
         }
