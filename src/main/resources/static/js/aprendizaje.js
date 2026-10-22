@@ -36,10 +36,37 @@
         return new Intl.NumberFormat('es-SV', {style: 'currency', currency: 'USD'}).format(value);
     }
 
-    function row(title, detail, state, action) {
+    function row(title, detail, state, action, imageUrl, courseUrl, progress) {
         const article = node('article', 'learning-item');
+        if (imageUrl) {
+            const cover = node(courseUrl ? 'a' : 'div', 'learning-item-cover');
+            if (courseUrl) cover.href = courseUrl;
+            const image = node('img', '', 'Portada de ' + title);
+            image.src = imageUrl;
+            image.alt = 'Portada de ' + title;
+            image.loading = 'lazy';
+            image.addEventListener('error', () => cover.remove());
+            cover.append(image);
+            article.append(cover);
+        }
         const copy = node('div', 'learning-item-copy');
         copy.append(node('h3', '', title), node('p', '', detail));
+        if (progress && progress.total > 0) {
+            const meter = node('div', 'learning-progress');
+            const heading = node('div', 'learning-progress-heading');
+            heading.append(node('span', '', 'Progreso del curso'), node('strong', '', `${progress.completed} de ${progress.total} módulos · ${progress.percent}%`));
+            const track = node('div', 'learning-progress-track');
+            track.setAttribute('role', 'progressbar');
+            track.setAttribute('aria-label', 'Progreso del curso');
+            track.setAttribute('aria-valuemin', '0');
+            track.setAttribute('aria-valuemax', '100');
+            track.setAttribute('aria-valuenow', String(progress.percent));
+            const fill = node('span', '');
+            fill.style.width = `${progress.percent}%`;
+            track.append(fill);
+            meter.append(heading, track);
+            copy.append(meter);
+        }
         article.append(copy, node('span', 'learning-item-state', state));
         if (action) article.append(action);
         return article;
@@ -56,22 +83,46 @@
         }
         const paymentsByEnrollment = new Map(payments.filter((p) => p.idInscripcion)
             .map((payment) => [payment.idInscripcion, payment]));
+        document.getElementById('learning-course-count').textContent = String(enrollments.length);
+        const coursesWithProgress = enrollments.filter(enrollment => enrollment.totalModulos > 0);
+        const averageProgress = coursesWithProgress.length
+            ? Math.round(coursesWithProgress.reduce((sum, enrollment) => sum + (enrollment.progresoPorcentaje || 0), 0) / coursesWithProgress.length)
+            : 0;
+        document.getElementById('learning-average-progress').textContent = averageProgress + '%';
+        document.getElementById('learning-pending-count').textContent = String(enrollments.filter(enrollment =>
+            enrollment.estado === 'PENDIENTE' || paymentsByEnrollment.get(enrollment.idInscripcion)?.estado === 'PENDIENTE').length);
         enrollments.forEach((enrollment) => {
             const payment = paymentsByEnrollment.get(enrollment.idInscripcion);
-            let action = null;
+            const actions = node('div', 'learning-actions');
+            if (enrollment.idCurso) {
+                const detail = node('a', 'learning-course-link', 'Ver curso');
+                detail.href = '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso);
+                actions.append(detail);
+            }
             if (enrollment.idCurso && enrollment.estado === 'PENDIENTE' && !payment) {
-                action = node('button', 'learning-action', 'Registrar pago');
+                const action = node('button', 'learning-action', 'Registrar pago');
                 action.type = 'button';
                 action.addEventListener('click', () => abrirPago(enrollment));
+                actions.append(action);
             }
             const total = enrollment.total == null ? '' : money(enrollment.total) + ' · ';
+            const courseUrl = enrollment.idCurso
+                ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null;
             enrollmentList.append(row(enrollment.curso, total + 'Inscripción ' + enrollment.fecha,
                 payment?.estado === 'CONFIRMADO' ? 'Pagado' : payment?.estado === 'PENDIENTE' ? 'Pago pendiente' : enrollment.estado,
-                action));
+                actions.childElementCount ? actions : null, enrollment.imagenUrl, courseUrl,
+                {completed: enrollment.modulosCompletados?.length || 0, total: enrollment.totalModulos || 0,
+                    percent: enrollment.progresoPorcentaje || 0}));
         });
         if (!payments.length) paymentList.append(node('p', 'learning-note', 'Todavía no has registrado pagos.'));
-        payments.forEach((payment) => paymentList.append(row(payment.curso, money(payment.monto) + ' · ' + payment.fecha + ' · ' + payment.metodo,
-            payment.estado + (payment.referencia ? ' · ' + payment.referencia : ''))));
+        const enrollmentsById = new Map(enrollments.map(enrollment => [enrollment.idInscripcion, enrollment]));
+        payments.forEach((payment) => {
+            const enrollment = enrollmentsById.get(payment.idInscripcion);
+            paymentList.append(row(payment.curso, money(payment.monto) + ' · ' + payment.fecha + ' · ' + payment.metodo,
+                payment.estado + (payment.referencia ? ' · ' + payment.referencia : ''), null,
+                enrollment?.imagenUrl, enrollment?.idCurso
+                    ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null));
+        });
         status.textContent = 'Se actualizaron tus cursos y pagos.';
     }
 

@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import sv.edu.udb.ucacfcconnect.dto.InscripcionClienteDTO;
 import sv.edu.udb.ucacfcconnect.dto.InscripcionCursoRequest;
+import sv.edu.udb.ucacfcconnect.dto.ProgresoModuloRequest;
 import sv.edu.udb.ucacfcconnect.service.ClienteFormacionService;
 
 import java.util.List;
@@ -28,6 +29,13 @@ public class ClienteFormacionController {
     public InscripcionClienteDTO inscribir(@AuthenticationPrincipal Jwt jwt,
                                            @Valid @RequestBody InscripcionCursoRequest request) {
         return formacion.inscribir(Long.valueOf(jwt.getSubject()), request);
+    }
+
+    @PostMapping("/cursos/{idCurso}/progreso")
+    public InscripcionClienteDTO completarModulo(@AuthenticationPrincipal Jwt jwt,
+                                                  @PathVariable Long idCurso,
+                                                  @Valid @RequestBody ProgresoModuloRequest request) {
+        return formacion.completarModulo(Long.valueOf(jwt.getSubject()), idCurso, request.numeroModulo());
     }
 
 }

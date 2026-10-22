@@ -16,7 +16,6 @@
     const diplomaGrid = document.getElementById('diploma-grid');
     const diplomaStatus = document.getElementById('diploma-list-status');
     const diplomaPagination = document.getElementById('diploma-pagination');
-    const courseDetailDialog = document.getElementById('course-detail-dialog');
     const diplomaDetailDialog = document.getElementById('diploma-detail-dialog');
     const size = 8;
     let coursePage = 0;
@@ -27,14 +26,18 @@
     let detailTrigger = null;
     let spacePage = 0;
     let selectedSpace = null;
-    let selectedCourse = null;
     let csrfToken = null;
+    let enrolledCourseIds = new Set();
+    let clientEnrollments = [];
+    let enrollmentListLoaded = false;
 
     async function request(url) {
         const response = await fetch(url, {credentials: 'same-origin'});
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(data.message || data.mensaje || 'No se pudo cargar la información.');
+            const error = new Error(data.message || data.mensaje || 'No se pudo cargar la información.');
+            error.status = response.status;
+            throw error;
         }
         return data;
     }
@@ -89,6 +92,40 @@
 
     function tone(id) {
         return 'course-cover-tone-' + ((Number(id) || 0) % 4 + 1);
+    }
+
+    function categoryIcon(category) {
+        const value = String(category || '').toLocaleLowerCase('es');
+        if (value.includes('tecnolog') || value.includes('inform')) return 'laptop';
+        if (value.includes('administr') || value.includes('negocio') || value.includes('finanz')) return 'chart';
+        if (value.includes('arte') || value.includes('diseñ') || value.includes('manga')) return 'palette';
+        if (value.includes('idioma') || value.includes('inglés')) return 'globe';
+        if (value.includes('salud')) return 'health';
+        if (value.includes('educ')) return 'book';
+        return 'sparkle';
+    }
+
+    function icon(name, className) {
+        const paths = {
+            laptop: ['M4 5h16v11H4z', 'M2 19h20l-2 2H4z'],
+            chart: ['M4 19V10h4v9z', 'M10 19V5h4v14z', 'M16 19v-7h4v7z'],
+            palette: ['M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.5-3.3c-.8-.9-.2-2.2 1-2.2H18a3 3 0 0 0 3-3c0-5.2-4-9.5-9-9.5z', 'M7.5 11h.01', 'M10 7.5h.01', 'M15 8h.01', 'M17 11.5h.01'],
+            globe: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z', 'M3 12h18', 'M12 3a15 15 0 0 1 0 18', 'M12 3a15 15 0 0 0 0 18'],
+            health: ['M12 21s-8-4.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.5-8 11-8 11z', 'M12 8v7', 'M8.5 11.5h7'],
+            book: ['M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z', 'M4 5.5v15', 'M8 7h8', 'M8 11h8'],
+            sparkle: ['m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z', 'm19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z']
+        };
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.classList.add(className);
+        (paths[name] || paths.sparkle).forEach((d) => {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            svg.append(path);
+        });
+        return svg;
     }
 
     function spaceCard(space) {
@@ -167,8 +204,18 @@
         const title = isDiploma ? item.nombre : item.titulo;
         const card = element('article', 'catalog-card course-card');
         const cover = element('div', 'course-cover ' + tone(item.idCategoria + (isDiploma ? 1 : 0)));
+        if (!isDiploma && item.imagenUrl) {
+            const image = element('img', 'course-cover-image');
+            image.src = item.imagenUrl;
+            image.alt = '';
+            image.loading = 'lazy';
+            cover.append(image);
+        }
+        const category = element('span', 'course-cover-category');
+        const categoryIconElement = icon(categoryIcon(item.categoria), 'course-category-icon');
+        category.append(categoryIconElement, element('span', '', item.categoria || 'Formación continua'));
         cover.append(
-            element('span', 'course-cover-category', item.categoria),
+            category,
             element('span', 'course-cover-mark', isDiploma ? 'DIPLOMADO · UCA CFC' : 'CURSO · UCA CFC')
         );
 
@@ -193,7 +240,7 @@
         detail.setAttribute('aria-label', 'Ver detalles de ' + title);
         detail.addEventListener('click', (event) => {
             if (isDiploma) openDiplomaDetail(item, event.currentTarget);
-            else openCourseDetail(item, event.currentTarget);
+            else window.location.assign('/cliente/curso.html?id=' + encodeURIComponent(item.idCurso));
         });
         footer.append(detail);
         body.append(footer);
@@ -247,12 +294,31 @@
         courseGrid.replaceChildren();
         coursePagination.hidden = true;
         try {
-            const data = await request(courseApi + '?' + query(coursePage));
+            const [data, enrollments] = await Promise.all([
+                request(courseApi + '?' + query(coursePage)),
+                enrollmentListLoaded ? Promise.resolve(null) : request('/api/v1/cliente/inscripciones').then((result) => {
+                    if (!Array.isArray(result)) throw new Error('No se pudo comprobar el estado de tus inscripciones. Recarga la página.');
+                    return result;
+                }).catch((error) => {
+                    if (error.status === 401 || error.status === 403) return [];
+                    throw error;
+                })
+            ]);
+            if (Array.isArray(enrollments)) {
+                clientEnrollments = enrollments;
+                enrolledCourseIds = new Set(enrollments
+                    .map((enrollment) => enrollment.idCurso == null ? null : String(enrollment.idCurso))
+                    .filter((id) => id != null));
+                enrollmentListLoaded = true;
+            }
             if (thisLoad !== courseLoadNumber) return;
-            data.contenido.forEach((course) => courseGrid.append(catalogCard(course, 'course')));
-            courseStatus.textContent = data.totalElementos
-                ? data.totalElementos + (data.totalElementos === 1 ? ' curso disponible.' : ' cursos disponibles.')
-                : 'No hay cursos activos que coincidan con los filtros seleccionados.';
+            const availableCourses = data.contenido.filter((course) => !enrolledCourseIds.has(String(course.idCurso)));
+            availableCourses.forEach((course) => courseGrid.append(catalogCard(course, 'course')));
+            courseStatus.textContent = availableCourses.length
+                ? availableCourses.length + (availableCourses.length === 1 ? ' curso disponible en esta página.' : ' cursos disponibles en esta página.')
+                : data.totalElementos
+                    ? 'Ya estás inscrito en los cursos que aparecen en esta página.'
+                    : 'No hay cursos activos que coincidan con los filtros seleccionados.';
             renderPagination(data,
                 document.getElementById('course-previous-page'), document.getElementById('course-next-page'),
                 document.getElementById('course-page-indicator'), coursePagination);
@@ -289,25 +355,6 @@
     async function loadAll(scroll = false) {
         await Promise.all([loadCourses(), loadDiplomas()]);
         if (scroll) document.getElementById('explorar').scrollIntoView({behavior: 'smooth', block: 'start'});
-    }
-
-    function openCourseDetail(course, trigger) {
-        detailTrigger = trigger;
-        selectedCourse = course;
-        document.getElementById('course-enroll-button').disabled = false;
-        document.getElementById('course-enroll-button').textContent = 'Inscribirme';
-        document.getElementById('course-enroll-status').textContent = 'Inscríbete desde aquí y consulta el estado de tu pago en Mi aprendizaje.';
-        document.getElementById('course-detail-category').textContent = course.categoria;
-        document.getElementById('course-detail-title').textContent = course.titulo;
-        document.getElementById('course-detail-description').textContent = course.descripcion;
-        document.getElementById('course-detail-modality').textContent = course.modalidad;
-        document.getElementById('course-detail-duration').textContent = hours(course.duracionHoras);
-        document.getElementById('course-detail-dates').textContent = date(course.fechaInicio) + ' – ' + date(course.fechaFin);
-        document.getElementById('course-detail-schedule').textContent = course.horario;
-        document.getElementById('course-detail-capacity').textContent = course.cupoMaximo + ' personas';
-        document.getElementById('course-detail-cost').textContent = money(course.costo);
-        document.getElementById('course-detail-teachers').textContent = teacherNames(course.docentes);
-        courseDetailDialog.showModal();
     }
 
     async function openDiplomaDetail(diploma, trigger) {
@@ -374,25 +421,7 @@
     document.getElementById('diploma-next-page').addEventListener('click', () => { diplomaPage += 1; loadDiplomas(); });
     document.getElementById('space-previous-page').addEventListener('click', () => { spacePage -= 1; loadSpaces(); });
     document.getElementById('space-next-page').addEventListener('click', () => { spacePage += 1; loadSpaces(); });
-    document.getElementById('course-detail-close').addEventListener('click', () => courseDetailDialog.close());
-    document.getElementById('course-enroll-button').addEventListener('click', async (event) => {
-        if (!selectedCourse) return;
-        const button = event.currentTarget;
-        const status = document.getElementById('course-enroll-status');
-        button.disabled = true;
-        status.textContent = 'Procesando tu inscripción...';
-        try {
-            await secureRequest('/api/v1/cliente/inscripciones', {method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({idCurso: selectedCourse.idCurso})});
-            status.textContent = 'Inscripción creada. Quedó pendiente de pago; puedes continuar desde Mi aprendizaje.';
-            button.textContent = 'Inscrito';
-        } catch (error) {
-            status.textContent = error.message;
-            button.disabled = false;
-        }
-    });
     document.getElementById('diploma-detail-close').addEventListener('click', () => diplomaDetailDialog.close());
-    courseDetailDialog.addEventListener('close', restoreDetailFocus);
     diplomaDetailDialog.addEventListener('close', restoreDetailFocus);
     document.getElementById('reservation-form').addEventListener('submit', submitReservation);
     document.getElementById('reservation-close').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());

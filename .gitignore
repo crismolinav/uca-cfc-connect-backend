@@ -37,6 +37,7 @@ build/
 *.sql
 !database/actualizar_perfiles_y_detalle_cursos.sql
 !database/agregar_imagen_curso.sql
+!database/agregar_progreso_cursos.sql
 
 ### Local secrets ###
 .env
