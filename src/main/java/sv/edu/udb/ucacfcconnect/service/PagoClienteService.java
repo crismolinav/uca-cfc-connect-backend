@@ -42,7 +42,7 @@ public class PagoClienteService {
         Cliente cliente = clienteExistente(usuarioId);
         String metodo = request.metodo().trim().toUpperCase(Locale.ROOT);
         if (!METODOS.contains(metodo)) throw invalido("Selecciona un método de pago válido");
-        Inscripcion inscripcion = inscripciones.findById(request.idInscripcion())
+        Inscripcion inscripcion = inscripciones.bloquear(request.idInscripcion())
                 .orElseThrow(() -> noEncontrado("inscripción"));
         if (!cliente.getId().equals(inscripcion.getParticipante().getCliente().getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "La inscripción no pertenece a tu cuenta");
@@ -67,18 +67,24 @@ public class PagoClienteService {
 
     @Transactional(readOnly = true)
     public List<PagoClienteDTO> listar(Long usuarioId) {
-        Cliente cliente = clienteExistente(usuarioId);
+        usuarioCliente(usuarioId);
+        Cliente cliente = clientes.findByUsuarioId(usuarioId).orElse(null);
+        if (cliente == null) return List.of();
         return pagos.findByClienteIdOrderByFechaDescIdDesc(cliente.getId()).stream().map(this::vista).toList();
     }
 
     private Cliente clienteExistente(Long usuarioId) {
+        usuarioCliente(usuarioId);
+        return clientes.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ApiException(HttpStatus.CONFLICT, "Inscríbete en un curso antes de registrar un pago"));
+    }
+
+    private void usuarioCliente(Long usuarioId) {
         Usuario usuario = usuarios.findById(usuarioId)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Debes iniciar sesión"));
         if (!"CLIENTE".equalsIgnoreCase(usuario.getRol().getNombre())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Solo una cuenta de cliente puede registrar pagos");
         }
-        return clientes.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new ApiException(HttpStatus.CONFLICT, "Inscríbete en un curso antes de registrar un pago"));
     }
 
     private PagoClienteDTO vista(Pago pago) {
