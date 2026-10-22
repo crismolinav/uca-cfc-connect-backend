@@ -233,3 +233,14 @@ h2,h3,p{margin-top:0}
 @media(max-width:380px){.catalog-grid{grid-template-columns:1fr}.card-cover{height:165px}.account-section dl{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media(forced-colors:active){.interest-options button[aria-pressed='true'],.site-search button,.promo a{border:1px solid ButtonText}}
+.learning-section{margin:1.5rem 0;padding:1.25rem;border:1px solid #e2e9f2;border-radius:10px;background:#fff}
+.learning-section h2{margin:0 0 1rem;color:#153763;font-size:1.1rem}
+.learning-list{display:grid;gap:.7rem}
+.learning-item{display:flex;align-items:center;gap:1rem;padding:.9rem;border:1px solid #e4eaf2;border-radius:8px}
+.learning-item-copy{flex:1;min-width:0}
+.learning-item h3{margin:0;color:#243c5b;font-size:.9rem}
+.learning-item p{margin:.25rem 0 0;color:#607087;font-size:.75rem}
+.learning-item-state{color:#36577d;font-size:.72rem;font-weight:700}
+.learning-action{padding:.55rem .8rem;border:1px solid #8da9d0;border-radius:5px;background:#fff;color:#28496f;font-size:.72rem;font-weight:600}
+.learning-section>a{color:#0757c8;font-weight:600}
+@media(max-width:640px){.learning-item{align-items:flex-start;flex-wrap:wrap}.learning-item-state{margin-left:auto}}

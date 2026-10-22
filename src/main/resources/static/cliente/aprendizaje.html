@@ -46,19 +46,20 @@
             </div>
             <div class="learning-intro-art" aria-hidden="true"><span></span><span></span><span></span></div>
         </section>
-        <p class="learning-note">Cuando estén disponibles las inscripciones en línea, aquí podrás consultar tu actividad.</p>
-        <div class="learning-filters" role="group" aria-label="Ver estado de aprendizaje">
-            <button type="button" data-learning-filter="curso" aria-pressed="true">En curso</button>
-            <button type="button" data-learning-filter="completado" aria-pressed="false">Completado(a)</button>
-            <button type="button" data-learning-filter="certificados" aria-pressed="false">Certificados</button>
-        </div>
-        <section class="learning-empty" aria-labelledby="learning-empty-title" aria-live="polite">
-            <div class="empty-illustration" aria-hidden="true"><span class="empty-book"></span><span class="empty-page"></span></div>
-            <h2 id="learning-empty-title">Comienza a explorar</h2>
-            <p id="learning-empty-copy">Aún no hay cursos en seguimiento. Conoce los formatos de formación disponibles en el CFC.</p>
-            <a href="/cliente/index.html#explorar">Explorar formatos</a>
-        </section>
+        <p id="learning-status" class="learning-note" role="status">Cargando tus cursos y pagos...</p>
+        <section class="learning-section" aria-labelledby="enrolled-title"><h2 id="enrolled-title">Mis cursos</h2><div id="enrolled-courses" class="learning-list"></div></section>
+        <section class="learning-section" aria-labelledby="payments-title"><h2 id="payments-title">Mis pagos</h2><div id="client-payments" class="learning-list"></div></section>
     </div>
 </main>
+<dialog id="client-payment-dialog" class="course-detail-dialog" aria-labelledby="client-payment-title">
+    <form id="client-payment-form">
+        <div class="course-detail-header"><div><span class="course-detail-category">Inscripción de curso</span><h2 id="client-payment-title">Registrar pago</h2></div><button id="client-payment-close" type="button">Cerrar</button></div>
+        <p id="client-payment-course" class="course-detail-description"></p>
+        <div class="reservation-fields"><div class="field"><label for="client-payment-method">Método de pago *</label><select id="client-payment-method" required><option value="">Selecciona un método</option><option value="TRANSFERENCIA">Transferencia</option><option value="TARJETA">Tarjeta (registro para procesar en recepción)</option><option value="EFECTIVO">Efectivo</option></select></div><div class="field"><label for="client-payment-reference">Referencia (opcional)</label><input id="client-payment-reference" maxlength="100" placeholder="Número de comprobante"></div></div>
+        <p class="reservation-note">El pago quedará pendiente hasta que recepción lo verifique. Este formulario registra el pago y no procesa cargos de tarjeta.</p>
+        <p id="client-payment-error" class="form-status" role="alert"></p><div class="reservation-actions"><button id="client-payment-cancel" type="button">Cancelar</button><button type="submit">Registrar pago</button></div>
+    </form>
+</dialog>
+<script src="/js/pagos-cliente.js" defer></script>
 </body>
 </html>
