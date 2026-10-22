@@ -11,7 +11,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,16 +26,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import sv.edu.udb.ucacfcconnect.dto.CatalogoResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.AsignacionDocentesDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoDTO;
+import sv.edu.udb.ucacfcconnect.dto.ContenidoCursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.ArchivoCursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.DocenteResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.ErrorResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.EstadoCursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.service.CursoService;
+import sv.edu.udb.ucacfcconnect.service.ArchivoCursoService;
 import sv.edu.udb.ucacfcconnect.service.DocenteAsignacionService;
 
 import java.net.URI;
@@ -46,10 +53,13 @@ public class CursoController {
 
     private final CursoService cursoService;
     private final DocenteAsignacionService docenteAsignacionService;
+    private final ArchivoCursoService archivoCursoService;
 
-    public CursoController(CursoService cursoService, DocenteAsignacionService docenteAsignacionService) {
+    public CursoController(CursoService cursoService, DocenteAsignacionService docenteAsignacionService,
+                           ArchivoCursoService archivoCursoService) {
         this.cursoService = cursoService;
         this.docenteAsignacionService = docenteAsignacionService;
+        this.archivoCursoService = archivoCursoService;
     }
 
     @GetMapping
@@ -140,8 +150,9 @@ public class CursoController {
             @ApiResponse(responseCode = "422", description = "Regla de negocio incumplida",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public ResponseEntity<CursoResponseDTO> crear(@Valid @RequestBody CursoDTO cursoDTO) {
-        CursoResponseDTO creado = cursoService.crear(cursoDTO);
+    public ResponseEntity<CursoResponseDTO> crear(@AuthenticationPrincipal Jwt jwt,
+                                                   @Valid @RequestBody CursoDTO cursoDTO) {
+        CursoResponseDTO creado = cursoService.crear(cursoDTO, Long.valueOf(jwt.getSubject()));
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(creado.idCurso())
@@ -166,6 +177,36 @@ public class CursoController {
             @Valid @RequestBody CursoDTO cursoDTO
     ) {
         return ResponseEntity.ok(cursoService.actualizar(id, cursoDTO));
+    }
+
+    @PutMapping("/{id}/contenido")
+    @Operation(summary = "Actualizar el contenido académico de un curso")
+    public ResponseEntity<CursoResponseDTO> actualizarContenido(
+            @PathVariable @Positive Long id, @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ContenidoCursoDTO contenido
+    ) {
+        return ResponseEntity.ok(cursoService.actualizarContenido(
+                id, contenido, Long.valueOf(jwt.getSubject())));
+    }
+
+    @PostMapping(value = "/{id}/recursos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ArchivoCursoDTO> subirRecurso(
+            @PathVariable @Positive Long id, @AuthenticationPrincipal Jwt jwt,
+            @RequestParam("archivo") MultipartFile archivo
+    ) {
+        cursoService.validarPermisoEdicion(id, Long.valueOf(jwt.getSubject()));
+        return ResponseEntity.ok(archivoCursoService.guardar(id, archivo, false));
+    }
+
+    @PostMapping(value = "/{id}/portada", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CursoResponseDTO> subirPortada(
+            @PathVariable @Positive Long id, @AuthenticationPrincipal Jwt jwt,
+            @RequestParam("archivo") MultipartFile archivo
+    ) {
+        Long usuarioId = Long.valueOf(jwt.getSubject());
+        cursoService.validarPermisoEdicion(id, usuarioId);
+        ArchivoCursoDTO imagen = archivoCursoService.guardar(id, archivo, true);
+        return ResponseEntity.ok(cursoService.actualizarImagen(id, usuarioId, imagen.url()));
     }
 
     @PatchMapping("/{id}/estado")

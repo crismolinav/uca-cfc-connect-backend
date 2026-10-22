@@ -23,6 +23,7 @@ target/
 /nbproject/private/
 /nbbuild/
 /dist/
+/uploads/
 /nbdist/
 /.nb-gradle/
 build/
@@ -34,6 +35,8 @@ build/
 
 ### Database dumps ###
 *.sql
+!database/actualizar_perfiles_y_detalle_cursos.sql
+!database/agregar_imagen_curso.sql
 
 ### Local secrets ###
 .env

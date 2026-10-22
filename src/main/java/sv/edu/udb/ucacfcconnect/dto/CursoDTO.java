@@ -25,6 +25,18 @@ public class CursoDTO {
     @Schema(example = "Curso práctico para el análisis y visualización de datos empresariales")
     private String descripcion;
 
+    @Size(max = 5000)
+    private String loQueAprenderas;
+
+    @Size(max = 50000)
+    private String contenidoPrograma;
+
+    @Size(max = 5000)
+    private String requisitos;
+
+    @Size(max = 5000)
+    private String dirigidoA;
+
     @NotNull(message = "Debe definir un cupo máximo")
     @Positive(message = "El cupo máximo debe ser mayor que cero")
     @Schema(example = "25")
@@ -83,6 +95,15 @@ public class CursoDTO {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+
+    public String getLoQueAprenderas() { return loQueAprenderas; }
+    public void setLoQueAprenderas(String loQueAprenderas) { this.loQueAprenderas = loQueAprenderas; }
+    public String getContenidoPrograma() { return contenidoPrograma; }
+    public void setContenidoPrograma(String contenidoPrograma) { this.contenidoPrograma = contenidoPrograma; }
+    public String getRequisitos() { return requisitos; }
+    public void setRequisitos(String requisitos) { this.requisitos = requisitos; }
+    public String getDirigidoA() { return dirigidoA; }
+    public void setDirigidoA(String dirigidoA) { this.dirigidoA = dirigidoA; }
 
     public Integer getCupoMaximo() {
         return cupoMaximo;

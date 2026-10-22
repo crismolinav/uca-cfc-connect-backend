@@ -3,6 +3,8 @@ package sv.edu.udb.ucacfcconnect.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,31 @@ public class Curso {
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
+
+    @Column(name = "lo_que_aprenderas", columnDefinition = "TEXT")
+    private String loQueAprenderas;
+
+    @Column(name = "contenido_programa", columnDefinition = "TEXT")
+    private String contenidoPrograma;
+
+    @Column(name = "imagen_url", length = 500)
+    private String imagenUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String requisitos;
+
+    @Column(name = "dirigido_a", columnDefinition = "TEXT")
+    private String dirigidoA;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_creador", foreignKey = @ForeignKey(name = "fk_curso_usuario_creador"))
+    private Usuario creador;
+
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
+    private LocalDateTime fechaCreacion;
+
+    @Column(name = "fecha_actualizacion", nullable = false)
+    private LocalDateTime fechaActualizacion;
 
     @Column(name = "duracion_horas", nullable = false)
     private Integer duracionHoras;
@@ -78,6 +105,23 @@ public class Curso {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+
+    public String getLoQueAprenderas() { return loQueAprenderas; }
+    public void setLoQueAprenderas(String loQueAprenderas) { this.loQueAprenderas = loQueAprenderas; }
+    public String getContenidoPrograma() { return contenidoPrograma; }
+    public void setContenidoPrograma(String contenidoPrograma) { this.contenidoPrograma = contenidoPrograma; }
+    public String getImagenUrl() { return imagenUrl; }
+    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
+    public String getRequisitos() { return requisitos; }
+    public void setRequisitos(String requisitos) { this.requisitos = requisitos; }
+    public String getDirigidoA() { return dirigidoA; }
+    public void setDirigidoA(String dirigidoA) { this.dirigidoA = dirigidoA; }
+    public Usuario getCreador() { return creador; }
+    public void setCreador(Usuario creador) { this.creador = creador; }
+    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 
     public Integer getDuracionHoras() {
         return duracionHoras;
@@ -157,5 +201,17 @@ public class Curso {
 
     public void setDocentes(List<CursoDocente> docentes) {
         this.docentes = docentes;
+    }
+
+    @PrePersist
+    void antesDeCrear() {
+        LocalDateTime ahora = LocalDateTime.now(ZoneId.of("America/El_Salvador"));
+        fechaCreacion = ahora;
+        fechaActualizacion = ahora;
+    }
+
+    @PreUpdate
+    void antesDeActualizar() {
+        fechaActualizacion = LocalDateTime.now(ZoneId.of("America/El_Salvador"));
     }
 }

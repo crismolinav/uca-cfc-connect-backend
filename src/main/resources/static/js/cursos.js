@@ -17,13 +17,17 @@
     const sortFilter = document.getElementById('sort-filter');
     const teacherAssignments = window.crearGestorDocentes('cursos');
     const formFields = [
-        'titulo', 'descripcion', 'idCategoria', 'idModalidad', 'fechaInicio',
+        'titulo', 'descripcion', 'loQueAprenderas', 'contenidoPrograma', 'requisitos', 'dirigidoA',
+        'idCategoria', 'idModalidad', 'fechaInicio',
         'fechaFin', 'duracionHoras', 'cupoMaximo', 'costo'
     ];
     const scheduleDays = [...form.querySelectorAll('input[name="diasHorario"]')];
     const scheduleStart = form.elements.namedItem('horaInicio');
     const scheduleEnd = form.elements.namedItem('horaFin');
     const scheduleSummary = document.getElementById('schedule-summary');
+    const modulesEditor = document.getElementById('course-modules-editor');
+    const coverFile = document.getElementById('course-cover-file');
+    const coverPreview = document.getElementById('course-cover-preview');
     const dayIndexes = {
         Domingo: 0,
         Lunes: 1,
@@ -42,6 +46,8 @@
     let csrfToken;
     let loadNumber = 0;
     let originalStartDate = null;
+    let courseModules = [];
+    let pendingCover = null;
 
     async function obtenerCsrf() {
         if (csrfToken) return csrfToken;
@@ -183,6 +189,136 @@
             control.value = value ?? '';
         });
         llenarHorario(curso?.horario);
+        pendingCover = null;
+        coverFile.value = '';
+        coverPreview.hidden = !curso?.imagenUrl;
+        if (curso?.imagenUrl) coverPreview.src = curso.imagenUrl;
+        try {
+            const parsed = JSON.parse(curso?.contenidoPrograma || '');
+            courseModules = Array.isArray(parsed) ? parsed.map(module => ({
+                titulo: module.titulo || '', descripcion: module.descripcion || '',
+                recursos: Array.isArray(module.recursos) ? module.recursos.map(resource => ({...resource})) : []
+            })) : [];
+        } catch (_) {
+            courseModules = (curso?.contenidoPrograma || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+                .map(titulo => ({titulo, descripcion: '', recursos: []}));
+        }
+        renderCourseModules();
+    }
+
+    function renderCourseModules() {
+        modulesEditor.replaceChildren();
+        courseModules.forEach((module, moduleIndex) => {
+            const card = document.createElement('section');
+            card.className = 'course-module-editor';
+            const header = document.createElement('div');
+            header.className = 'course-module-editor-head';
+            const title = document.createElement('strong');
+            title.textContent = 'Módulo ' + (moduleIndex + 1);
+            const remove = boton('Quitar módulo', () => {
+                courseModules.splice(moduleIndex, 1);
+                renderCourseModules();
+            }, 'Quitar módulo ' + (moduleIndex + 1), 'remove-course-module');
+            header.append(title, remove);
+            card.append(header);
+
+            const titleField = document.createElement('div');
+            titleField.className = 'field';
+            const titleLabel = document.createElement('label');
+            titleLabel.textContent = 'Título del módulo';
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text'; titleInput.maxLength = 180; titleInput.required = true;
+            titleInput.value = module.titulo; titleInput.placeholder = 'Ej. Introducción a los fundamentos';
+            titleInput.addEventListener('input', () => { module.titulo = titleInput.value; });
+            titleField.append(titleLabel, titleInput);
+            card.append(titleField);
+
+            const descriptionField = document.createElement('div');
+            descriptionField.className = 'field';
+            const descriptionLabel = document.createElement('label');
+            descriptionLabel.textContent = 'Descripción y actividades';
+            const descriptionInput = document.createElement('textarea');
+            descriptionInput.rows = 3; descriptionInput.maxLength = 4000;
+            descriptionInput.value = module.descripcion; descriptionInput.placeholder = 'Explica qué se trabajará en este módulo.';
+            descriptionInput.addEventListener('input', () => { module.descripcion = descriptionInput.value; });
+            descriptionField.append(descriptionLabel, descriptionInput);
+            card.append(descriptionField);
+
+            const resources = document.createElement('div');
+            resources.className = 'course-module-resources';
+            (module.recursos || []).forEach((resource, resourceIndex) => {
+                const item = document.createElement('div'); item.className = 'course-module-resource';
+                const label = document.createElement('span');
+                label.textContent = (resource.tipo || 'RECURSO') + ' · ' + (resource.nombre || resource.url || 'Archivo pendiente');
+                const removeResource = boton('Quitar', () => {
+                    module.recursos.splice(resourceIndex, 1);
+                    renderCourseModules();
+                }, 'Quitar recurso', '');
+                item.append(label, removeResource); resources.append(item);
+            });
+            card.append(resources);
+
+            const linkControls = document.createElement('div');
+            linkControls.className = 'course-module-add-resource';
+            const linkField = document.createElement('div'); linkField.className = 'field';
+            const linkLabel = document.createElement('label'); linkLabel.textContent = 'Enlace de recurso';
+            const linkInput = document.createElement('input'); linkInput.type = 'url'; linkInput.placeholder = 'https://...';
+            linkField.append(linkLabel, linkInput);
+            const linkTypeField = document.createElement('div'); linkTypeField.className = 'field';
+            const linkTypeLabel = document.createElement('label'); linkTypeLabel.textContent = 'Tipo';
+            const linkType = document.createElement('select');
+            [['ENLACE','Enlace'],['VIDEO','Video'],['IMAGEN','Imagen'],['PRESENTACION','Presentación'],['LECTURA','Lectura']]
+                .forEach(([value, label]) => linkType.add(new Option(label, value)));
+            linkTypeField.append(linkTypeLabel, linkType);
+            const linkNameField = document.createElement('div'); linkNameField.className = 'field';
+            const linkNameLabel = document.createElement('label'); linkNameLabel.textContent = 'Nombre';
+            const linkNameInput = document.createElement('input'); linkNameInput.type = 'text'; linkNameInput.maxLength = 180; linkNameInput.placeholder = 'Video, lectura, presentación...';
+            linkNameField.append(linkNameLabel, linkNameInput);
+            const addLink = boton('Agregar enlace', () => {
+                const url = linkInput.value.trim();
+                if (!url) { linkInput.focus(); return; }
+                try {
+                    const parsedUrl = new URL(url);
+                    if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error();
+                } catch (_) { document.getElementById('dialog-error').textContent = 'El enlace debe comenzar con https:// o http://'; linkInput.focus(); return; }
+                module.recursos.push({nombre: linkNameInput.value.trim() || url, tipo: linkType.value, url});
+                renderCourseModules();
+            }, 'Agregar enlace al módulo', '');
+            linkControls.append(linkField, linkTypeField, linkNameField, addLink); card.append(linkControls);
+
+            const upload = document.createElement('input');
+            upload.type = 'file'; upload.accept = '.png,.jpg,.jpeg,.webp,.gif,.mp4,.webm,.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.txt';
+            upload.setAttribute('aria-label', 'Seleccionar archivo para el módulo ' + (moduleIndex + 1));
+            const addFile = boton('Adjuntar archivo', () => {
+                if (!upload.files?.[0]) { upload.click(); return; }
+                const file = upload.files[0];
+                if (file.size > 50 * 1024 * 1024) { document.getElementById('dialog-error').textContent = 'El archivo no puede superar los 50 MB.'; return; }
+                const extension = file.name.split('.').pop().toLowerCase();
+                const types = {png:'IMAGEN',jpg:'IMAGEN',jpeg:'IMAGEN',webp:'IMAGEN',gif:'IMAGEN',mp4:'VIDEO',webm:'VIDEO',pdf:'PRESENTACION',ppt:'PRESENTACION',pptx:'PRESENTACION',doc:'DOCUMENTO',docx:'DOCUMENTO',xls:'DOCUMENTO',xlsx:'DOCUMENTO',txt:'DOCUMENTO'};
+                if (!types[extension]) { document.getElementById('dialog-error').textContent = 'Ese formato de archivo no está permitido.'; return; }
+                module.recursos.push({nombre:file.name,tipo:types[extension],archivo:file,url:null});
+                renderCourseModules();
+            }, 'Adjuntar archivo', 'course-module-upload');
+            const uploadRow = document.createElement('div'); uploadRow.className = 'course-module-file-upload';
+            uploadRow.append(upload, addFile); card.append(uploadRow);
+            modulesEditor.append(card);
+        });
+        document.getElementById('add-course-module').disabled = form.querySelectorAll('input[name], textarea[name], select[name]').length > 0
+            && form.elements.namedItem('titulo').disabled;
+    }
+
+    function serializarModulos() {
+        return JSON.stringify(courseModules.map(module => ({
+            titulo: module.titulo.trim(), descripcion: module.descripcion.trim(),
+            recursos: module.recursos.filter(resource => resource.url).map(resource => ({
+                nombre: resource.nombre, tipo: resource.tipo, url: resource.url
+            }))
+        })));
+    }
+
+    async function subirArchivo(idCurso, archivo, portada = false) {
+        const datos = new FormData(); datos.append('archivo', archivo);
+        return request(api + '/' + idCurso + (portada ? '/portada' : '/recursos'), {method: 'POST', body: datos});
     }
 
     function llenarHorario(horario) {
@@ -195,10 +331,12 @@
         scheduleDays.forEach((day) => {
             day.checked = horarioNormalizado.includes(day.value.toLocaleLowerCase('es'));
         });
-        const rango = horario.match(/([01]\d|2[0-3]):[0-5]\d\s*-\s*([01]\d|2[0-3]):[0-5]\d/);
+        const rango = horario.match(/([01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\s*[-–—]\s*([01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?/);
         if (rango) {
-            scheduleStart.value = rango[1];
-            scheduleEnd.value = rango[2];
+            scheduleStart.value = rango[0].match(/^([01]?\d|2[0-3]):[0-5]\d/)[0].padStart(5, '0');
+            const fin = rango[0].match(/([01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/)[0].split(':');
+            scheduleEnd.value = fin[0].padStart(2, '0') + ':' + fin[1];
+            scheduleEnd.min = scheduleStart.value;
         }
     }
 
@@ -362,6 +500,8 @@
         form.querySelectorAll('input[name], textarea[name], select[name]').forEach((control) => {
             control.disabled = readOnly;
         });
+        document.getElementById('add-course-module').disabled = readOnly;
+        modulesEditor.querySelectorAll('button, input, textarea, select').forEach(control => { control.disabled = readOnly; });
         form.elements.namedItem('fechaInicio').min = mode === 'new' ? fechaLocalActual() : '';
         actualizarLimiteFechaFin();
         actualizarResumenHorario();
@@ -518,15 +658,24 @@
         const error = document.getElementById('dialog-error');
         error.textContent = '';
         if (!validarFormulario()) return;
+        if (courseModules.some(module => !module.titulo.trim())) {
+            error.textContent = 'Completa el título de cada módulo del curso.';
+            return;
+        }
 
         const save = document.getElementById('dialog-save');
         const label = save.textContent;
         save.disabled = true;
         save.textContent = 'Guardando...';
+        const eraEdicion = editingId !== null;
         try {
             const data = {
                 titulo: form.elements.namedItem('titulo').value.trim(),
                 descripcion: form.elements.namedItem('descripcion').value.trim(),
+                loQueAprenderas: form.elements.namedItem('loQueAprenderas').value.trim(),
+                contenidoPrograma: serializarModulos(),
+                requisitos: form.elements.namedItem('requisitos').value.trim(),
+                dirigidoA: form.elements.namedItem('dirigidoA').value.trim(),
                 idCategoria: Number(form.elements.namedItem('idCategoria').value),
                 idModalidad: Number(form.elements.namedItem('idModalidad').value),
                 fechaInicio: form.elements.namedItem('fechaInicio').value,
@@ -536,12 +685,38 @@
                 costo: Number(form.elements.namedItem('costo').value),
                 horario: construirHorario()
             };
-            await request(editingId ? api + '/' + editingId : api, {
+            const guardado = await request(editingId ? api + '/' + editingId : api, {
                 method: editingId ? 'PUT' : 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
-            const action = editingId ? 'actualizado' : 'creado';
+            editingId = guardado.idCurso;
+            if (pendingCover) {
+                const portada = await subirArchivo(editingId, pendingCover, true);
+                pendingCover = null;
+                coverPreview.src = portada.imagenUrl;
+                coverPreview.hidden = false;
+            }
+            let seActualizoPrograma = false;
+            for (const module of courseModules) {
+                for (const resource of module.recursos) {
+                    if (!resource.archivo) continue;
+                    const archivo = await subirArchivo(editingId, resource.archivo);
+                    resource.url = archivo.url;
+                    resource.nombre = archivo.nombre;
+                    resource.tipo = archivo.tipo;
+                    delete resource.archivo;
+                    seActualizoPrograma = true;
+                }
+            }
+            if (seActualizoPrograma) {
+                await request(api + '/' + editingId + '/contenido', {
+                    method: 'PUT', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({descripcion: data.descripcion, loQueAprenderas: data.loQueAprenderas,
+                        contenidoPrograma: serializarModulos(), requisitos: data.requisitos, dirigidoA: data.dirigidoA})
+                });
+            }
+            const action = eraEdicion ? 'actualizado' : 'creado';
             formDialog.close();
             await cargar();
             actionStatus.textContent = 'El curso «' + data.titulo + '» fue ' + action + ' correctamente.';
@@ -552,6 +727,20 @@
             save.textContent = label;
         }
     }
+
+    coverFile.addEventListener('change', () => {
+        const archivo = coverFile.files?.[0];
+        if (!archivo) return;
+        if (!archivo.type.startsWith('image/') || archivo.size > 50 * 1024 * 1024) {
+            document.getElementById('dialog-error').textContent = 'Selecciona una imagen válida de hasta 50 MB.';
+            coverFile.value = '';
+            return;
+        }
+        pendingCover = archivo;
+        coverPreview.src = URL.createObjectURL(archivo);
+        coverPreview.hidden = false;
+        document.getElementById('dialog-error').textContent = '';
+    });
 
     function limpiarFiltros() {
         search.value = '';
@@ -585,6 +774,11 @@
 
     document.getElementById('logout-button').addEventListener('click', salir);
     document.getElementById('new-course-button').addEventListener('click', () => abrirFormulario('new'));
+    document.getElementById('add-course-module').addEventListener('click', () => {
+        courseModules.push({titulo: '', descripcion: '', recursos: []});
+        renderCourseModules();
+        modulesEditor.lastElementChild?.querySelector('input')?.focus();
+    });
     document.getElementById('clear-filters').addEventListener('click', limpiarFiltros);
     document.getElementById('dialog-close').addEventListener('click', () => formDialog.close());
     document.getElementById('dialog-cancel').addEventListener('click', () => formDialog.close());

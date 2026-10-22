@@ -7,7 +7,7 @@
     <title>Cursos | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/admin.css">
     <script src="/js/docente-asignaciones.js?v=20260925-4" defer></script>
-    <script src="/js/cursos.js?v=20260925-4" defer></script>
+    <script src="/js/cursos.js?v=20261022-7" defer></script>
 </head>
 <body>
 <div class="admin-shell">
@@ -149,6 +149,11 @@
                 <label for="course-description">Descripción *</label>
                 <textarea id="course-description" name="descripcion" minlength="10" maxlength="5000" rows="3" required></textarea>
             </div>
+            <div class="field field-wide"><label for="course-learnings">Lo que aprenderás</label><textarea id="course-learnings" name="loQueAprenderas" maxlength="5000" rows="3"></textarea></div>
+            <div class="field field-wide course-program-editor-field"><span class="field-label">Contenido del curso</span><p class="field-help">Crea módulos con descripción, enlaces y archivos de apoyo.</p><div id="course-modules-editor" class="course-modules-editor"></div><button id="add-course-module" class="secondary-button" type="button">+ Agregar módulo</button><textarea id="course-program" name="contenidoPrograma" maxlength="50000" hidden></textarea></div>
+            <div class="field field-wide course-cover-field"><label for="course-cover-file">Imagen de portada</label><input id="course-cover-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><small class="field-help">PNG, JPG, WEBP o GIF. Máximo 50 MB.</small><img id="course-cover-preview" class="course-cover-preview" alt="Vista previa de la portada" hidden></div>
+            <div class="field field-wide"><label for="course-requirements">Requisitos</label><textarea id="course-requirements" name="requisitos" maxlength="5000" rows="3"></textarea></div>
+            <div class="field field-wide"><label for="course-audience">¿Para quién es este curso?</label><textarea id="course-audience" name="dirigidoA" maxlength="5000" rows="3"></textarea></div>
             <div class="field">
                 <label for="course-category">Categoría *</label>
                 <select id="course-category" name="idCategoria" required>

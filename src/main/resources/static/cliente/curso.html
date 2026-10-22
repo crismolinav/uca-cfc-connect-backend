@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Información, docentes e inscripción al curso en UCA CFC Connect.">
+    <title>Detalle del curso | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/cliente.css?v=20261022-10">
+    <script src="/js/client-shell.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/curso-detalle.js?v=20261022-8" defer></script>
+</head>
+<body data-page="cliente">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="site-header"><div class="header-inner">
+    <a class="brand" href="/cliente/index.html" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
+    <nav class="primary-nav" aria-label="Principal"><a href="/cliente/index.html#explorar" aria-current="page">Cursos</a><a href="/cliente/index.html#diplomados">Diplomados</a><a href="/cliente/index.html#espacios">Espacios</a><a href="/cliente/aprendizaje.html">Mi aprendizaje</a></nav>
+    <div class="account-control"><button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button><nav id="account-menu" class="account-menu" aria-label="Cuenta" hidden><a href="/cliente/aprendizaje.html">Mi aprendizaje</a><a href="/cliente/configuracion.html">Configuración</a><button id="logout-button" type="button">Cerrar sesión</button></nav></div>
+</div></header>
+<main id="contenido" class="course-page page-shell">
+    <p class="course-breadcrumb"><a href="/cliente/index.html#explorar">← Volver a los cursos</a><span aria-hidden="true">/</span><span id="course-breadcrumb-title">Detalle del curso</span></p>
+    <p id="course-loading" class="loading" role="status">Cargando información del curso...</p>
+    <p id="course-error" class="error-message" role="alert"></p>
+    <div id="course-content" hidden>
+        <section class="course-hero">
+            <div class="course-hero-copy"><span class="course-kicker">Formación continua · UCA</span><span id="course-category" class="course-category-pill"></span><h1 id="course-title"></h1><p id="course-description" class="course-lead"></p>
+                <div class="course-byline"><span>Creado por <strong id="course-creator"></strong></span><span>Docente: <strong id="course-teachers-byline"></strong></span><span>Actualizado <strong id="course-updated"></strong></span></div>
+                <div class="course-social-proof"><span class="course-stars" aria-hidden="true">★★★★★</span><strong id="course-rating"></strong><span id="course-students"></span></div>
+            </div>
+            <div class="course-hero-art" aria-hidden="true"><span id="course-art-initial">C</span><img id="course-cover-image" alt="" hidden><div><i></i><i></i><i></i></div><small>UCA · CFC</small></div>
+        </section>
+        <div class="course-page-columns"><div class="course-main-column">
+            <section class="course-info-panel course-learning-panel"><span class="course-kicker">Resultados de aprendizaje</span><h2>Lo que aprenderás</h2><ul id="course-learning" class="course-bullet-list"></ul></section>
+            <section class="course-info-panel"><div class="course-section-heading"><div><span class="course-kicker">Programa</span><h2>Contenido del curso</h2></div><div id="course-progress" class="course-progress" hidden><div class="course-progress-heading"><span>Tu progreso</span><strong id="course-progress-label"></strong></div><div class="course-progress-track" role="progressbar" aria-label="Progreso del curso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="course-progress-fill"></span></div></div></div><p id="course-progress-message" class="course-progress-message" hidden></p><div id="course-program" class="course-program-list"></div></section>
+            <section class="course-info-panel course-two-up"><div><h2>Requisitos</h2><p id="course-requirements"></p></div><div><h2>¿Para quién es este curso?</h2><p id="course-audience"></p></div></section>
+            <section class="course-info-panel"><div class="course-section-heading"><div><span class="course-kicker">Acompañamiento</span><h2>Conoce a tus docentes</h2></div><p id="course-teachers"></p></div><div id="course-teacher-profiles" class="teacher-profile-grid"></div></section>
+            <section class="course-info-panel"><div class="course-section-heading"><div><span class="course-kicker">Experiencias</span><h2>Valoraciones del curso</h2></div><span id="course-rating-summary" class="course-review-summary"></span></div><p id="course-review-status" role="status"></p><div id="course-review-list" class="course-review-list"></div>
+                <p id="course-review-eligibility" class="review-eligibility" role="status"></p>
+                <form id="course-review-form" class="course-review-form" hidden><h3>Comparte tu experiencia</h3><div class="review-form-grid"><div class="review-form-wide"><span class="review-field-label">Tu calificación</span><div id="course-star-rating" class="star-rating" role="radiogroup" aria-label="Calificación del curso"></div><input id="course-review-stars" type="hidden" value=""></div><div><label for="course-review-teacher">Valorar a un docente (opcional)</label><select id="course-review-teacher"><option value="">No valorar a un docente</option></select></div><div class="review-form-wide"><label for="course-review-comment">Tu comentario</label><textarea id="course-review-comment" maxlength="2000" required></textarea></div><div><span class="review-field-label">Calificación del docente</span><div id="teacher-star-rating" class="star-rating" role="radiogroup" aria-label="Calificación del docente"></div><input id="teacher-review-stars" type="hidden" value=""></div><div><label for="teacher-review-comment">Comentario sobre el docente</label><textarea id="teacher-review-comment" maxlength="2000"></textarea></div></div><button type="submit" class="course-review-submit">Publicar valoración</button></form>
+            </section>
+        </div><aside class="course-enroll-card" aria-label="Inscripción al curso"><span class="course-enroll-label">Invierte en tu aprendizaje</span><strong id="course-cost" class="course-page-price"></strong><p id="course-enroll-status" role="status">Consulta tu estado de inscripción y pago desde Mi aprendizaje.</p><button id="course-enroll-button" class="course-enroll-cta" type="button">Inscribirme</button><a href="/cliente/aprendizaje.html">Ir a Mi aprendizaje</a><ul class="course-quick-facts"><li><span>Modalidad</span><strong id="course-modality"></strong></li><li><span>Duración</span><strong id="course-duration"></strong></li><li><span>Fechas</span><strong id="course-dates"></strong></li><li><span>Horario</span><strong id="course-schedule"></strong></li><li><span>Cupo máximo</span><strong id="course-capacity"></strong></li></ul></aside></div>
+    </div>
+</main>
+</body>
+</html>

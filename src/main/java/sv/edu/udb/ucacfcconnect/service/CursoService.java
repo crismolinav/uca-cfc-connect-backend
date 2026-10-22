@@ -1,6 +1,7 @@
 package sv.edu.udb.ucacfcconnect.service;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.CatalogoResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.CursoResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.ContenidoCursoDTO;
 import sv.edu.udb.ucacfcconnect.dto.DocenteResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.entity.Categoria;
@@ -20,7 +22,11 @@ import sv.edu.udb.ucacfcconnect.exception.RecursoNoEncontradoException;
 import sv.edu.udb.ucacfcconnect.exception.SolicitudInvalidaException;
 import sv.edu.udb.ucacfcconnect.repository.CategoriaRepository;
 import sv.edu.udb.ucacfcconnect.repository.CursoRepository;
+import sv.edu.udb.ucacfcconnect.repository.DocenteRepository;
+import sv.edu.udb.ucacfcconnect.repository.InscripcionRepository;
 import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
+import sv.edu.udb.ucacfcconnect.repository.ResenaCursoRepository;
+import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -65,17 +71,37 @@ public class CursoService {
     private final CategoriaRepository categoriaRepository;
     private final ModalidadRepository modalidadRepository;
     private final DocenteDisponibilidadService docenteDisponibilidadService;
+    private final UsuarioRepository usuarioRepository;
+    private final InscripcionRepository inscripcionRepository;
+    private final ResenaCursoRepository resenaRepository;
+    private final DocenteRepository docenteRepository;
 
+    @Autowired
     public CursoService(
             CursoRepository cursoRepository,
             CategoriaRepository categoriaRepository,
             ModalidadRepository modalidadRepository,
-            DocenteDisponibilidadService docenteDisponibilidadService
+            DocenteDisponibilidadService docenteDisponibilidadService,
+            UsuarioRepository usuarioRepository,
+            InscripcionRepository inscripcionRepository,
+            ResenaCursoRepository resenaRepository,
+            DocenteRepository docenteRepository
     ) {
         this.cursoRepository = cursoRepository;
         this.categoriaRepository = categoriaRepository;
         this.modalidadRepository = modalidadRepository;
         this.docenteDisponibilidadService = docenteDisponibilidadService;
+        this.usuarioRepository = usuarioRepository;
+        this.inscripcionRepository = inscripcionRepository;
+        this.resenaRepository = resenaRepository;
+        this.docenteRepository = docenteRepository;
+    }
+
+    public CursoService(CursoRepository cursoRepository, CategoriaRepository categoriaRepository,
+                        ModalidadRepository modalidadRepository,
+                        DocenteDisponibilidadService docenteDisponibilidadService) {
+        this(cursoRepository, categoriaRepository, modalidadRepository, docenteDisponibilidadService,
+                null, null, null, null);
     }
 
     @Transactional(readOnly = true)
@@ -138,13 +164,21 @@ public class CursoService {
     }
 
     @Transactional
-    public CursoResponseDTO crear(CursoDTO dto) {
+    public CursoResponseDTO crear(CursoDTO dto, Long usuarioId) {
         validarFechas(dto, null);
         validarHorarioYDuracion(dto);
         Curso curso = new Curso();
         asignarDatos(curso, dto);
+        if (usuarioId != null && usuarioRepository != null) {
+            curso.setCreador(usuarioRepository.findById(usuarioId).orElseThrow());
+        }
         curso.setActivo(true);
         return aRespuesta(cursoRepository.save(curso));
+    }
+
+    @Transactional
+    public CursoResponseDTO crear(CursoDTO dto) {
+        return crear(dto, null);
     }
 
     @Transactional
@@ -155,6 +189,41 @@ public class CursoService {
         asignarDatos(curso, dto);
         docenteDisponibilidadService.validarCursoConDocentesAsignados(curso);
         return aRespuesta(cursoRepository.save(curso));
+    }
+
+    @Transactional
+    public CursoResponseDTO actualizarContenido(Long id, ContenidoCursoDTO dto, Long usuarioId) {
+        Curso curso = buscarCurso(id);
+        validarPermisoEdicion(curso, usuarioId);
+        if (dto.descripcion() != null) curso.setDescripcion(dto.descripcion().strip());
+        curso.setLoQueAprenderas(limpiar(dto.loQueAprenderas()));
+        curso.setContenidoPrograma(limpiar(dto.contenidoPrograma()));
+        curso.setRequisitos(limpiar(dto.requisitos()));
+        curso.setDirigidoA(limpiar(dto.dirigidoA()));
+        return aRespuesta(cursoRepository.save(curso));
+    }
+
+    @Transactional
+    public CursoResponseDTO actualizarImagen(Long id, Long usuarioId, String imagenUrl) {
+        Curso curso = buscarCurso(id);
+        validarPermisoEdicion(curso, usuarioId);
+        curso.setImagenUrl(imagenUrl);
+        return aRespuesta(cursoRepository.save(curso));
+    }
+
+    @Transactional(readOnly = true)
+    public void validarPermisoEdicion(Long id, Long usuarioId) {
+        validarPermisoEdicion(buscarCurso(id), usuarioId);
+    }
+
+    private void validarPermisoEdicion(Curso curso, Long usuarioId) {
+        var usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", usuarioId));
+        boolean administrador = usuario.getRol().getNombre().equalsIgnoreCase("ADMIN");
+        boolean docenteAsignado = usuario.getDocente() != null && curso.getDocentes().stream()
+                .anyMatch(asignacion -> asignacion.getDocente().getId().equals(usuario.getDocente().getId()));
+        if (!administrador && !docenteAsignado)
+            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para editar este curso");
     }
 
     @Transactional
@@ -190,6 +259,10 @@ public class CursoService {
 
         curso.setTitulo(dto.getTitulo().strip());
         curso.setDescripcion(dto.getDescripcion().strip());
+        curso.setLoQueAprenderas(limpiar(dto.getLoQueAprenderas()));
+        curso.setContenidoPrograma(limpiar(dto.getContenidoPrograma()));
+        curso.setRequisitos(limpiar(dto.getRequisitos()));
+        curso.setDirigidoA(limpiar(dto.getDirigidoA()));
         curso.setCupoMaximo(dto.getCupoMaximo());
         curso.setCosto(dto.getCosto());
         curso.setFechaInicio(dto.getFechaInicio());
@@ -321,7 +394,22 @@ public class CursoService {
                         .map(docente -> new DocenteResumenDTO(
                                 docente.getId(), docente.getNombre(), docente.getEspecialidad()
                         ))
-                        .toList()
+                        .toList(),
+                curso.getLoQueAprenderas(),
+                curso.getContenidoPrograma(),
+                curso.getRequisitos(),
+                curso.getDirigidoA(),
+                curso.getCreador() == null ? null : curso.getCreador().getNombre(),
+                curso.getFechaActualizacion(),
+                inscripcionRepository == null ? 0 : Math.toIntExact(
+                        inscripcionRepository.countByCursoIdCursoAndEstadoNot(curso.getIdCurso(), "CANCELADA")),
+                resenaRepository == null ? null : resenaRepository.promedioCurso(curso.getIdCurso()),
+                resenaRepository == null ? 0 : resenaRepository.countByInscripcion_Curso_IdCurso(curso.getIdCurso()),
+                curso.getImagenUrl()
         );
+    }
+
+    private String limpiar(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.strip();
     }
 }

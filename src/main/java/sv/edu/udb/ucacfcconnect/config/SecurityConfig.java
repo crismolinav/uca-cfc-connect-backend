@@ -57,12 +57,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/registro",
                                 "/api/v1/auth/aceptar-invitacion",
+                                "/api/v1/auth/aceptar-invitacion-docente",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/cursos/*/contenido").hasAnyRole("ADMIN", "DOCENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/cursos/*/recursos", "/api/v1/cursos/*/portada").hasAnyRole("ADMIN", "DOCENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/cursos/*/resenas").authenticated()
+                        .requestMatchers("/api/v1/docente/**").hasRole("DOCENTE")
+                        .requestMatchers("/docente/**").hasRole("DOCENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/docentes/*/perfil").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/csrf",
                                 "/api/v1/auth/invitacion",
+                                "/api/v1/auth/invitacion-docente",
                                 "/api/v1/cursos/**",
                                 "/api/v1/diplomados/**",
                                 "/api/v1/espacios/**").permitAll()
@@ -105,6 +113,7 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/assets/**",
+                                "/archivos/**",
                                 "/favicon.ico").permitAll()
                         .requestMatchers(
                                 "/oauth2/**",

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Cursos asignados al docente en UCA CFC Connect.">
+    <title>Mis cursos | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/admin.css?v=20261022-4">
+    <script src="/js/docente-cursos.js?v=20261022-4" defer></script>
+</head>
+<body class="docente-page">
+<a class="skip-link" href="#main-content">Ir al contenido</a>
+<div class="admin-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación del docente">
+        <button class="sidebar-close" id="sidebar-close" type="button">Cerrar menú</button>
+        <a class="sidebar-brand" href="/docente/cursos.html">UCA CFC<span>.</span></a>
+        <nav aria-label="Principal">
+            <span class="nav-group-label">Área docente</span>
+            <a class="nav-link" href="/docente/cursos.html" aria-current="page">Mis cursos</a>
+            <a class="nav-link" href="/cliente/index.html">Catálogo de cursos</a>
+        </nav>
+        <div class="sidebar-footer">UCA CFC Connect<br><span>Área docente</span></div>
+    </aside>
+
+    <main class="admin-main" id="main-content">
+        <header class="topbar">
+            <button class="menu-button" id="menu-button" type="button" aria-controls="sidebar"
+                    aria-expanded="false" aria-label="Abrir menú">Menú</button>
+            <div class="topbar-spacer"></div>
+            <span id="docente-nombre" class="admin-name">Docente</span>
+            <a class="account-link" href="/cuenta/perfil.html">Mi cuenta</a>
+            <button class="logout-button" id="logout-button" type="button">Cerrar sesión</button>
+        </header>
+
+        <section class="content" aria-labelledby="page-title">
+            <div class="page-intro">
+                <div><span class="docente-eyebrow">Espacio docente</span><h1 id="page-title">Mis cursos</h1><p class="breadcrumb">Área docente <span aria-hidden="true">/</span> Mis cursos</p></div>
+                <p class="page-description">Organiza tus cursos y mantén sus materiales al día para tus estudiantes.</p>
+            </div>
+            <p id="estado-cursos" class="list-status" role="status">Cargando tus cursos...</p>
+            <section id="lista-cursos" class="docente-course-grid" aria-label="Cursos asignados"></section>
+        </section>
+    </main>
+</div>
+
+<dialog id="editar-contenido" class="course-dialog docente-editor-dialog" aria-labelledby="titulo-edicion">
+    <form id="form-contenido" class="docente-editor-form" novalidate>
+        <div class="dialog-header docente-editor-header"><div><span class="docente-eyebrow">Editor del curso</span><h2 id="titulo-edicion">Contenido del curso</h2><p>Actualiza la información académica y los materiales de aprendizaje.</p></div>
+            <button id="cerrar-edicion" class="dialog-close" type="button">Cerrar</button></div>
+        <div class="docente-editor-body"><div class="dialog-fields course-fields docente-editor-fields">
+            <div class="field"><label for="contenido-descripcion">Descripción</label><textarea id="contenido-descripcion" name="descripcion" required minlength="10" maxlength="5000"></textarea></div>
+            <div class="field"><label for="contenido-aprenderas">Lo que aprenderán</label><textarea id="contenido-aprenderas" name="loQueAprenderas" maxlength="5000"></textarea></div>
+            <div class="field field-wide course-program-editor-field"><div class="docente-section-heading"><div><span class="docente-eyebrow">Programa</span><span class="field-label">Contenido del curso</span><p class="field-help">Divide el curso en módulos y agrega enlaces o archivos para cada uno.</p></div><button id="agregar-modulo" class="secondary-button" type="button">+ Agregar módulo</button></div><div id="contenido-modulos-editor" class="course-modules-editor"></div><textarea id="contenido-programa" name="contenidoPrograma" maxlength="50000" hidden></textarea></div>
+            <div class="field field-wide course-cover-field"><div class="course-cover-copy"><label for="portada-curso">Imagen de portada</label><input id="portada-curso" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><small class="field-help">PNG, JPG, WEBP o GIF, hasta 50 MB.</small></div><img id="portada-vista-previa" class="course-cover-preview" alt="Vista previa de la portada" hidden></div>
+            <div class="field"><label for="contenido-requisitos">Requisitos</label><textarea id="contenido-requisitos" name="requisitos" maxlength="5000"></textarea></div>
+            <div class="field"><label for="contenido-publico">¿Para quién es este curso?</label><textarea id="contenido-publico" name="dirigidoA" maxlength="5000"></textarea></div>
+        </div></div>
+        <div class="docente-editor-footer"><p id="estado-guardado" class="action-status" role="status"></p><div class="dialog-actions"><button class="secondary-button" id="cancelar-edicion" type="button">Cancelar</button><button class="new-button" type="submit">Guardar cambios</button></div></div>
+    </form>
+</dialog>
+</body>
+</html>

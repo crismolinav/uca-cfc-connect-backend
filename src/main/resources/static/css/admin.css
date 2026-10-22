@@ -91,6 +91,8 @@ a { color: inherit; }
 }
 .sidebar-footer span { color: #8e979d; }
 .admin-main { min-width: 0; }
+.skip-link { position: absolute; z-index: 10; top: 10px; left: -10000px; padding: 10px 14px; border-radius: 7px; background: #fff; color: #174b9b; box-shadow: 0 2px 12px rgba(0,0,0,.16); }
+.skip-link:focus { left: 10px; }
 .topbar {
     display: flex;
     min-height: 68px;
@@ -367,6 +369,98 @@ dialog::backdrop { background: rgba(12, 21, 29, .58); }
     .time-range { grid-template-columns: 1fr; }
     .time-range > span { display: none; }
 }
+
+.course-program-editor-field>.field-label{display:block;margin-bottom:.25rem;font-weight:600}
+.course-modules-editor{display:grid;gap:1rem;margin:.8rem 0}
+.course-module-editor{padding:1rem;border:1px solid #d7e0ed;border-radius:10px;background:#f8faff}
+.course-module-editor-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.8rem}
+.course-module-editor-head strong{color:#18365f}
+.course-module-editor .field{margin:.6rem 0}
+.course-module-resources{display:grid;gap:.5rem;margin:.6rem 0}
+.course-module-resource{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.55rem .7rem;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-size:.76rem}
+.course-module-resource span{overflow-wrap:anywhere}
+.course-module-resource button,.remove-course-module{padding:.38rem .55rem;border:1px solid #d1dbe8;border-radius:5px;background:#fff;color:#764343;font-size:.72rem}
+.course-module-add-resource{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(130px,.7fr) minmax(0,1fr) auto;gap:.5rem;align-items:end;margin-top:.7rem}
+.course-module-add-resource .field{margin:0}
+.course-module-add-resource button,.course-module-upload{min-height:38px;padding:.45rem .7rem;border:1px solid #9aafd0;border-radius:6px;background:#fff;color:#234775;font-size:.74rem;font-weight:600}
+.course-module-upload{margin-top:.55rem}
+.course-cover-preview{display:block;max-width:100%;max-height:220px;margin-top:.75rem;border:1px solid #d8e1ee;border-radius:9px;object-fit:cover}
+.course-module-file-upload{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem}.course-module-file-upload input{max-width:100%;font-size:.74rem}
+@media(max-width:680px){.course-module-add-resource{grid-template-columns:1fr}.course-module-add-resource button{justify-self:start}}
+
+/* Espacio docente */
+.docente-page{background:#eef2f8}
+.docente-page .admin-shell{background:#f7f9fc}
+.docente-page .content{max-width:1480px;margin-inline:auto;padding-top:clamp(24px,4vw,54px)}
+.docente-page .page-intro{position:relative;overflow:hidden;align-items:center;min-height:210px;padding:clamp(26px,4vw,48px);border-radius:22px;background:radial-gradient(circle at 88% 15%,rgb(93 153 255 / .34),transparent 24%),linear-gradient(120deg,#102a53,#174b8e);box-shadow:0 20px 45px rgb(14 42 84 / .15);color:#fff}
+.docente-page .page-intro::after{position:absolute;right:-75px;bottom:-210px;width:360px;height:360px;border:1px solid rgb(255 255 255 / .14);border-radius:50%;content:"";pointer-events:none}
+.docente-page .page-intro h1{margin:.45rem 0;color:#fff;font-size:clamp(2rem,4vw,3rem)}
+.docente-page .breadcrumb,.docente-page .page-description{color:#c9daf2}
+.docente-page .page-description{position:relative;z-index:1;max-width:34ch;font-size:.86rem;line-height:1.7}
+.docente-eyebrow{display:block;color:#6ca5ff;font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.docente-page .page-intro .docente-eyebrow{color:#a9caff}
+.docente-course-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,350px),1fr));gap:22px}
+.docente-course-card{overflow:hidden;border:1px solid #e0e7f1;border-radius:17px;background:#fff;box-shadow:0 10px 28px rgb(24 49 83 / .07);transition:transform .18s ease,box-shadow .18s ease}
+.docente-course-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgb(24 49 83 / .12)}
+.docente-course-cover{position:relative;display:grid;place-items:end start;aspect-ratio:16/7;overflow:hidden;padding:17px;background:linear-gradient(125deg,#18396f,#3878c8);color:#fff}
+.docente-course-cover::after{position:absolute;inset:0;background:linear-gradient(0deg,rgb(7 24 51 / .58),transparent 65%);content:""}
+.docente-course-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.docente-course-cover span{position:relative;z-index:1;font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.docente-course-card-body{padding:20px}
+.docente-course-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.docente-course-card h2{margin:0;color:#17345d;font-size:1.12rem;line-height:1.4}
+.docente-course-label{flex:none;padding:5px 9px;border-radius:999px;background:#eef4ff;color:#2857a3;font-size:.61rem;font-weight:600}
+.docente-course-summary{display:-webkit-box;min-height:3.3em;overflow:hidden;margin:10px 0 17px;color:#687b93;font-size:.75rem;line-height:1.65;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.docente-course-facts{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:12px;padding:14px 0;border-top:1px solid #edf1f6;border-bottom:1px solid #edf1f6}
+.docente-course-fact span,.docente-course-fact strong{display:block}.docente-course-fact span{margin-bottom:5px;color:#8190a4;font-size:.63rem}.docente-course-fact strong{color:#294565;font-size:.72rem;line-height:1.5}
+.docente-course-card-actions{display:flex;justify-content:flex-end;padding-top:15px}
+.docente-edit-button{min-height:42px;padding:9px 15px;border:0;border-radius:8px;background:#1457c5;color:#fff;font-size:.72rem;font-weight:600;transition:background .15s ease,transform .15s ease}
+.docente-edit-button:hover{transform:translateY(-1px);background:#0f469f}
+.docente-page .list-status:empty{display:none}
+.docente-page .list-status:not(:empty){margin:0 0 16px;padding:15px 18px;border:1px solid #e0e7f1;border-radius:12px;background:#fff;color:#52647b}
+
+/* Editor de contenido docente */
+#editar-contenido.docente-editor-dialog{display:none;width:min(96vw,1040px);height:min(90dvh,940px);max-height:92dvh;overflow:hidden;padding:0;border:1px solid #e0e8f3;border-radius:20px;background:#fff;box-shadow:0 28px 90px rgb(6 23 48 / .3)}
+#editar-contenido.docente-editor-dialog[open]{display:block}
+#editar-contenido.docente-editor-dialog::backdrop{background:rgb(9 23 43 / .66);backdrop-filter:blur(4px)}
+.docente-editor-form{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;min-height:0}
+.docente-editor-header{position:relative;z-index:2;align-items:center;padding:22px 28px;border-bottom:1px solid #e8edf4;background:#fff}
+.docente-editor-header h2{margin:5px 0 3px;color:#16345e;font-size:1.35rem;letter-spacing:-.02em}
+.docente-editor-header p{margin:0;color:#75849a;font-size:.74rem;line-height:1.5}
+.docente-editor-header .docente-eyebrow,.docente-section-heading .docente-eyebrow{color:#2365c8}
+.docente-editor-header .dialog-close{min-width:76px;min-height:38px;border-radius:8px;font-weight:600}
+.docente-editor-body{min-height:0;overflow:auto;padding:22px 28px 28px;overscroll-behavior:contain;scrollbar-gutter:stable}
+.docente-editor-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 22px;margin:0}
+.docente-editor-fields>.field label,.docente-editor-fields>.field>.field-label{color:#2e4665;font-size:.75rem;font-weight:600}
+.docente-editor-fields>.field input:not([type=file]),.docente-editor-fields>.field textarea,.course-module-editor input:not([type=file]),.course-module-editor select,.course-module-editor textarea{min-height:43px;padding:11px 13px;border-color:#d8e2ef;border-radius:9px;background:#fbfcfe;color:#233b5d;font-size:.75rem;transition:border-color .15s ease,box-shadow .15s ease}
+.docente-editor-fields>.field textarea,.course-module-editor textarea{min-height:116px;line-height:1.65}
+.docente-editor-fields>.field input:focus,.docente-editor-fields>.field textarea:focus,.course-module-editor input:focus,.course-module-editor select:focus,.course-module-editor textarea:focus{border-color:#6d9ee8;outline:none;box-shadow:0 0 0 3px rgb(43 105 201 / .12)}
+.docente-editor-fields .course-program-editor-field{padding:20px;border:1px solid #e0e8f3;border-radius:15px;background:#f7f9fd}
+.docente-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.docente-section-heading .field-label{display:block;margin-top:4px;color:#1b365c;font-size:.97rem;font-weight:600}
+.docente-section-heading .field-help{margin-top:5px;font-size:.7rem}
+.docente-section-heading .secondary-button{flex:none;min-height:40px;border-color:#b9cdee;border-radius:8px;color:#1554ad;font-weight:600}
+.course-modules-editor{gap:14px;margin:16px 0 0}
+.course-module-editor{padding:18px;border-color:#dce5f1;border-radius:13px;background:#fff;box-shadow:0 4px 14px rgb(25 52 88 / .04)}
+.course-module-editor-head{margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #edf1f6}
+.course-module-editor-head strong{color:#1a3b69;font-size:.82rem}
+.course-module-editor .field{gap:7px;margin:12px 0}
+.course-module-editor .field label{color:#50647e;font-size:.69rem;font-weight:600}
+.course-module-add-resource{grid-template-columns:minmax(0,1.15fr) minmax(125px,.7fr) minmax(0,1fr) auto;gap:8px;margin-top:14px}
+.course-module-add-resource input,.course-module-add-resource select{min-width:0;min-height:42px;padding:9px 11px;border:1px solid #d8e2ef;border-radius:8px;background:#fbfcfe;color:#344b68;font-size:.7rem}
+.course-module-add-resource button,.course-module-upload{min-height:42px;border-color:#c8d8ef;border-radius:8px;background:#fff;color:#1e57a5;font-size:.69rem}
+.course-module-resource{padding:9px 11px;border-color:#e4eaf2;border-radius:8px;color:#435a76}
+.course-module-resource button,.remove-course-module{min-height:32px;padding:6px 10px;border-color:#eed9dc;border-radius:7px;background:#fff7f7;color:#9b3c47;font-weight:600}
+.course-module-file-upload{margin-top:10px;padding:11px;border:1px dashed #cbd8e9;border-radius:9px;background:#f8fafd}
+.course-module-file-upload input{color:#61738b;font-size:.67rem}
+.course-module-file-upload input::file-selector-button,.course-cover-copy input::file-selector-button{min-height:34px;margin-right:9px;padding:6px 11px;border:1px solid #c9d8ec;border-radius:7px;background:#fff;color:#244d85;font:600 .68rem Poppins,'Segoe UI',sans-serif;cursor:pointer}
+.course-cover-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);align-items:center;gap:18px;padding:18px;border:1px solid #e3eaf3;border-radius:13px;background:#f8fafd}
+.course-cover-copy{display:grid;gap:10px}.course-cover-copy input{width:100%;font-size:.69rem}.course-cover-preview{width:100%;max-width:none;height:160px;max-height:none;margin:0;padding:5px;border-color:#dce5f0;border-radius:10px;background:#fff;object-fit:contain}
+.docente-editor-footer{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:78px;padding:12px 28px;border-top:1px solid #e8edf4;background:#fff}
+.docente-editor-footer .action-status{margin:0;color:#27704d;font-size:.72rem}
+.docente-editor-footer .dialog-actions{margin:0}.docente-editor-footer .secondary-button,.docente-editor-footer .new-button{min-height:42px;margin:0;border-radius:8px;font-size:.72rem;font-weight:600}
+@media(max-width:760px){.docente-page .page-intro{align-items:flex-start;flex-direction:column;gap:12px}.docente-page .page-description{max-width:48ch;text-align:left}.docente-course-grid{grid-template-columns:1fr}.docente-editor-fields{grid-template-columns:1fr}.docente-editor-fields>.field{grid-column:1/-1}.course-module-add-resource{grid-template-columns:1fr 1fr}.course-module-add-resource input:first-child{grid-column:1/-1}.course-module-add-resource button{grid-column:1/-1}.course-cover-field{grid-template-columns:1fr}.course-cover-preview{height:190px}}
+@media(max-width:520px){#editar-contenido.docente-editor-dialog{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0}.docente-editor-header{padding:17px 18px}.docente-editor-header h2{font-size:1.1rem}.docente-editor-body{padding:18px}.docente-editor-footer{align-items:stretch;flex-direction:column;padding:12px 18px}.docente-editor-footer .dialog-actions{justify-content:flex-end}.docente-editor-fields .course-program-editor-field{padding:14px}.docente-section-heading{align-items:flex-start;flex-direction:column}.course-module-editor{padding:13px}.course-module-add-resource{grid-template-columns:1fr}.course-module-add-resource input:first-child,.course-module-add-resource button{grid-column:auto}.docente-course-card-body{padding:16px}.docente-course-card-heading{flex-direction:column;gap:8px}}
 
 /* Módulos operativos: espacios, alquileres y cotizaciones */
 .operations-filters { grid-template-columns: minmax(260px, 2fr) repeat(2, minmax(150px, 1fr)); }
