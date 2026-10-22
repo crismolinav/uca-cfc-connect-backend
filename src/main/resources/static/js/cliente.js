@@ -27,6 +27,7 @@
     let detailTrigger = null;
     let spacePage = 0;
     let selectedSpace = null;
+    let selectedCourse = null;
     let csrfToken = null;
 
     async function request(url) {
@@ -292,6 +293,10 @@
 
     function openCourseDetail(course, trigger) {
         detailTrigger = trigger;
+        selectedCourse = course;
+        document.getElementById('course-enroll-button').disabled = false;
+        document.getElementById('course-enroll-button').textContent = 'Inscribirme';
+        document.getElementById('course-enroll-status').textContent = 'Inscríbete desde aquí y consulta el estado de tu pago en Mi aprendizaje.';
         document.getElementById('course-detail-category').textContent = course.categoria;
         document.getElementById('course-detail-title').textContent = course.titulo;
         document.getElementById('course-detail-description').textContent = course.descripcion;
@@ -370,6 +375,22 @@
     document.getElementById('space-previous-page').addEventListener('click', () => { spacePage -= 1; loadSpaces(); });
     document.getElementById('space-next-page').addEventListener('click', () => { spacePage += 1; loadSpaces(); });
     document.getElementById('course-detail-close').addEventListener('click', () => courseDetailDialog.close());
+    document.getElementById('course-enroll-button').addEventListener('click', async (event) => {
+        if (!selectedCourse) return;
+        const button = event.currentTarget;
+        const status = document.getElementById('course-enroll-status');
+        button.disabled = true;
+        status.textContent = 'Procesando tu inscripción...';
+        try {
+            await secureRequest('/api/v1/cliente/inscripciones', {method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({idCurso: selectedCourse.idCurso})});
+            status.textContent = 'Inscripción creada. Quedó pendiente de pago; puedes continuar desde Mi aprendizaje.';
+            button.textContent = 'Inscrito';
+        } catch (error) {
+            status.textContent = error.message;
+            button.disabled = false;
+        }
+    });
     document.getElementById('diploma-detail-close').addEventListener('click', () => diplomaDetailDialog.close());
     courseDetailDialog.addEventListener('close', restoreDetailFocus);
     diplomaDetailDialog.addEventListener('close', restoreDetailFocus);

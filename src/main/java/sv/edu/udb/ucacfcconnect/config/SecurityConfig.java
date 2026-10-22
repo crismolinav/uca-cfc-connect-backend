@@ -70,6 +70,7 @@ public class SecurityConfig {
                                 "/api/v1/cotizaciones",
                                 "/api/v1/alquileres",
                                 "/api/v1/alquileres/solicitudes").authenticated()
+                        .requestMatchers("/api/v1/cliente/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/alquileres/mios").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/alquileres/*/cancelar").authenticated()
                         .requestMatchers(
