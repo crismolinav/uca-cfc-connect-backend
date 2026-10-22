@@ -91,6 +91,21 @@ GET /api/v1/cursos?texto=excel&idCategoria=1&activo=true&pagina=0&tamano=10&orde
 
 Los campos de ordenamiento permitidos son `idCurso`, `titulo`, `duracionHoras`, `cupoMaximo`, `costo`, `fechaInicio`, `fechaFin`, `horario`, `activo`, `categoria` y `modalidad`.
 
+## Inscripción y pagos del cliente
+
+Desde el catálogo, un cliente con sesión iniciada puede inscribirse en un curso activo si aún hay cupo. El sistema crea o reutiliza su participante y registra la inscripción como `PENDIENTE`. En **Mi aprendizaje** puede consultar sus inscripciones y pagos.
+
+| Método | Ruta | Función |
+|---|---|---|
+| `GET` | `/api/v1/cliente/inscripciones` | Lista las inscripciones de la cuenta autenticada |
+| `POST` | `/api/v1/cliente/inscripciones` | Inscribe al cliente en un curso activo y con cupo |
+| `GET` | `/api/v1/cliente/pagos` | Lista los pagos de la cuenta autenticada |
+| `POST` | `/api/v1/cliente/pagos` | Registra un pago pendiente para una inscripción propia |
+
+Para inscribirse, envía `{"idCurso": 10}`. Para registrar un pago, envía `{"idInscripcion": 25, "metodo": "TRANSFERENCIA", "referencia": "REF-123"}`. Los métodos admitidos son `EFECTIVO`, `TRANSFERENCIA` y `TARJETA`. El importe siempre se toma del costo de la inscripción; el cliente no puede modificarlo.
+
+El registro de pago queda `PENDIENTE` hasta que recepción lo verifique y confirme. Esta función registra el pago para revisión; no procesa cargos de tarjeta ni se conecta a una pasarela bancaria.
+
 ## Módulo de cotizaciones
 
 Las cotizaciones se crean para un cliente y contienen uno o más detalles de cursos o espacios. El servidor toma el precio vigente del catálogo, calcula cada subtotal y el monto estimado total. Sus estados son `PENDIENTE`, `EN_PROCESO`, `APROBADA` y `RECHAZADA`.
