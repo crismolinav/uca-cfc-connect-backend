@@ -48,7 +48,9 @@ public class PagoClienteService {
             throw new ApiException(HttpStatus.FORBIDDEN, "La inscripción no pertenece a tu cuenta");
         }
         if (inscripcion.getCurso() == null) throw invalido("El pago en línea solo está disponible para cursos");
-        if ("CONFIRMADA".equals(inscripcion.getEstado())) throw conflicto("La inscripción ya está pagada");
+        if (!"PENDIENTE".equals(inscripcion.getEstado())) {
+            throw conflicto("Solo puedes pagar una inscripción pendiente");
+        }
         if (pagos.existsByInscripcionIdAndEstadoIn(inscripcion.getId(), List.of("PENDIENTE", "CONFIRMADO"))) {
             throw conflicto("Ya existe un pago pendiente o confirmado para esta inscripción");
         }

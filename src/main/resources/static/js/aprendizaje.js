@@ -59,12 +59,13 @@
         enrollments.forEach((enrollment) => {
             const payment = paymentsByEnrollment.get(enrollment.idInscripcion);
             let action = null;
-            if (enrollment.estado !== 'CONFIRMADA' && !payment) {
+            if (enrollment.idCurso && enrollment.estado === 'PENDIENTE' && !payment) {
                 action = node('button', 'learning-action', 'Registrar pago');
                 action.type = 'button';
                 action.addEventListener('click', () => abrirPago(enrollment));
             }
-            enrollmentList.append(row(enrollment.curso, money(enrollment.total) + ' · Inscripción ' + enrollment.fecha,
+            const total = enrollment.total == null ? '' : money(enrollment.total) + ' · ';
+            enrollmentList.append(row(enrollment.curso, total + 'Inscripción ' + enrollment.fecha,
                 payment?.estado === 'CONFIRMADO' ? 'Pagado' : payment?.estado === 'PENDIENTE' ? 'Pago pendiente' : enrollment.estado,
                 action));
         });
