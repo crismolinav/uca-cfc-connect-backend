@@ -16,6 +16,9 @@ public interface CursoDocenteRepository extends JpaRepository<CursoDocente, Long
     @EntityGraph(attributePaths = "curso")
     List<CursoDocente> findByDocente_Id(Long idDocente);
 
+    @EntityGraph(attributePaths = {"curso", "curso.categoria", "curso.modalidad", "docente"})
+    List<CursoDocente> findByDocente_Usuario_Id(Long usuarioId);
+
     boolean existsByDocente_Id(Long idDocente);
 
     void deleteByCurso_IdCursoAndDocente_Id(Long idCurso, Long idDocente);

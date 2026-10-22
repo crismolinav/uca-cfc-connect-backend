@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Crea tu acceso docente a UCA CFC Connect.">
+    <title>Crear acceso docente | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/auth.css?v=20261022-1">
+    <script src="/js/invitacion-docente.js?v=20261022-1" defer></script>
+</head>
+<body>
+<main class="auth-layout">
+    <section class="auth-panel" aria-labelledby="page-title">
+        <div class="auth-card">
+            <a class="brand" href="/" aria-label="UCA CFC Connect, inicio">
+                <span class="brand-mark" aria-hidden="true">U</span><span>UCA CFC Connect</span>
+            </a>
+            <header class="auth-heading">
+                <h1 id="page-title">Crear acceso docente</h1>
+                <p id="invitacion-docente-info">Verificando tu invitación...</p>
+            </header>
+            <form id="invitacion-docente-form" class="auth-form" hidden>
+                <div class="field">
+                    <label for="docente-password">Contraseña</label>
+                    <input id="docente-password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required aria-describedby="password-help">
+                    <p id="password-help" class="field-help">Debe tener al menos 8 caracteres.</p>
+                </div>
+                <div class="field">
+                    <label for="docente-password-confirm">Confirmar contraseña</label>
+                    <input id="docente-password-confirm" type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
+                </div>
+                <label class="check-control" for="docente-terminos">
+                    <input id="docente-terminos" type="checkbox" required>
+                    <span>Acepto los términos y políticas.</span>
+                </label>
+            <p id="invitacion-docente-error" class="form-status" role="alert"></p>
+                <button class="primary-button" type="submit">Crear acceso</button>
+            </form>
+            <p class="auth-switch"><a href="/auth/login.html">Ya tengo acceso</a></p>
+        </div>
+    </section>
+    <aside class="auth-visual" aria-hidden="true">
+        <img src="/assets/students-studying.png" alt="">
+    </aside>
+</main>
+</body>
+</html>

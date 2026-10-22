@@ -18,6 +18,14 @@ public class Docente {
     private String correo;
     @Column(length = 20)
     private String telefono;
+    @Column(columnDefinition = "TEXT")
+    private String descripcion;
+    @Column(name = "foto_url", length = 500)
+    private String fotoUrl;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", unique = true,
+            foreignKey = @ForeignKey(name = "fk_docente_usuario"))
+    private Usuario usuario;
     @OneToMany(mappedBy = "docente")
     private List<CursoDocente> cursos = new ArrayList<>();
     @OneToMany(mappedBy = "docente")
@@ -34,6 +42,12 @@ public class Docente {
     public void setCorreo(String correo) { this.correo = correo; }
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
     public List<CursoDocente> getCursos() { return cursos; }
     public void setCursos(List<CursoDocente> cursos) { this.cursos = cursos; }
     public List<DiplomadoDocente> getDiplomados() { return diplomados; }

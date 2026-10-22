@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import sv.edu.udb.ucacfcconnect.dto.DocenteDTO;
 import sv.edu.udb.ucacfcconnect.dto.DocenteResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.DocentePerfilDTO;
 import sv.edu.udb.ucacfcconnect.dto.ErrorResponseDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.service.DocenteService;
@@ -58,6 +59,12 @@ public class DocenteController {
     @Operation(summary = "Consultar un docente")
     public ResponseEntity<DocenteResponseDTO> obtener(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(docenteService.obtener(id));
+    }
+
+    @GetMapping("/{id}/perfil")
+    @Operation(summary = "Consultar perfil público, estadísticas y reseñas del docente")
+    public ResponseEntity<DocentePerfilDTO> perfil(@PathVariable @Positive Long id) {
+        return ResponseEntity.ok(docenteService.perfil(id));
     }
 
     @PostMapping

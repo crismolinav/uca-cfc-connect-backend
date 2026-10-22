@@ -16,7 +16,18 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
     long countByCursoIdCursoAndEstadoNot(Long cursoId, String estado);
     List<Inscripcion> findByParticipanteClienteIdOrderByFechaDescIdDesc(Long clienteId);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"curso"})
+    @Query("select i from Inscripcion i join i.participante p join p.cliente cl " +
+            "where cl.usuario.id = :usuarioId and i.curso.idCurso = :cursoId " +
+            "and upper(i.estado) <> 'CANCELADA' order by i.id desc")
+    List<Inscripcion> buscarInscripcionCursoDeUsuario(@Param("usuarioId") Long usuarioId,
+                                                       @Param("cursoId") Long cursoId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from Inscripcion i where i.id = :id")
     Optional<Inscripcion> bloquear(@Param("id") Long id);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"participante", "participante.cliente", "participante.cliente.usuario", "curso", "curso.docentes", "curso.docentes.docente"})
+    Optional<Inscripcion> findByIdAndParticipante_Cliente_Usuario_IdAndCurso_IdCurso(
+            Long id, Long usuarioId, Long cursoId);
 }

@@ -30,6 +30,8 @@ public class Usuario {
     private boolean emailVerificado;
     @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY)
     private Cliente cliente;
+    @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY)
+    private Docente docente;
 
     public Usuario() {}
     public Long getId() { return id; }
@@ -52,4 +54,6 @@ public class Usuario {
     public void setEmailVerificado(boolean emailVerificado) { this.emailVerificado = emailVerificado; }
     public Cliente getCliente() { return cliente; }
     public void setCliente(Cliente cliente) { this.cliente = cliente; }
+    public Docente getDocente() { return docente; }
+    public void setDocente(Docente docente) { this.docente = docente; }
 }

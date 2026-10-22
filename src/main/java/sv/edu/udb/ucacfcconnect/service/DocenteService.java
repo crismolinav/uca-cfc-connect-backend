@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.DocenteDTO;
 import sv.edu.udb.ucacfcconnect.dto.DocenteResponseDTO;
+import sv.edu.udb.ucacfcconnect.dto.DocentePerfilDTO;
+import sv.edu.udb.ucacfcconnect.dto.ResenaResumenDTO;
 import sv.edu.udb.ucacfcconnect.dto.PaginaDTO;
 import sv.edu.udb.ucacfcconnect.entity.Docente;
 import sv.edu.udb.ucacfcconnect.exception.ConflictException;
@@ -16,8 +18,12 @@ import sv.edu.udb.ucacfcconnect.exception.SolicitudInvalidaException;
 import sv.edu.udb.ucacfcconnect.repository.CursoDocenteRepository;
 import sv.edu.udb.ucacfcconnect.repository.DiplomadoDocenteRepository;
 import sv.edu.udb.ucacfcconnect.repository.DocenteRepository;
+import sv.edu.udb.ucacfcconnect.repository.InscripcionRepository;
+import sv.edu.udb.ucacfcconnect.repository.ResenaCursoRepository;
+import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 
 import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,15 +39,24 @@ public class DocenteService {
     private final DocenteRepository docenteRepository;
     private final CursoDocenteRepository cursoDocenteRepository;
     private final DiplomadoDocenteRepository diplomadoDocenteRepository;
+    private final InscripcionRepository inscripciones;
+    private final ResenaCursoRepository resenas;
+    private final UsuarioRepository usuarios;
 
     public DocenteService(
             DocenteRepository docenteRepository,
             CursoDocenteRepository cursoDocenteRepository,
-            DiplomadoDocenteRepository diplomadoDocenteRepository
+            DiplomadoDocenteRepository diplomadoDocenteRepository,
+            InscripcionRepository inscripciones,
+            ResenaCursoRepository resenas,
+            UsuarioRepository usuarios
     ) {
         this.docenteRepository = docenteRepository;
         this.cursoDocenteRepository = cursoDocenteRepository;
         this.diplomadoDocenteRepository = diplomadoDocenteRepository;
+        this.inscripciones = inscripciones;
+        this.resenas = resenas;
+        this.usuarios = usuarios;
     }
 
     @Transactional(readOnly = true)
@@ -76,6 +91,25 @@ public class DocenteService {
     @Transactional(readOnly = true)
     public DocenteResponseDTO obtener(Long id) {
         return aRespuesta(buscar(id));
+    }
+
+    @Transactional(readOnly = true)
+    public DocentePerfilDTO perfil(Long id) {
+        Docente docente = buscar(id);
+        var asignaciones = cursoDocenteRepository.findByDocente_Id(id);
+        long estudiantes = asignaciones.stream().mapToLong(asignacion ->
+                inscripciones.countByCursoIdCursoAndEstadoNot(asignacion.getCurso().getIdCurso(), "CANCELADA")).sum();
+        var opiniones = resenas.findByDocente_IdAndCalificacionDocenteIsNotNullOrderByFechaCreacionDesc(id);
+        List<ResenaResumenDTO> resumenes = opiniones.stream().map(resena -> {
+            var inscripcion = resena.getInscripcion();
+            var participante = inscripcion.getParticipante();
+            return new ResenaResumenDTO(participante.getNombre() + " " + participante.getApellido(),
+                    inscripcion.getCurso().getTitulo(), resena.getCalificacionDocente(),
+                    resena.getComentarioDocente(), resena.getFechaCreacion().toLocalDate());
+        }).toList();
+        return new DocentePerfilDTO(docente.getId(), docente.getNombre(), docente.getEspecialidad(),
+                docente.getDescripcion(), docente.getFotoUrl(), asignaciones.size(), estudiantes,
+                resenas.promedioDocente(id), (long) opiniones.size(), resumenes);
     }
 
     @Transactional
@@ -127,6 +161,14 @@ public class DocenteService {
         docente.setEspecialidad(dto.especialidad().strip());
         docente.setCorreo(correo);
         docente.setTelefono(dto.telefono() == null || dto.telefono().isBlank() ? null : dto.telefono().strip());
+        docente.setDescripcion(dto.descripcion() == null || dto.descripcion().isBlank() ? null : dto.descripcion().strip());
+        docente.setFotoUrl(dto.fotoUrl() == null || dto.fotoUrl().isBlank() ? null : dto.fotoUrl().strip());
+        var usuarioDocente = usuarios.findByCorreoIgnoreCase(correo)
+                .filter(usuario -> usuario.getRol().getNombre().equalsIgnoreCase("DOCENTE"))
+                .orElse(null);
+        if (usuarioDocente != null) docente.setUsuario(usuarioDocente);
+        else if (docente.getUsuario() != null && !docente.getUsuario().getCorreo().equalsIgnoreCase(correo))
+            docente.setUsuario(null);
     }
 
     private DocenteResponseDTO aRespuesta(Docente docente) {
@@ -135,7 +177,9 @@ public class DocenteService {
                 docente.getNombre(),
                 docente.getEspecialidad(),
                 docente.getCorreo(),
-                docente.getTelefono()
+                docente.getTelefono(),
+                docente.getDescripcion(),
+                docente.getFotoUrl()
         );
     }
 }

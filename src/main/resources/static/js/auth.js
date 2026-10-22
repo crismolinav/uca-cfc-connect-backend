@@ -32,6 +32,7 @@
 
     function rutaPorRol(usuario) {
         if (usuario?.rol === "ADMIN") return "/admin/index.html";
+        if (usuario?.rol === "DOCENTE") return "/docente/cursos.html";
         if (usuario?.rol === "RECEPCIONISTA") return "/recepcion/index.html";
         if (usuario?.rol === "CLIENTE") return "/cliente/index.html";
         return "/cuenta/perfil.html";

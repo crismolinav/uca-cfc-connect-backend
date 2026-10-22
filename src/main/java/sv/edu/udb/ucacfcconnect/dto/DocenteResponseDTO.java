@@ -8,6 +8,8 @@ public record DocenteResponseDTO(
         String nombre,
         String especialidad,
         String correo,
-        String telefono
+        String telefono,
+        String descripcion,
+        String fotoUrl
 ) {
 }

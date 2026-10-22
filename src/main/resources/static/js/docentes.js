@@ -80,10 +80,25 @@
         wrap.className = 'row-actions ' + extraClass;
         wrap.append(
             button('Editar', () => openForm(teacher), 'Editar ' + teacher.nombre),
+            button('Invitar', (event) => invitar(teacher, event.currentTarget), 'Invitar a ' + teacher.nombre),
             button('Eliminar', (event) => openDelete(teacher, event.currentTarget),
                 'Eliminar ' + teacher.nombre, 'delete-row-button')
         );
         return wrap;
+    }
+
+    async function invitar(teacher, control) {
+        control.disabled = true;
+        try {
+            const invitacion = await request(api + '/' + teacher.idDocente + '/invitacion', {method: 'POST'});
+            actionStatus.replaceChildren(document.createTextNode(invitacion.mensaje + ' '));
+            if (invitacion.enlaceLocal) {
+                const enlace = document.createElement('a'); enlace.href = invitacion.enlaceLocal;
+                enlace.textContent = 'Abrir invitación'; enlace.target = '_blank'; enlace.rel = 'noopener';
+                actionStatus.append(enlace);
+            }
+        } catch (failure) { actionStatus.textContent = failure.message; }
+        finally { control.disabled = false; }
     }
 
     function row(teacher, number) {
@@ -146,7 +161,7 @@
         form.reset();
         editingId = teacher?.idDocente ?? null;
         document.getElementById('dialog-error').textContent = '';
-        ['nombre', 'especialidad', 'correo', 'telefono'].forEach((name) => {
+        ['nombre', 'especialidad', 'correo', 'telefono', 'descripcion', 'fotoUrl'].forEach((name) => {
             form.elements.namedItem(name).value = teacher?.[name] ?? '';
         });
         document.getElementById('dialog-title').textContent = teacher ? 'Editar docente' : 'Nuevo docente';

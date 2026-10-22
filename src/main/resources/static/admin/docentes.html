@@ -6,7 +6,7 @@
     <meta name="description" content="Administración de docentes de UCA CFC Connect.">
     <title>Docentes | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/admin.css?v=20260925-3">
-    <script src="/js/docentes.js?v=20260925-3" defer></script>
+    <script src="/js/docentes.js?v=20261022-1" defer></script>
 </head>
 <body>
 <div class="admin-shell">
@@ -100,7 +100,7 @@
 <dialog id="teacher-dialog" class="course-dialog" aria-labelledby="dialog-title">
     <form id="teacher-form" novalidate>
         <div class="dialog-header">
-            <div><h2 id="dialog-title">Nuevo docente</h2><p>Esta ficha no crea una cuenta de acceso al sistema.</p></div>
+            <div><h2 id="dialog-title">Nuevo docente</h2><p>Completa los datos que aparecerán en las fichas de cursos y docentes.</p></div>
             <button class="dialog-close" id="dialog-close" type="button">Cerrar</button>
         </div>
         <div class="dialog-fields">
@@ -108,6 +108,8 @@
             <div class="field field-wide"><label for="teacher-specialty">Especialidad *</label><input id="teacher-specialty" name="especialidad" type="text" minlength="3" maxlength="120" required></div>
             <div class="field"><label for="teacher-email">Correo *</label><input id="teacher-email" name="correo" type="email" maxlength="120" required autocomplete="email"></div>
             <div class="field"><label for="teacher-phone">Teléfono</label><input id="teacher-phone" name="telefono" type="tel" minlength="7" maxlength="20" pattern="[+0-9() .-]{7,20}" autocomplete="tel"><small class="field-help">Puede incluir código de país, espacios y guiones.</small></div>
+            <div class="field field-wide"><label for="teacher-photo">Foto (URL)</label><input id="teacher-photo" name="fotoUrl" type="url" maxlength="500" placeholder="https://..." autocomplete="url"></div>
+            <div class="field field-wide"><label for="teacher-description">Descripción del docente</label><textarea id="teacher-description" name="descripcion" maxlength="5000" rows="4"></textarea></div>
         </div>
         <p id="dialog-error" class="dialog-error" role="alert"></p>
         <div class="dialog-actions"><button class="secondary-button" id="dialog-cancel" type="button">Cancelar</button><button class="new-button" id="dialog-save" type="submit">Guardar docente</button></div>
