@@ -34,8 +34,11 @@ class AdminClienteIntegrationTests {
     @Autowired JwtService jwtService;
     @Autowired PasswordEncoder passwordEncoder;
 
+    @Autowired sv.edu.udb.ucacfcconnect.repository.ParticipanteRepository participantes;
+
     @BeforeEach
     void limpiar() {
+        participantes.deleteAll();
         clientes.deleteAll();
         usuarios.deleteAll();
         roles.deleteAll();
@@ -63,12 +66,12 @@ class AdminClienteIntegrationTests {
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Ana López","duiNit":"87654321-0",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","duiNit":"87654321-0",
                                  "empresa":"Empresa UCA","correo":"ana@example.com"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.nombre").value("Ana López"));
+                .andExpect(jsonPath("$.nombre").value("Ana López Díaz"));
 
         Long id = clientes.findByDuiNit("87654321-0").orElseThrow().getId();
         mockMvc.perform(get("/api/v1/admin/clientes?q=Ana&page=0&size=10")
@@ -81,7 +84,7 @@ class AdminClienteIntegrationTests {
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Ana López","duiNit":"87654321-0",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","duiNit":"87654321-0",
                                  "empresa":"Nueva Empresa","correo":"ana@example.com"}
                                 """))
                 .andExpect(status().isOk())

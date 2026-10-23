@@ -31,6 +31,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final String defaultRole;
+    private final ParticipanteRegistroService registroParticipantes;
 
     public AuthService(
             UsuarioRepository usuarioRepository,
@@ -38,7 +39,8 @@ public class AuthService {
             RolRepository rolRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            @Value("${app.auth.default-role:CLIENTE}") String defaultRole
+            @Value("${app.auth.default-role:CLIENTE}") String defaultRole,
+            ParticipanteRegistroService registroParticipantes
     ) {
         this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
@@ -46,6 +48,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.defaultRole = defaultRole;
+        this.registroParticipantes = registroParticipantes;
     }
 
     @Transactional
@@ -74,10 +77,14 @@ public class AuthService {
             usuario = usuarioRepository.saveAndFlush(usuario);
             Cliente cliente = new Cliente();
             cliente.setUsuario(usuario);
-            cliente.setNombre(usuario.getNombre());
+            cliente.setPrimerNombre(request.primerNombre());
+            cliente.setSegundoNombre(request.segundoNombre());
+            cliente.setPrimerApellido(request.primerApellido());
+            cliente.setSegundoApellido(request.segundoApellido());
             cliente.setCorreo(usuario.getCorreo());
             cliente.setDuiNit(request.dui());
             clienteRepository.saveAndFlush(cliente);
+            registroParticipantes.asegurar(cliente);
             usuario.setCliente(cliente);
         } catch (DataIntegrityViolationException ex) {
             throw new ApiException(HttpStatus.CONFLICT, "Ya existe una cuenta con ese correo o DUI");
@@ -174,6 +181,7 @@ public class AuthService {
         }
         cliente.setDuiNit(request.dui());
         clienteRepository.saveAndFlush(cliente);
+        registroParticipantes.asegurar(cliente);
         usuario.setCliente(cliente);
         return usuario;
     }
@@ -184,12 +192,16 @@ public class AuthService {
         if (!"CLIENTE".equalsIgnoreCase(usuario.getRol().getNombre())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Solo una cuenta de cliente puede cambiar su nombre aquí");
         }
-        String nombre = request.nombre().trim();
-        if (nombre.isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Escribe tu nombre");
-        }
-        usuario.setNombre(nombre);
-        clienteRepository.findByUsuarioId(usuarioId).ifPresent(cliente -> cliente.setNombre(nombre));
+        Cliente cliente = clienteRepository.bloquearPorUsuarioId(usuarioId).orElseThrow(() ->
+                new ApiException(HttpStatus.CONFLICT, "Completa tus datos de cliente antes de cambiar el nombre"));
+        cliente.setPrimerNombre(request.primerNombre());
+        cliente.setSegundoNombre(request.segundoNombre());
+        cliente.setPrimerApellido(request.primerApellido());
+        cliente.setSegundoApellido(request.segundoApellido());
+        clienteRepository.saveAndFlush(cliente);
+        registroParticipantes.asegurar(cliente);
+        usuario.setCliente(cliente);
+        usuario.setNombre(cliente.getNombre());
         return UsuarioResponse.from(usuario);
     }
 

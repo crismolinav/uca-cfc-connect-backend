@@ -56,9 +56,11 @@ class AuthControllerIntegrationTests {
 
     @Autowired
     private AuthService authService;
+    @Autowired sv.edu.udb.ucacfcconnect.repository.ParticipanteRepository participantes;
 
     @BeforeEach
     void limpiarBaseDeDatos() {
+        participantes.deleteAll();
         clienteRepository.deleteAll();
         usuarioRepository.deleteAll();
         rolRepository.deleteAll();
@@ -80,7 +82,7 @@ class AuthControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "nombre": "Usuario Nuevo",
+                                  "primerNombre":"Usuario","primerApellido":"Nuevo","segundoApellido":"Díaz",
                                   "dui": "12345678-9",
                                   "correo": "nuevo@example.com",
                                   "password": "ClaveSegura123",
@@ -94,7 +96,7 @@ class AuthControllerIntegrationTests {
     void registraIniciaSesionYConsultaPerfilConJwt() throws Exception {
         String registro = """
                 {
-                  "nombre": "Kevin Zepeda",
+                  "primerNombre":"Kevin","primerApellido":"Zepeda","segundoApellido":"Díaz",
                   "dui": "12345678-9",
                   "correo": "  KEVIN@EXAMPLE.COM ",
                   "password": "ClaveSegura123",
@@ -124,6 +126,15 @@ class AuthControllerIntegrationTests {
         assertThat(passwordEncoder.matches("ClaveSegura123", usuario.getPassword())).isTrue();
         assertThat(clienteRepository.findByUsuarioId(usuario.getId()).orElseThrow().getDuiNit())
                 .isEqualTo("12345678-9");
+        var cliente = clienteRepository.findByUsuarioId(usuario.getId()).orElseThrow();
+        assertThat(cliente.getPrimerNombre()).isEqualTo("Kevin");
+        assertThat(cliente.getPrimerApellido()).isEqualTo("Zepeda");
+        assertThat(cliente.getSegundoApellido()).isEqualTo("Díaz");
+        assertThat(cliente.getCarnet()).matches("ZD[0-9]{4}[A-F0-9]{12}");
+        assertThat(participantes.findFirstByClienteIdOrderByIdAsc(cliente.getId())).hasValueSatisfying(p -> {
+            assertThat(p.getNombre()).isEqualTo("Kevin");
+            assertThat(p.getApellido()).isEqualTo("Zepeda Díaz");
+        });
 
         MvcResult resultadoLogin = mockMvc.perform(post("/api/v1/auth/login").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +154,8 @@ class AuthControllerIntegrationTests {
         mockMvc.perform(get("/api/v1/auth/me")
                         .cookie(cookieRegistro))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Kevin Zepeda"))
+                .andExpect(jsonPath("$.nombre").value("Kevin Zepeda Díaz"))
+                .andExpect(jsonPath("$.carnet").value(cliente.getCarnet()))
                 .andExpect(jsonPath("$.correo").value("kevin@example.com"))
                 .andExpect(jsonPath("$.dui").value("12345678-9"));
     }
@@ -152,7 +164,7 @@ class AuthControllerIntegrationTests {
     void rechazaCorreoDuplicadoYCredencialesIncorrectas() throws Exception {
         String registro = """
                 {
-                  "nombre": "Kevin Zepeda",
+                  "primerNombre":"Kevin","primerApellido":"Zepeda","segundoApellido":"Díaz",
                   "dui": "12345678-9",
                   "correo": "kevin@example.com",
                   "password": "ClaveSegura123",
@@ -189,7 +201,7 @@ class AuthControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "nombre": "",
+                                  "primerNombre": "",
                                   "dui": "123",
                                   "correo": "correo-invalido",
                                   "password": "123",
@@ -197,7 +209,7 @@ class AuthControllerIntegrationTests {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.nombre").exists())
+                .andExpect(jsonPath("$.primerNombre").exists())
                 .andExpect(jsonPath("$.dui").exists())
                 .andExpect(jsonPath("$.correo").exists())
                 .andExpect(jsonPath("$.password").exists())
@@ -221,7 +233,7 @@ class AuthControllerIntegrationTests {
         assertThat(csrfSession).isNotNull();
 
         String registro = """
-                {"nombre":"Ana López","dui":"87654321-0","correo":"ana@example.com",
+                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"87654321-0","correo":"ana@example.com",
                  "password":"ClaveSegura123","aceptaTerminos":true}
                 """;
         mockMvc.perform(post("/api/v1/auth/registro")
@@ -267,6 +279,10 @@ class AuthControllerIntegrationTests {
         mockMvc.perform(get("/auth/registro.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Crea tu cuenta")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"primerNombre\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"segundoNombre\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"primerApellido\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"segundoApellido\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("DUI")));
     }
 
@@ -275,7 +291,7 @@ class AuthControllerIntegrationTests {
         mockMvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Kevin Zepeda","dui":"12345678-9",
+                                {"primerNombre":"Kevin","primerApellido":"Zepeda","segundoApellido":"Díaz","dui":"12345678-9",
                                  "correo":"kevin@example.com","password":"ClaveSegura123",
                                  "aceptaTerminos":true}
                                 """))
@@ -316,25 +332,32 @@ class AuthControllerIntegrationTests {
         var registro = mockMvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Ana López","dui":"87654321-0","correo":"ana@example.com",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"87654321-0","correo":"ana@example.com",
                                  "password":"ClaveSegura123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated()).andReturn();
         Cookie cookie = registro.getResponse().getCookie("uca_cfc_session");
         Usuario usuario = usuarioRepository.findByCorreoIgnoreCase("ana@example.com").orElseThrow();
+        String carnet = clienteRepository.findByUsuarioId(usuario.getId()).orElseThrow().getCarnet();
 
         mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"  Ana María Pérez  \",\"correo\":\"otro@example.com\"}"))
+                        .content("{\"primerNombre\":\"  Ana  \",\"segundoNombre\":\"María\",\"primerApellido\":\"Pérez\",\"segundoApellido\":\"Díaz\",\"correo\":\"otro@example.com\",\"carnet\":\"ALTERADO\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Ana María Pérez"))
+                .andExpect(jsonPath("$.nombre").value("Ana María Pérez Díaz"))
                 .andExpect(jsonPath("$.correo").value("ana@example.com"));
         assertThat(usuarioRepository.findById(usuario.getId()).orElseThrow().getNombre())
-                .isEqualTo("Ana María Pérez");
+                .isEqualTo("Ana María Pérez Díaz");
         assertThat(clienteRepository.findByUsuarioId(usuario.getId()).orElseThrow().getNombre())
-                .isEqualTo("Ana María Pérez");
+                .isEqualTo("Ana María Pérez Díaz");
+        var cliente = clienteRepository.findByUsuarioId(usuario.getId()).orElseThrow();
+        assertThat(cliente.getCarnet()).isEqualTo(carnet);
+        assertThat(cliente.getPrimerApellido()).isEqualTo("Pérez");
+        var participante = participantes.findFirstByClienteIdOrderByIdAsc(cliente.getId()).orElseThrow();
+        assertThat(participante.getNombre()).isEqualTo("Ana María");
+        assertThat(participante.getApellido()).isEqualTo("Pérez Díaz");
         mockMvc.perform(get("/api/v1/auth/me").cookie(cookie))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.nombre").value("Ana María Pérez"));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.nombre").value("Ana María Pérez Díaz"));
 
         mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"   \"}"))
@@ -344,7 +367,7 @@ class AuthControllerIntegrationTests {
                         .content("{\"nombre\":\"" + "A".repeat(101) + "\"}"))
                 .andExpect(status().isBadRequest());
         assertThat(usuarioRepository.findById(usuario.getId()).orElseThrow().getNombre())
-                .isEqualTo("Ana María Pérez");
+                .isEqualTo("Ana María Pérez Díaz");
     }
 
     @Test
@@ -363,24 +386,24 @@ class AuthControllerIntegrationTests {
         administrador = usuarioRepository.saveAndFlush(administrador);
         mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf())
                         .header("Authorization", "Bearer " + jwtService.generarToken(administrador))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"Otro\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"primerNombre\":\"Otro\",\"primerApellido\":\"Pérez\",\"segundoApellido\":\"Díaz\"}"))
                 .andExpect(status().isForbidden());
 
         var registro = mockMvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Nombre original","dui":"87654321-0","correo":"google@example.com",
+                                {"primerNombre":"Nombre","primerApellido":"Original","segundoApellido":"Díaz","dui":"87654321-0","correo":"google@example.com",
                                  "password":"ClaveSegura123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated()).andReturn();
         Cookie cookie = registro.getResponse().getCookie("uca_cfc_session");
         mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"Nombre elegido\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"primerNombre\":\"Nombre\",\"primerApellido\":\"Elegido\",\"segundoApellido\":\"Díaz\"}"))
                 .andExpect(status().isOk());
         authService.procesarUsuarioGoogle("google-id", "google@example.com", "Nombre de Google", true);
         authService.procesarUsuarioGoogle("google-id", "google@example.com", "Otro nombre de Google", true);
         assertThat(usuarioRepository.findByCorreoIgnoreCase("google@example.com").orElseThrow().getNombre())
-                .isEqualTo("Nombre elegido");
+                .isEqualTo("Nombre Elegido Díaz");
     }
 
     @Test

@@ -34,15 +34,11 @@ public final class RecepcionRequests {
     ) {}
 
     public record ParticipanteRequest(
-            @NotNull Long clienteId,
-            @NotBlank @Size(max = 100) String nombre,
-            @NotBlank @Size(max = 100) String apellido,
-            @Email @Size(max = 120) String correo,
-            @Size(max = 20) String telefono
+            @NotBlank @Size(max = 24) String carnet
     ) {}
 
     public record InscripcionRequest(
-            @NotNull Long participanteId,
+            @NotBlank @Size(max = 24) String carnet,
             String programaTipo,
             @NotNull Long programaId
     ) {}

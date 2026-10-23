@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "participantes")
+@Table(name = "participantes", uniqueConstraints = @UniqueConstraint(name = "uk_participante_cliente", columnNames = "id_cliente"))
 public class Participante {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_participante") private Long id;
-    @Column(nullable = false, length = 100) private String nombre;
-    @Column(nullable = false, length = 100) private String apellido;
+    @Column(nullable = false, length = 121) private String nombre;
+    @Column(nullable = false, length = 121) private String apellido;
     @Column(length = 120) private String correo;
     @Column(length = 20) private String telefono;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

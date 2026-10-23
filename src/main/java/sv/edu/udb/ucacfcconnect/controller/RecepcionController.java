@@ -61,6 +61,14 @@ public class RecepcionController {
         return invitaciones.invitar(id);
     }
 
+    @GetMapping("/clientes/carnet/{carnet}")
+    public Map<String, Object> buscarCarnet(@PathVariable String carnet) { return operaciones.buscarCarnet(carnet); }
+
+    @PutMapping("/clientes/{id}")
+    public ClienteResumen actualizarCliente(@PathVariable Long id, @Valid @RequestBody ClienteRequest request) {
+        return clientes.actualizar(id, request);
+    }
+
     @GetMapping("/espacios")
     public List<RecepcionEspaciosService.EspacioView> espacios() { return espacios.espacios(); }
 
@@ -104,6 +112,11 @@ public class RecepcionController {
 
     @GetMapping("/inscripciones")
     public List<Map<String, Object>> inscripciones() { return operaciones.inscripciones(); }
+
+    @GetMapping("/inscripciones/pendientes-pago")
+    public List<Map<String, Object>> inscripcionesPendientesPago(@RequestParam(required = false) Long clienteId) {
+        return operaciones.inscripcionesPendientesPago(clienteId);
+    }
 
     @PostMapping("/inscripciones")
     @ResponseStatus(HttpStatus.CREATED)
@@ -152,6 +165,19 @@ public class RecepcionController {
 
     @GetMapping("/pagos")
     public List<Map<String, Object>> pagos() { return operaciones.pagos(); }
+
+    @GetMapping("/pagos/historial")
+    public Map<String, Object> historialPagos(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String metodo,
+            @RequestParam(required = false) Long clienteId,
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return operaciones.historialPagos(desde, hasta, estado, metodo, clienteId, q, page, size);
+    }
 
     @PostMapping("/pagos")
     @ResponseStatus(HttpStatus.CREATED)

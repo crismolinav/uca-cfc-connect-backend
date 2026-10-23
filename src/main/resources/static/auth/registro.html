@@ -23,11 +23,31 @@
             </header>
 
             <form id="registro-form" class="auth-form" novalidate>
-                <div class="field">
-                    <label for="nombre">Nombre completo</label>
-                    <input id="nombre" name="nombre" type="text" autocomplete="name"
-                           placeholder="Ingresa tu nombre" maxlength="100" required aria-describedby="nombre-error">
-                    <p id="nombre-error" class="field-error" aria-live="polite"></p>
+                <div class="registration-names" role="group" aria-label="Nombres y apellidos">
+                    <div class="field">
+                        <label for="primerNombre">Primer nombre</label>
+                        <input id="primerNombre" name="primerNombre" type="text" autocomplete="given-name"
+                               placeholder="Tu primer nombre" maxlength="60" required aria-describedby="primerNombre-error">
+                        <p id="primerNombre-error" class="field-error" aria-live="polite"></p>
+                    </div>
+                    <div class="field">
+                        <label for="segundoNombre">Segundo nombre <span class="field-optional">(opcional)</span></label>
+                        <input id="segundoNombre" name="segundoNombre" type="text" autocomplete="additional-name"
+                               placeholder="Tu segundo nombre" maxlength="60" aria-describedby="segundoNombre-error">
+                        <p id="segundoNombre-error" class="field-error" aria-live="polite"></p>
+                    </div>
+                    <div class="field">
+                        <label for="primerApellido">Primer apellido</label>
+                        <input id="primerApellido" name="primerApellido" type="text" autocomplete="family-name"
+                               placeholder="Tu primer apellido" maxlength="60" required aria-describedby="primerApellido-error">
+                        <p id="primerApellido-error" class="field-error" aria-live="polite"></p>
+                    </div>
+                    <div class="field">
+                        <label for="segundoApellido">Segundo apellido</label>
+                        <input id="segundoApellido" name="segundoApellido" type="text"
+                               placeholder="Tu segundo apellido" maxlength="60" required aria-describedby="segundoApellido-error">
+                        <p id="segundoApellido-error" class="field-error" aria-live="polite"></p>
+                    </div>
                 </div>
 
                 <div class="field">

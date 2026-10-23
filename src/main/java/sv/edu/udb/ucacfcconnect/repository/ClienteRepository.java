@@ -14,16 +14,23 @@ import java.util.Optional;
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     boolean existsByDuiNit(String duiNit);
     Optional<Cliente> findByDuiNit(String duiNit);
+    Optional<Cliente> findByCarnetIgnoreCase(String carnet);
     Optional<Cliente> findByUsuarioId(Long usuarioId);
     boolean existsByCorreoIgnoreCase(String correo);
+    Optional<Cliente> findByCorreoIgnoreCase(String correo);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Cliente c where c.id = :id")
     Optional<Cliente> bloquear(@Param("id") Long id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from Cliente c where c.usuario.id = :usuarioId")
+    Optional<Cliente> bloquearPorUsuarioId(@Param("usuarioId") Long usuarioId);
+
     @Query("""
             select c from Cliente c
             where lower(c.nombre) like lower(concat('%', :q, '%'))
+               or lower(coalesce(c.carnet, '')) like lower(concat('%', :q, '%'))
                or lower(coalesce(c.correo, '')) like lower(concat('%', :q, '%'))
                or lower(coalesce(c.duiNit, '')) like lower(concat('%', :q, '%'))
                or lower(coalesce(c.empresa, '')) like lower(concat('%', :q, '%'))

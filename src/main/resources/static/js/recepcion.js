@@ -3,7 +3,7 @@
     const api = '/api/v1/recepcion';
     const flash = document.getElementById('flash');
     const state = {catalogos: null, espacios: [], alquileres: [], allAlquileres: [], catering: [],
-        cotizaciones: [], inscripciones: [], actividades: [], pagos: []};
+        cotizaciones: [], inscripciones: [], inscripcionesPorPagar: [], actividades: [], pagos: []};
     const titles = {
         agenda: ['Agenda y alquileres', 'Consulta espacios y asigna reservas sin cruces de horario.'],
         clientes: ['Clientes', 'Registra personas y empresas para los servicios del centro.'],
@@ -15,6 +15,9 @@
         pagos: ['Pagos', 'Registra y confirma los pagos recibidos.']
     };
     let csrfToken;
+    let paymentHistoryPage = 0;
+    let paymentHistoryFilters = {size: '10'};
+    let paymentHistoryLoad = 0;
 
     async function csrf() {
         if (csrfToken) return csrfToken;
@@ -37,7 +40,9 @@
         if (!response.ok) {
             const fieldMessage = Object.entries(data).find(([key, value]) =>
                 !['timestamp', 'status', 'error', 'ruta', 'mensaje'].includes(key) && typeof value === 'string');
-            throw new Error(data.mensaje || fieldMessage?.[1] || 'No se pudo completar la operación.');
+            const error = new Error(data.mensaje || fieldMessage?.[1] || 'No se pudo completar la operación.');
+            error.status = response.status;
+            throw error;
         }
         return data;
     }
@@ -116,7 +121,7 @@
 
     function opciones(select, items, label) {
         const previous = select.value;
-        select.replaceChildren(new Option('Seleccionar...', ''));
+        select.replaceChildren(new Option(select.dataset.emptyLabel || 'Seleccionar...', ''));
         items.forEach((item) => select.add(new Option(label(item), String(item.id))));
         if (items.some((item) => String(item.id) === previous)) select.value = previous;
     }
@@ -144,7 +149,8 @@
         if (tipo === 'DIPLOMADO') return state.catalogos?.diplomados || [];
         if (tipo === 'ALQUILER') return state.allAlquileres.filter((a) => a.estado !== 'CANCELADO')
             .map((a) => ({...a, nombre: a.espacio + ' · ' + a.fecha + ' ' + a.horaInicio}));
-        if (tipo === 'INSCRIPCION') return state.inscripciones.map((i) => ({...i, nombre: i.programa + ' · ' + i.participante}));
+        if (tipo === 'INSCRIPCION') return (formId === 'payment-form' ? state.inscripcionesPorPagar : state.inscripciones)
+            .map((i) => ({...i, nombre: (i.programaTipo === 'DIPLOMADO' ? 'Diplomado: ' : 'Curso: ') + i.programa + ' · ' + i.participante}));
         if (tipo === 'COTIZACION') return state.cotizaciones.map((c) => ({...c, nombre: 'Cotización #' + c.id + ' · ' + c.cliente}));
         return [];
     }
@@ -155,10 +161,11 @@
         if (!target) return;
         const cliente = form.elements.namedItem('clienteId');
         let items = recursosPorTipo(select.value, form.id);
-        if (form.id === 'payment-form' && cliente?.value) {
-            items = items.filter((item) => String(item.clienteId) === cliente.value);
+        if (form.id === 'payment-form') {
+            items = cliente?.value ? items.filter((item) => String(item.clienteId) === cliente.value) : [];
         }
         opciones(target, items, (item) => item.nombre);
+        if (form.id === 'payment-form') actualizarMontoPago();
         if (form.id === 'quote-form') actualizarProgramacionCotizacion();
     }
 
@@ -195,6 +202,26 @@
                 '. Recepción no puede modificarlas desde la cotización.'
             : 'Programación registrada: ' + (item.fechaInicio || 'fecha por confirmar') +
                 (item.fechaFin ? ' al ' + item.fechaFin : '') + ' · sesiones por confirmar.';
+    }
+
+    function actualizarMontoPago() {
+        const form = document.getElementById('payment-form');
+        const monto = form.elements.namedItem('monto');
+        const esInscripcion = form.elements.namedItem('conceptoTipo').value === 'INSCRIPCION';
+        const clienteId = form.elements.namedItem('clienteId').value;
+        const id = form.elements.namedItem('conceptoId').value;
+        monto.readOnly = esInscripcion;
+        const inscripcion = esInscripcion ? state.inscripcionesPorPagar.find((i) =>
+            String(i.id) === id && String(i.clienteId) === clienteId) : null;
+        monto.value = inscripcion ? Number(inscripcion.total).toFixed(2) : '';
+        form.querySelector('button[type="submit"]').disabled = esInscripcion && !inscripcion;
+        const hint = document.getElementById('payment-amount-help');
+        hint.textContent = !esInscripcion ? 'Ingresa el monto correspondiente al concepto seleccionado.'
+            : inscripcion ? 'Monto automático del total de la inscripción: $' + monto.value + '.'
+                : !clienteId ? 'Selecciona un cliente para consultar sus inscripciones pendientes de pago.'
+                    : state.inscripcionesPorPagar.some((i) => String(i.clienteId) === clienteId)
+                        ? 'Selecciona una inscripción. Solo aparecen las que aún no tienen un pago pendiente o confirmado.'
+                        : 'Este cliente no tiene inscripciones pendientes de pago. Los pagos ya registrados se confirman en la lista inferior.';
     }
 
     function fechaLocal() {
@@ -331,9 +358,15 @@
                         finally { button.disabled = false; }
                     });
                 }
-                return fila(client.nombre, (client.duiNit ? 'DUI / NIT: ' + client.duiNit : 'Sin documento') +
+                const actions = document.createElement('div');
+                if (button) actions.append(button);
+                const edit = texto('button', client.carnet ? 'Editar datos' : 'Completar datos', 'item-action');
+                edit.type = 'button';
+                edit.addEventListener('click', () => editarCliente(client));
+                actions.append(edit);
+                return fila(client.nombre + ' · ' + (client.carnet || 'Carnet pendiente'), (client.duiNit ? 'DUI / NIT: ' + client.duiNit : 'Sin documento') +
                     (client.correo ? ' · ' + client.correo : '') +
-                    (client.tieneCuenta ? ' · Cuenta creada' : ' · Sin cuenta'), null, button);
+                    (client.tieneCuenta ? ' · Cuenta creada' : ' · Sin cuenta'), null, actions);
             },
             'Todavía no hay clientes registrados.');
     }
@@ -362,8 +395,50 @@
 
     function pintarParticipantes() {
         mostrarLista('participants-list', state.catalogos.participantes,
-            (p) => fila(p.nombre + ' ' + p.apellido, 'Cliente: ' + p.cliente + (p.correo ? ' · ' + p.correo : '')),
+            (p) => fila(p.nombre + ' ' + p.apellido, (p.carnet || 'Carnet pendiente') + ' · Cliente: ' + p.cliente + (p.correo ? ' · ' + p.correo : '')),
             'Todavía no hay participantes registrados.');
+    }
+
+    async function cargarHistorialPagos() {
+        const sequence = ++paymentHistoryLoad;
+        const status = document.getElementById('payment-history-status');
+        const list = document.getElementById('payment-history-list');
+        const previous = document.getElementById('payment-history-previous');
+        const next = document.getElementById('payment-history-next');
+        const query = new URLSearchParams(paymentHistoryFilters);
+        query.set('page', String(paymentHistoryPage));
+        status.textContent = 'Cargando historial...';
+        status.classList.remove('is-error');
+        list.setAttribute('aria-busy', 'true');
+        previous.disabled = true; next.disabled = true;
+        try {
+            const data = await request(api + '/pagos/historial?' + query);
+            if (sequence !== paymentHistoryLoad) return;
+            if (data.totalPages > 0 && data.number >= data.totalPages) {
+                paymentHistoryPage = data.totalPages - 1;
+                return await cargarHistorialPagos();
+            }
+            if (data.totalPages === 0) paymentHistoryPage = 0;
+            const money = new Intl.NumberFormat('es-SV', {style: 'currency', currency: 'USD'});
+            mostrarLista('payment-history-list', data.content, (p) => fila(
+                'Pago #' + p.id + ' · ' + p.cliente + ' · ' + money.format(p.monto),
+                [p.fecha, p.concepto, p.metodo, p.carnet ? 'Carnet: ' + p.carnet : '',
+                    p.referencia ? 'Referencia: ' + p.referencia : ''].filter(Boolean).join(' · '), p.estado),
+            'No hay pagos que coincidan con estos filtros. Prueba con otras fechas o limpia la búsqueda.');
+            status.textContent = data.totalElements ? 'Mostrando ' + (data.number * data.size + 1) + '–' +
+                (data.number * data.size + data.content.length) + ' de ' + data.totalElements + ' pagos.'
+                : 'No se encontraron pagos con los filtros seleccionados.';
+            document.getElementById('payment-history-page').textContent = data.totalPages
+                ? 'Página ' + (data.number + 1) + ' de ' + data.totalPages : 'Sin resultados';
+            previous.disabled = data.number === 0 || data.totalPages === 0;
+            next.disabled = data.number + 1 >= data.totalPages;
+        } catch (error) {
+            if (sequence !== paymentHistoryLoad) return;
+            status.textContent = error.message;
+            status.classList.add('is-error');
+        } finally {
+            if (sequence === paymentHistoryLoad) list.setAttribute('aria-busy', 'false');
+        }
     }
 
     async function cargarPanel(name) {
@@ -373,7 +448,7 @@
         if (name === 'inscripciones') {
             state.inscripciones = await request(api + '/inscripciones');
             mostrarLista('enrollments-list', state.inscripciones, (i) => fila(i.participante + ' · ' + i.programa,
-                i.fecha + ' · Total $' + i.total, i.estado), 'No hay inscripciones registradas.');
+                (i.carnet || 'Carnet pendiente') + ' · ' + i.fecha + ' · Total $' + i.total, i.estado), 'No hay inscripciones registradas.');
         }
         if (name === 'catering') {
             [state.catering, state.catalogos.servicios] = await Promise.all([
@@ -413,9 +488,9 @@
                 (a.cupo ? ' · Cupo ' + a.cupo : ''), a.tipo), 'No hay actividades registradas.');
         }
         if (name === 'pagos') {
-            [state.pagos, state.inscripciones, state.allAlquileres, state.catering, state.cotizaciones] = await Promise.all([
+            [state.pagos, state.inscripciones, state.allAlquileres, state.catering, state.cotizaciones, state.inscripcionesPorPagar] = await Promise.all([
                 request(api + '/pagos'), request(api + '/inscripciones'), request(api + '/alquileres'),
-                request(api + '/catering'), request(api + '/cotizaciones')]);
+                request(api + '/catering'), request(api + '/cotizaciones'), request(api + '/inscripciones/pendientes-pago')]);
             mostrarLista('payments-list', state.pagos, (p) => {
                 const button = p.estado === 'PENDIENTE' ? texto('button', 'Confirmar pago', 'item-action') : null;
                 if (button) {
@@ -430,7 +505,8 @@
                 }
                 return fila(p.cliente + ' · $' + p.monto,
                     p.fecha + ' · ' + p.metodo + (p.referencia ? ' · ' + p.referencia : ''), p.estado, button);
-            }, 'No hay pagos registrados.');
+            }, 'No hay pagos pendientes de confirmar.');
+            await cargarHistorialPagos();
         }
         completarOpciones();
     }
@@ -450,12 +526,121 @@
         try { await cargarPanel(name); } catch (error) { aviso(error.message, true); }
     }
 
+    function editarCliente(client) {
+        const form = document.getElementById('client-form');
+        form.reset();
+        for (const field of ['primerNombre', 'segundoNombre', 'primerApellido', 'segundoApellido', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion']) {
+            form.elements.namedItem(field).value = client[field] || '';
+        }
+        form.dataset.editingId = client.id;
+        form.elements.namedItem('correo').readOnly = client.tieneCuenta;
+        document.getElementById('cancel-client-edit').hidden = false;
+        form.querySelector('button[type="submit"]').textContent = 'Guardar cambios';
+        form.querySelector('.form-feedback').textContent = client.carnet
+            ? 'Actualiza los datos personales. El carnet del estudiante permanece sin cambios.'
+            : 'Nombre registrado: ' + client.nombre + '. Confirma los nombres y apellidos de esta ficha.';
+        form.scrollIntoView({block: 'center'});
+        form.elements.namedItem('primerNombre').focus();
+    }
+
+    document.getElementById('cancel-client-edit').addEventListener('click', () => {
+        const form = document.getElementById('client-form');
+        form.reset(); delete form.dataset.editingId;
+        form.elements.namedItem('correo').readOnly = false;
+        document.getElementById('cancel-client-edit').hidden = true;
+        form.querySelector('button[type="submit"]').textContent = 'Guardar cliente';
+        form.querySelector('.form-feedback').textContent = '';
+    });
+
+    async function buscarCarnet(form) {
+        const input = form.elements.namedItem('carnet');
+        if (!input.reportValidity()) return;
+        const carnet = input.value.trim().toUpperCase();
+        input.value = carnet;
+        const sequence = Number(form.dataset.lookupSequence || 0) + 1;
+        form.dataset.lookupSequence = sequence;
+        delete form.dataset.verifiedCarnet;
+        const search = form.querySelector('[data-carnet-search]');
+        const submit = form.querySelector('button[type="submit"]');
+        const result = form.querySelector('.carnet-result');
+        const original = search.textContent;
+        search.disabled = true;
+        if (submit) submit.disabled = true;
+        search.textContent = 'Buscando...';
+        result.textContent = 'Buscando el carnet...';
+        result.classList.remove('is-error');
+        try {
+            const found = await request(api + '/clientes/carnet/' + encodeURIComponent(carnet));
+            if (Number(form.dataset.lookupSequence) !== sequence || input.value.trim().toUpperCase() !== carnet) return;
+            const enrolling = form.id === 'enrollment-form';
+            const allowed = enrolling ? found.puedeInscribirse : found.esParticipante;
+            const message = enrolling
+                ? !found.esParticipante ? 'La ficha del cliente está pendiente de completar. Actualízala en Clientes.'
+                    : !found.puedeInscribirse ? 'La cuenta está inactiva. Solicita su reactivación.' : 'Participante listo para inscribir.'
+                : found.esParticipante ? 'Registrado automáticamente como participante.' : 'Completa su ficha en Clientes para actualizar el registro.';
+            result.textContent = found.nombre + ' · ' + found.carnet + '. ' + message;
+            result.classList.toggle('is-error', !allowed);
+            if (allowed) form.dataset.verifiedCarnet = carnet;
+            if (submit) submit.disabled = !allowed;
+        } catch (error) {
+            if (Number(form.dataset.lookupSequence) !== sequence) return;
+            result.textContent = error.message;
+            result.classList.add('is-error');
+        } finally {
+            search.disabled = false;
+            search.textContent = original;
+        }
+    }
+
+    function sugerenciasCarnet(input) {
+        const prefix = input.value.trim().toUpperCase();
+        const matches = prefix.length < 2 ? [] : (state.catalogos?.clientes || [])
+            .filter((c) => c.carnet && c.carnet.toUpperCase().startsWith(prefix))
+            .sort((a, b) => a.carnet.localeCompare(b.carnet)).slice(0, 10);
+        const list = document.getElementById('carnet-suggestions');
+        list.replaceChildren(...matches.map((cliente) => {
+            const option = document.createElement('option');
+            option.value = cliente.carnet;
+            option.label = cliente.nombre;
+            return option;
+        }));
+        return matches;
+    }
+
+    document.querySelectorAll('[data-carnet-search]').forEach((button) => {
+        let lookupTimer;
+        button.addEventListener('click', () => { clearTimeout(lookupTimer); buscarCarnet(button.form); });
+        const input = button.form.elements.namedItem('carnet');
+        input.addEventListener('focus', () => sugerenciasCarnet(input));
+        input.addEventListener('input', () => {
+            clearTimeout(lookupTimer);
+            delete button.form.dataset.verifiedCarnet;
+            button.form.dataset.lookupSequence = Number(button.form.dataset.lookupSequence || 0) + 1;
+            const submit = button.form.querySelector('button[type="submit"]');
+            if (submit) submit.disabled = true;
+            const matches = sugerenciasCarnet(input);
+            const carnet = input.value.trim().toUpperCase();
+            button.form.querySelector('.carnet-result').textContent = carnet.length < 2
+                ? 'Escribe al menos dos caracteres del carnet para ver sugerencias.'
+                : matches.length ? 'Elige una sugerencia para completar el carnet y consultar al cliente.'
+                    : 'No hay sugerencias para ese prefijo. Puedes escribir el carnet completo y buscar.';
+            button.form.querySelector('.carnet-result').classList.remove('is-error');
+            if (matches.some((cliente) => cliente.carnet.toUpperCase() === carnet) || /^[A-Z]{2}[0-9]{4}[A-Z0-9]{12}$/.test(carnet)) {
+                lookupTimer = setTimeout(() => buscarCarnet(button.form), 250);
+            }
+        });
+    });
+
+    document.getElementById('participant-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        buscarCarnet(event.currentTarget);
+    });
+
     const formActions = [
         ['booking-form', '/alquileres', 'Reserva registrada.', ['clienteId', 'espacioId', 'fecha', 'horaInicio', 'horaFin', 'motivo']],
         ['space-form', '/espacios', 'Espacio guardado.', ['nombre', 'tipo', 'capacidad', 'precio', 'equipamiento', 'disponible']],
-        ['client-form', '/clientes', 'Cliente registrado.', ['nombre', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion']],
-        ['participant-form', '/participantes', 'Participante registrado.', ['clienteId', 'nombre', 'apellido', 'correo', 'telefono']],
-        ['enrollment-form', '/inscripciones', 'Inscripción creada.', ['participanteId', 'programaTipo', 'programaId']],
+        ['client-form', '/clientes', 'Cliente registrado.', ['primerNombre', 'segundoNombre', 'primerApellido', 'segundoApellido', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion']],
+        ['enrollment-form', '/inscripciones', 'Inscripción creada.', ['carnet', 'programaTipo', 'programaId']],
         ['catering-form', '/catering', 'Solicitud de catering registrada.', ['clienteId', 'servicioId', 'fecha', 'hora', 'numeroAsistentes', 'lugar', 'menu']],
         ['service-form', '/servicios-catering', 'Servicio registrado.', ['nombre', 'tipoServicio', 'precioBase', 'descripcion']],
         ['quote-form', '/cotizaciones', 'Cotización creada.', ['clienteId', 'conceptoTipo', 'conceptoId', 'cantidad', 'fechaServicio', 'horaInicio', 'horaFin', 'observaciones']],
@@ -473,6 +658,10 @@
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             if (!form.reportValidity()) return;
+            if (form.querySelector('[data-carnet-search]') && form.dataset.verifiedCarnet !== form.elements.namedItem('carnet').value.trim().toUpperCase()) {
+                await buscarCarnet(form);
+                return;
+            }
             feedback.textContent = '';
             feedback.classList.remove('is-error');
             const button = form.querySelector('button[type="submit"]');
@@ -521,7 +710,17 @@
                 });
                 delete form.dataset.editingId;
                 form.reset();
-                button.textContent = original;
+                if (form.querySelector('[data-carnet-search]')) {
+                    delete form.dataset.verifiedCarnet;
+                    form.dataset.lookupSequence = Number(form.dataset.lookupSequence || 0) + 1;
+                    form.querySelector('.carnet-result').textContent = 'Busca otro carnet para continuar.';
+                }
+                if (id === 'client-form') {
+                    document.getElementById('cancel-client-edit').hidden = true;
+                    form.elements.namedItem('correo').readOnly = false;
+                    button.textContent = 'Guardar cliente';
+                }
+                button.textContent = id === 'client-form' ? 'Guardar cliente' : original;
                 if (id === 'space-form') {
                     form.elements.namedItem('disponible').checked = true;
                     button.textContent = 'Guardar espacio';
@@ -534,15 +733,16 @@
                     form.elements.namedItem('fecha').value = fechaLocal();
                 }
                 if (id === 'quote-form') form.elements.namedItem('fechaServicio').value = fechaLocal();
-                aviso(success);
-                feedback.textContent = success;
+                const message = success + (id === 'client-form' && saved.carnet ? ' Carnet: ' + saved.carnet + '.' : '');
+                aviso(message);
+                feedback.textContent = message;
                 await cargarCatalogos();
                 await cargarPanel(document.querySelector('.nav-link.is-current').dataset.panel);
                 if (id === 'client-form' && !editingId && data.correo) {
                     try {
                         const invitation = await request(api + '/clientes/' + saved.id + '/invitacion', {method: 'POST'});
                         mostrarInvitacion(invitation);
-                        feedback.textContent = 'Cliente guardado. ' + invitation.mensaje;
+                        feedback.textContent = 'Cliente guardado. Carnet: ' + saved.carnet + '. ' + invitation.mensaje;
                     } catch (error) {
                         aviso('Cliente guardado, pero no se pudo enviar la invitación: ' + error.message, true);
                         feedback.textContent = 'Cliente guardado. Usa “Enviar invitación” para reintentar: ' + error.message;
@@ -553,10 +753,15 @@
                 aviso(error.message, true);
                 feedback.textContent = error.message;
                 feedback.classList.add('is-error');
+                if (id === 'payment-form' && error.status === 409) {
+                    try { await cargarPanel('pagos'); } catch { /* Conserva el error original de la operación. */ }
+                }
             }
             finally {
-                button.disabled = false;
-                if (id !== 'space-form' || form.dataset.editingId) button.textContent = original;
+                button.disabled = form.querySelector('[data-carnet-search]') ? !form.dataset.verifiedCarnet : false;
+                if (id === 'payment-form') actualizarMontoPago();
+                if (id === 'client-form') button.textContent = form.dataset.editingId ? 'Guardar cambios' : 'Guardar cliente';
+                if (id !== 'client-form' && (id !== 'space-form' || form.dataset.editingId)) button.textContent = original;
             }
         });
     }
@@ -567,6 +772,28 @@
     document.querySelector('#quote-form [name="conceptoId"]').addEventListener('change', actualizarProgramacionCotizacion);
     document.querySelector('#payment-form [name="clienteId"]').addEventListener('change', () =>
         actualizarDependiente(document.querySelector('#payment-form [name="conceptoTipo"]')));
+    document.querySelector('#payment-form [name="conceptoId"]').addEventListener('change', actualizarMontoPago);
+    const historyFilters = document.getElementById('payment-history-filters');
+    historyFilters.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!historyFilters.reportValidity()) return;
+        paymentHistoryFilters = Object.fromEntries([...new FormData(historyFilters)]
+            .map(([key, value]) => [key, value.trim()]).filter(([, value]) => value !== ''));
+        paymentHistoryPage = 0;
+        cargarHistorialPagos();
+    });
+    document.getElementById('payment-history-clear').addEventListener('click', () => {
+        historyFilters.reset();
+        paymentHistoryFilters = {size: '10'};
+        paymentHistoryPage = 0;
+        cargarHistorialPagos();
+    });
+    document.getElementById('payment-history-previous').addEventListener('click', () => {
+        if (paymentHistoryPage > 0) { paymentHistoryPage--; cargarHistorialPagos(); }
+    });
+    document.getElementById('payment-history-next').addEventListener('click', () => {
+        paymentHistoryPage++; cargarHistorialPagos();
+    });
     document.getElementById('agenda-date').addEventListener('change', () => cargarAgenda().catch((e) => aviso(e.message, true)));
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('menu-backdrop');

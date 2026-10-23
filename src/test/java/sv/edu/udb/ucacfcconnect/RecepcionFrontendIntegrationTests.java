@@ -33,6 +33,9 @@ class RecepcionFrontendIntegrationTests {
                 .andExpect(content().string(containsString("id=\"panel-actividades\"")))
                 .andExpect(content().string(containsString("id=\"panel-pagos\"")))
                 .andExpect(content().string(containsString("/js/recepcion.js")));
+        mvc.perform(get("/recepcion/index.html"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("id=\"client-form-carnet\""))))
+                .andExpect(content().string(containsString("Consultar participante")));
 
         mvc.perform(get("/js/auth.js"))
                 .andExpect(status().isOk())

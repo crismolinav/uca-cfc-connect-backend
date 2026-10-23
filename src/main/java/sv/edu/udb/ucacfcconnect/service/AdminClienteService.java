@@ -18,9 +18,11 @@ import sv.edu.udb.ucacfcconnect.repository.ClienteRepository;
 @Service
 public class AdminClienteService {
     private final ClienteRepository clientes;
+    private final ParticipanteRegistroService registroParticipantes;
 
-    public AdminClienteService(ClienteRepository clientes) {
+    public AdminClienteService(ClienteRepository clientes, ParticipanteRegistroService registroParticipantes) {
         this.clientes = clientes;
+        this.registroParticipantes = registroParticipantes;
     }
 
     @Transactional(readOnly = true)
@@ -43,23 +45,29 @@ public class AdminClienteService {
     public ClienteResumen crear(ClienteRequest request) {
         String documento = opcional(request.duiNit());
         validarDocumentoDisponible(documento, null);
+        validarCorreoDisponible(opcional(request.correo()), null);
         Cliente cliente = new Cliente();
         aplicar(cliente, request);
-        return ClienteResumen.from(clientes.save(cliente));
+        clientes.saveAndFlush(cliente);
+        registroParticipantes.asegurar(cliente);
+        return ClienteResumen.from(cliente);
     }
 
     @Transactional
     public ClienteResumen actualizar(Long id, ClienteRequest request) {
         Cliente cliente = obtener(id);
         if (cliente.getUsuario() != null &&
-                (!cliente.getNombre().equals(request.nombre().trim()) ||
-                        !iguales(cliente.getCorreo(), opcional(request.correo())))) {
+                !iguales(cliente.getCorreo(), opcional(request.correo()))) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
-                    "El nombre y correo de una cuenta vinculada se gestionan desde usuarios");
+                    "El correo de una cuenta vinculada se gestiona desde usuarios");
         }
         validarDocumentoDisponible(opcional(request.duiNit()), id);
+        validarCorreoDisponible(opcional(request.correo()), id);
         aplicar(cliente, request);
-        return ClienteResumen.from(clientes.save(cliente));
+        if (cliente.getUsuario() != null) cliente.getUsuario().setNombre(cliente.getNombre());
+        clientes.saveAndFlush(cliente);
+        registroParticipantes.asegurar(cliente);
+        return ClienteResumen.from(cliente);
     }
 
     @Transactional
@@ -93,12 +101,24 @@ public class AdminClienteService {
     }
 
     private void aplicar(Cliente cliente, ClienteRequest request) {
-        cliente.setNombre(request.nombre().trim());
+        cliente.setPrimerNombre(request.primerNombre());
+        cliente.setSegundoNombre(request.segundoNombre());
+        cliente.setPrimerApellido(request.primerApellido());
+        cliente.setSegundoApellido(request.segundoApellido());
         cliente.setDuiNit(opcional(request.duiNit()));
         cliente.setEmpresa(opcional(request.empresa()));
         cliente.setCorreo(opcional(request.correo()));
         cliente.setTelefono(opcional(request.telefono()));
         cliente.setDireccion(opcional(request.direccion()));
+    }
+
+    private void validarCorreoDisponible(String correo, Long idActual) {
+        if (correo == null) return;
+        clientes.findByCorreoIgnoreCase(correo).ifPresent(otro -> {
+            if (!otro.getId().equals(idActual)) {
+                throw new ApiException(HttpStatus.CONFLICT, "Ya existe un cliente con ese correo. Busca su ficha para evitar duplicados");
+            }
+        });
     }
 
     private String opcional(String valor) {

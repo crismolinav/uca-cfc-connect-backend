@@ -223,6 +223,9 @@ h2,h3,p{margin-top:0}
 .personal-fields label{display:block;margin-bottom:.35rem;font-size:.75rem;font-weight:600}
 .personal-fields input{width:100%;min-height:43px;padding:.55rem .7rem;border:1px solid #a8bcdf;border-radius:5px;background:#fff;color:#263850;font-size:1rem}
 .personal-fields input[aria-invalid='true']{border-color:#b02531}
+#settings-name-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem;max-width:42rem}
+#settings-name-form .settings-name-error,#settings-name-form .settings-name-status{grid-column:1/-1}
+@media(max-width:640px){#settings-name-form{grid-template-columns:minmax(0,1fr)}}
 .settings-save{justify-self:start;min-height:42px;margin-top:.35rem;padding:.55rem 1rem;border:0;border-radius:5px;background:var(--blue);color:#fff;font-size:.78rem;font-weight:600}
 .settings-save:disabled{cursor:wait;opacity:.65}
 .settings-card .settings-name-error{max-width:none;color:#a31f2c;font-size:.76rem}
@@ -596,3 +599,4 @@ h2,h3,p{margin-top:0}
 .payment-wompi-button span{padding:.15rem .35rem;border:1px solid rgb(255 255 255 / .35);border-radius:5px;background:rgb(255 255 255 / .12);font-size:.63rem}
 .payment-dialog-actions button.payment-manual-button{border-color:#c4d4ea;background:#f7faff;color:#174b91}
 @media(max-width:620px){.payment-dialog-header{padding:1rem}.payment-heading-icon{width:40px;height:40px}.payment-dialog-header h2{font-size:1.15rem}.payment-dialog-body{padding:1rem}.payment-method-fields{grid-template-columns:1fr;gap:.8rem;margin-top:1rem}.payment-dialog-actions{display:grid;grid-template-columns:1fr 1fr}.payment-dialog-actions button{min-height:43px;padding:.55rem .45rem;font-size:.67rem}.payment-dialog-actions .payment-wompi-button{grid-column:1/-1;grid-row:1}.payment-close-button{min-height:35px;padding:.35rem .55rem}.payment-heading-copy{gap:.65rem}}
+.account-control{display:flex;align-items:center;gap:.7rem}.student-carnet{color:#0d3168;font-size:.72rem;font-weight:600;overflow-wrap:anywhere;max-width:13rem}.student-carnet[hidden]{display:none}#carnet-help{display:block;margin-top:.4rem;font-size:.75rem;color:#405574}@media(max-width:640px){.student-carnet{max-width:11rem;font-size:.65rem}}

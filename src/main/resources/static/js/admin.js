@@ -70,10 +70,11 @@
     function abrirDialogo(mode, cliente) {
         form.reset();
         document.getElementById('dialog-error').textContent = '';
-        const campos = ['nombre', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion'];
+        const campos = ['primerNombre', 'segundoNombre', 'primerApellido', 'segundoApellido', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion'];
         campos.forEach((campo) => {
             form.elements.namedItem(campo).value = cliente?.[campo] || '';
         });
+        form.elements.namedItem('carnet').value = cliente?.carnet || 'Se genera al confirmar los nombres y apellidos';
         editingId = mode === 'new' ? null : cliente.id;
         const soloLectura = mode === 'view';
         document.getElementById('dialog-title').textContent =
@@ -83,23 +84,23 @@
                 mode === 'edit' ? 'Actualiza los datos del cliente.' : 'Datos registrados en el sistema.';
         campos.forEach((campo) => {
             form.elements.namedItem(campo).disabled = soloLectura ||
-                (mode === 'edit' && cliente.tieneCuenta && (campo === 'nombre' || campo === 'correo'));
+                (mode === 'edit' && cliente.tieneCuenta && campo === 'correo');
         });
         const note = document.getElementById('dialog-note');
         note.hidden = !(mode === 'edit' && cliente.tieneCuenta);
-        note.textContent = 'La cuenta de este cliente está vinculada. El nombre y el correo se gestionan desde usuarios.';
+        note.textContent = 'La cuenta de este cliente está vinculada. El correo se gestiona desde usuarios. El carnet es permanente.';
         document.getElementById('dialog-save').hidden = soloLectura;
         document.getElementById('dialog-cancel').textContent = soloLectura ? 'Cerrar' : 'Cancelar';
         document.getElementById('dialog-save').textContent =
             mode === 'new' ? 'Guardar cliente' : 'Guardar cambios';
         dialog.showModal();
-        if (!soloLectura) form.elements.namedItem(mode === 'edit' && cliente.tieneCuenta ? 'duiNit' : 'nombre').focus();
+        if (!soloLectura) form.elements.namedItem(mode === 'edit' && cliente.tieneCuenta ? 'duiNit' : 'primerNombre').focus();
     }
 
     function fila(cliente, numero) {
         const row = document.createElement('tr');
         celda(row, String(numero));
-        const nameCell = celda(row, cliente.nombre, 'client-name-cell');
+        const nameCell = celda(row, cliente.nombre + ' · ' + (cliente.carnet || 'Carnet pendiente'), 'client-name-cell');
         nameCell.append(estado(cliente, 'mobile-state'));
         nameCell.append(acciones(cliente, 'mobile-actions'));
         celda(row, cliente.duiNit, !cliente.duiNit ? 'cell-muted' : '');
@@ -235,7 +236,7 @@
         const oldText = save.textContent;
         save.textContent = 'Guardando...';
         try {
-            const fields = ['nombre', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion'];
+            const fields = ['primerNombre', 'segundoNombre', 'primerApellido', 'segundoApellido', 'duiNit', 'empresa', 'correo', 'telefono', 'direccion'];
             const data = Object.fromEntries(fields.map((field) => [field, form.elements.namedItem(field).value.trim()]));
             await request(editingId ? api + '/' + editingId : api, {
                 method: editingId ? 'PUT' : 'POST',

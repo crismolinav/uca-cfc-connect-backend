@@ -7,9 +7,21 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegistroRequest(
-        @NotBlank(message = "El nombre es obligatorio")
-        @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
-        String nombre,
+        @NotBlank(message = "El primer nombre es obligatorio")
+        @Size(max = 60, message = "El primer nombre no puede superar los 60 caracteres")
+        @Pattern(regexp = "[\\p{L}][\\p{L}\\p{M} '’-]*", message = "Escribe un primer nombre válido")
+        String primerNombre,
+        @Size(max = 60, message = "El segundo nombre no puede superar los 60 caracteres")
+        @Pattern(regexp = "[\\p{L}\\p{M} '’-]*", message = "Escribe un segundo nombre válido")
+        String segundoNombre,
+        @NotBlank(message = "El primer apellido es obligatorio")
+        @Size(max = 60, message = "El primer apellido no puede superar los 60 caracteres")
+        @Pattern(regexp = "[\\p{L}][\\p{L}\\p{M} '’-]*", message = "Escribe un primer apellido válido")
+        String primerApellido,
+        @NotBlank(message = "El segundo apellido es obligatorio")
+        @Size(max = 60, message = "El segundo apellido no puede superar los 60 caracteres")
+        @Pattern(regexp = "[\\p{L}][\\p{L}\\p{M} '’-]*", message = "Escribe un segundo apellido válido")
+        String segundoApellido,
 
         @NotBlank(message = "El DUI es obligatorio")
         @Pattern(regexp = "^[0-9]{8}-[0-9]$", message = "Escribe el DUI con el formato 12345678-9")
@@ -28,8 +40,18 @@ public record RegistroRequest(
         boolean aceptaTerminos
 ) {
     public RegistroRequest {
-        nombre = nombre == null ? null : nombre.trim();
+        primerNombre = limpiar(primerNombre);
+        segundoNombre = limpiar(segundoNombre);
+        primerApellido = limpiar(primerApellido);
+        segundoApellido = limpiar(segundoApellido);
         dui = dui == null ? null : dui.trim();
         correo = correo == null ? null : correo.trim();
     }
+
+    public String nombre() {
+        return java.util.stream.Stream.of(primerNombre, segundoNombre, primerApellido, segundoApellido)
+                .filter(s -> s != null && !s.isBlank()).collect(java.util.stream.Collectors.joining(" "));
+    }
+
+    private static String limpiar(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
 }

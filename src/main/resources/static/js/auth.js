@@ -62,7 +62,7 @@
     }
 
     function mostrarErrores(formulario, errores) {
-        const campos = ["nombre", "dui", "correo", "password", "aceptaTerminos"];
+        const campos = ["nombre", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido", "dui", "correo", "password", "aceptaTerminos"];
         let primerCampo = null;
 
         campos.forEach((nombre) => {
@@ -171,7 +171,10 @@
 
             try {
                 const datos = {
-                    nombre: formulario.nombre.value,
+                    primerNombre: formulario.primerNombre.value,
+                    segundoNombre: formulario.segundoNombre.value,
+                    primerApellido: formulario.primerApellido.value,
+                    segundoApellido: formulario.segundoApellido.value,
                     dui: formulario.dui.value,
                     correo: formulario.correo.value,
                     password: formulario.password.value,
@@ -344,8 +347,14 @@
             if (learningAvatar) learningAvatar.textContent = nombre.charAt(0).toUpperCase();
             const email = document.getElementById("client-email");
             if (email) email.textContent = usuario.correo;
-            const settingsName = document.getElementById("settings-name");
-            if (settingsName) settingsName.value = nombre;
+            const carnet = document.getElementById('client-carnet');
+            if (carnet) { carnet.textContent = usuario.carnet ? 'Carnet: ' + usuario.carnet : ''; carnet.hidden = !usuario.carnet; }
+            const settingsCarnet = document.getElementById('settings-carnet');
+            if (settingsCarnet) settingsCarnet.value = usuario.carnet || 'Pendiente: completa tus datos en recepción';
+            for (const name of ["primerNombre","segundoNombre","primerApellido","segundoApellido"]) {
+                const field = document.getElementById('settings-' + name);
+                if (field) field.value = usuario[name] || '';
+            }
             const provider = document.getElementById("client-provider");
             if (provider) provider.textContent =
                 usuario.proveedor === "google" ? "Google" : "Correo y contraseña";
@@ -369,26 +378,22 @@
 
     function prepararActualizarNombre() {
         const formulario = document.getElementById("settings-name-form");
-        const campo = document.getElementById("settings-name");
+        const nombres = ["primerNombre","segundoNombre","primerApellido","segundoApellido"];
+        const campos = nombres.map(name => formulario.elements.namedItem(name));
         const error = document.getElementById("settings-name-error");
         const estado = document.getElementById("settings-name-status");
         const boton = formulario.querySelector("button[type='submit']");
 
-        campo.addEventListener("input", () => {
-            campo.removeAttribute("aria-invalid");
+        formulario.addEventListener("input", () => {
+            campos.forEach(campo => campo.removeAttribute("aria-invalid"));
             error.textContent = "";
             estado.textContent = "";
             estado.classList.remove("is-error");
         });
         formulario.addEventListener("submit", async (evento) => {
             evento.preventDefault();
-            const nombre = campo.value.trim();
-            if (!nombre) {
-                error.textContent = "Escribe tu nombre.";
-                campo.setAttribute("aria-invalid", "true");
-                campo.focus();
-                return;
-            }
+            if (!formulario.reportValidity()) return;
+            const datos = Object.fromEntries(nombres.map((name, i) => [name, campos[i].value.trim()]));
             boton.disabled = true;
             estado.textContent = "Guardando nombre...";
             estado.classList.remove("is-error");
@@ -399,7 +404,7 @@
                     method: "PATCH",
                     credentials: "same-origin",
                     headers: {"Content-Type": "application/json", "X-CSRF-TOKEN": csrf},
-                    body: JSON.stringify({nombre})
+                    body: JSON.stringify(datos)
                 });
                 const contenido = await respuesta.json().catch(() => ({}));
                 if (respuesta.status === 401 || respuesta.status === 403) {
@@ -407,8 +412,10 @@
                     return;
                 }
                 if (!respuesta.ok) {
-                    if (contenido.nombre) {
-                        error.textContent = contenido.nombre;
+                    const invalido = nombres.find(name => contenido[name]);
+                    if (invalido) {
+                        error.textContent = contenido[invalido];
+                        const campo = formulario.elements.namedItem(invalido);
                         campo.setAttribute("aria-invalid", "true");
                         campo.focus();
                         estado.textContent = "";
@@ -419,7 +426,11 @@
                     }
                     return;
                 }
-                campo.value = contenido.nombre;
+                nombres.forEach((name, i) => { campos[i].value = contenido[name] || ''; });
+                const carnet = document.getElementById('settings-carnet');
+                if (carnet) carnet.value = contenido.carnet || 'Pendiente: completa tus datos en recepción';
+                const headerCarnet = document.getElementById('client-carnet');
+                if (headerCarnet) { headerCarnet.textContent = contenido.carnet ? 'Carnet: ' + contenido.carnet : ''; headerCarnet.hidden = !contenido.carnet; }
                 document.getElementById("client-avatar").textContent = contenido.nombre.charAt(0).toUpperCase();
                 estado.textContent = "Nombre actualizado.";
             } catch (_error) {
