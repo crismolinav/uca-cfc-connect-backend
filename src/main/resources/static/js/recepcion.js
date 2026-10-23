@@ -91,6 +91,8 @@
             if (key === 'servicios') items = items.filter((s) => s.activo);
             opciones(select, items || [], (item) => key === 'participantes' || key === 'participantesInscribibles'
                 ? item.nombre + ' ' + item.apellido + ' · ' + item.cliente
+                : key === 'espacios' && item.duracionMaximaHoras != null
+                    ? item.nombre + ' · máximo ' + Number(item.duracionMaximaHoras) + ' h'
                 : item.nombre);
         });
         document.querySelectorAll('select[data-dependent]').forEach(actualizarDependiente);
@@ -199,6 +201,7 @@
                 form.elements.namedItem('nombre').focus();
             });
             return fila(space.nombre, space.tipo + ' · ' + space.capacidad + ' personas · $' + space.precio +
+                (space.duracionMaximaHoras == null ? '' : ' · máximo ' + Number(space.duracionMaximaHoras) + ' h') +
                 (space.equipamiento ? ' · ' + space.equipamiento : ''), space.disponible ? 'Disponible' : 'Inactivo', button);
         }, 'Todavía no hay espacios registrados.');
     }
@@ -394,6 +397,21 @@
                 else if (field.endsWith('Id')) data[field] = element.value === '' ? null : Number(element.value);
                 else data[field] = element.value.trim();
             });
+            if (id === 'booking-form') {
+                const espacio = state.espacios.find((item) => item.id === data.espacioId);
+                const minutosSolicitados = minutos(data.horaFin) - minutos(data.horaInicio);
+                const minutosPermitidos = Number(espacio?.duracionMaximaHoras) * 60;
+                if (espacio && Number.isFinite(minutosPermitidos) && minutosSolicitados > minutosPermitidos) {
+                    const mensaje = 'La reserva no puede superar ' + Number(espacio.duracionMaximaHoras)
+                        + ' horas para este espacio.';
+                    feedback.textContent = mensaje;
+                    feedback.classList.add('is-error');
+                    aviso(mensaje, true);
+                    button.disabled = false;
+                    button.textContent = original;
+                    return;
+                }
+            }
             try {
                 const editingId = form.dataset.editingId;
                 const saved = await request(api + path + (editingId ? '/' + editingId : ''), {

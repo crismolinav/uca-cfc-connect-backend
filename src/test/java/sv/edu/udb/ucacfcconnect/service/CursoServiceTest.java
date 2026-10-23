@@ -70,6 +70,9 @@ class CursoServiceTest {
         solicitud.setFechaInicio(inicio);
         solicitud.setFechaFin(inicio.plusWeeks(4).plusDays(2));
         solicitud.setHorario("Lunes, Miércoles | 18:00-20:00");
+        solicitud.setContenidoPrograma("""
+                [{"titulo":"Fundamentos"},{"titulo":"Aplicación práctica"},{"titulo":"Proyecto final"}]
+                """);
         solicitud.setIdCategoria(1L);
         solicitud.setIdModalidad(2L);
 
@@ -194,7 +197,7 @@ class CursoServiceTest {
         var pagina = cursoService.listar("  excel  ", 1L, 2L, true, 0, 10, "costo", "desc");
 
         assertEquals(1, pagina.totalElementos());
-        assertEquals("Excel avanzado", pagina.contenido().getFirst().titulo());
+        assertEquals("Excel avanzado", pagina.contenido().get(0).titulo());
         verify(cursoRepository).buscar(eq("excel"), eq(1L), eq(2L), eq(true), any(Pageable.class));
     }
 
@@ -203,8 +206,8 @@ class CursoServiceTest {
         when(categoriaRepository.findAll(any(Sort.class))).thenReturn(List.of(categoria));
         when(modalidadRepository.findAll(any(Sort.class))).thenReturn(List.of(modalidad));
 
-        assertEquals("Tecnología", cursoService.listarCategorias().getFirst().nombre());
-        assertEquals("Virtual", cursoService.listarModalidades().getFirst().nombre());
+        assertEquals("Tecnología", cursoService.listarCategorias().get(0).nombre());
+        assertEquals("Virtual", cursoService.listarModalidades().get(0).nombre());
     }
 
     @Test

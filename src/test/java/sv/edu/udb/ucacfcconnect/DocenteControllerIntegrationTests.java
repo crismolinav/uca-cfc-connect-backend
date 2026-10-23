@@ -73,7 +73,7 @@ class DocenteControllerIntegrationTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nombre").value("Ana Martínez"));
 
-        Long id = docentes.findAll().getFirst().getId();
+        Long id = docentes.findAll().get(0).getId();
         mockMvc.perform(put("/api/v1/docentes/{id}", id).with(csrf())
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)

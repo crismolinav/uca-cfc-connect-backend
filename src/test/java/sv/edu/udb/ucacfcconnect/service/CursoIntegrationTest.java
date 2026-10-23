@@ -67,7 +67,7 @@ class CursoIntegrationTest {
                 "excel", idCategoria, idModalidad, true, 0, 10, "costo", "desc"
         );
         assertEquals(1, pagina.totalElementos());
-        assertEquals(creado.idCurso(), pagina.contenido().getFirst().idCurso());
+        assertEquals(creado.idCurso(), pagina.contenido().get(0).idCurso());
 
         solicitud.setTitulo("Excel financiero actualizado");
         CursoResponseDTO actualizado = cursoService.actualizar(creado.idCurso(), solicitud);
@@ -128,6 +128,9 @@ class CursoIntegrationTest {
         dto.setFechaInicio(inicio);
         dto.setFechaFin(inicio.plusWeeks(4).plusDays(2));
         dto.setHorario("Lunes, Miércoles | 18:00-20:00");
+        dto.setContenidoPrograma("""
+                [{"titulo":"Fundamentos"},{"titulo":"Aplicación práctica"},{"titulo":"Proyecto final"}]
+                """);
         dto.setIdCategoria(idCategoria);
         dto.setIdModalidad(idModalidad);
         return dto;
