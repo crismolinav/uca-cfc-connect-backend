@@ -279,7 +279,7 @@ public class DiplomadoService {
                 dto.fecha(), dto.horaInicio(), dto.horaFin(), idExcluir
         );
         if (!conflictos.isEmpty()) {
-            Actividad conflicto = conflictos.getFirst();
+            Actividad conflicto = conflictos.get(0);
             throw new ConflictException(
                     "Conflicto de horario con «" + conflicto.getTitulo() + "» ("
                             + conflicto.getHoraInicio() + "-" + conflicto.getHoraFin() + ")"

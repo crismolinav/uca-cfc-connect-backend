@@ -141,7 +141,7 @@ class RecuperacionPasswordIntegrationTests {
         verify(mailSender, timeout(5000)).send(email.capture());
         Matcher matcher = Pattern.compile("#token=([A-Za-z0-9_-]+)").matcher(email.getValue().getText());
         assertThat(matcher.find()).isTrue();
-        var recuperacion = recuperaciones.findAll().getFirst();
+        var recuperacion = recuperaciones.findAll().get(0);
         recuperacion.setExpiraEn(Instant.now().minusSeconds(1));
         recuperaciones.saveAndFlush(recuperacion);
         mvc.perform(post("/api/v1/auth/restablecer-password").with(csrf())

@@ -66,10 +66,12 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("<h2 id=\"catalog-title\">Cursos disponibles</h2>")))
                 .andExpect(content().string(containsString("id=\"course-category-filter\"")))
                 .andExpect(content().string(containsString("id=\"course-modality-filter\"")))
+                .andExpect(content().string(containsString("id=\"course-grid\"")))
                 .andExpect(content().string(containsString("/js/cliente.js")));
 
         mockMvc.perform(get("/cliente/curso.html"))
                 .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"course-content\"")))
                 .andExpect(content().string(containsString("id=\"course-enroll-button\"")))
                 .andExpect(content().string(containsString("/js/curso-detalle.js")));
 

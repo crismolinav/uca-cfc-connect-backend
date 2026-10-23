@@ -61,7 +61,7 @@ class AdminOperacionesIntegrationTests {
                         .header("Authorization", "Bearer " + admin)
                         .contentType(MediaType.APPLICATION_JSON).content(espacio))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.nombre").value("Sala de reuniones"));
-        assertEquals(new BigDecimal("24.00"), espacios.findAll().getFirst().getDuracionMaximaHoras());
+        assertEquals(new BigDecimal("24.00"), espacios.findAll().get(0).getDuracionMaximaHoras());
         mvc.perform(get("/api/v1/admin/operaciones/espacios")
                         .header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].nombre").value("Sala de reuniones"));

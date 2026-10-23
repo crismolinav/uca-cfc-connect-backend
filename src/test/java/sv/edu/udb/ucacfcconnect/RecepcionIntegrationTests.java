@@ -210,6 +210,37 @@ class RecepcionIntegrationTests {
     }
 
     @Test
+    void reservaDeRecepcionRespetaLaDuracionMaximaDelEspacio() throws Exception {
+        String recepcion = token("RECEPCIONISTA", "duracion-recepcion@example.com");
+        Cliente cliente = new Cliente();
+        cliente.setNombre("Cliente Duración");
+        cliente = clientes.save(cliente);
+        mvc.perform(post("/api/v1/recepcion/espacios").with(csrf())
+                        .header("Authorization", "Bearer " + recepcion)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Sala límite 4 horas","tipo":"Sala","capacidad":30,
+                                 "precio":75.00,"equipamiento":"Proyector","disponible":true}
+                                """))
+                .andExpect(status().isCreated());
+        var espacio = espacios.findAll().stream()
+                .filter(e -> "Sala límite 4 horas".equals(e.getNombre()))
+                .findFirst().orElseThrow();
+        espacio.setDuracionMaximaHoras(new BigDecimal("4.00"));
+        espacio = espacios.save(espacio);
+
+        LocalDate manana = LocalDate.now(ZoneId.of("America/El_Salvador")).plusDays(1);
+        mvc.perform(post("/api/v1/recepcion/alquileres").with(csrf())
+                        .header("Authorization", "Bearer " + recepcion)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reserva(cliente.getId(), espacio.getId(), manana, "11:00", "20:00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje")
+                        .value("La reserva no puede superar 4 horas para este espacio"));
+        assertThat(alquileres.findByFechaOrderByHoraInicioAsc(manana)).isEmpty();
+    }
+
+    @Test
     void cateringCotizacionActividadYPagoConservanSusRelaciones() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Cliente Catering");

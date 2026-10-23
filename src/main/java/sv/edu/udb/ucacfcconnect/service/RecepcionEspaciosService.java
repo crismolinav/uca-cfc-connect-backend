@@ -16,6 +16,7 @@ import sv.edu.udb.ucacfcconnect.repository.EspacioRepository;
 import sv.edu.udb.ucacfcconnect.repository.PagoRepository;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -79,6 +80,7 @@ public class RecepcionEspaciosService {
         if (!espacio.isDisponible()) {
             throw new ApiException(HttpStatus.CONFLICT, "El espacio no está habilitado para reservas");
         }
+        validarDuracionMaxima(espacio, request.horaInicio(), request.horaFin());
         if (alquileres.existeCruce(espacio.getId(), request.fecha(), request.horaInicio(), request.horaFin())) {
             throw new ApiException(HttpStatus.CONFLICT, "El espacio ya está reservado en ese horario");
         }
@@ -122,6 +124,18 @@ public class RecepcionEspaciosService {
         }
     }
 
+    private void validarDuracionMaxima(Espacio espacio, LocalTime inicio, LocalTime fin) {
+        BigDecimal duracionMaxima = espacio.getDuracionMaximaHoras();
+        if (duracionMaxima == null) return;
+        long minutosSolicitados = Duration.between(inicio, fin).toMinutes();
+        long minutosPermitidos = duracionMaxima.multiply(BigDecimal.valueOf(60)).longValue();
+        if (minutosSolicitados > minutosPermitidos) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La reserva no puede superar "
+                    + duracionMaxima.stripTrailingZeros().toPlainString()
+                    + " horas para este espacio");
+        }
+    }
+
     private void validarPrecio(BigDecimal precio) {
         if (precio == null || precio.signum() < 0 || precio.scale() > 2) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "El precio debe ser positivo y tener hasta dos decimales");
@@ -131,10 +145,11 @@ public class RecepcionEspaciosService {
     private String opcional(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
 
     public record EspacioView(Long id, String nombre, String tipo, Integer capacidad, BigDecimal precio,
-                              boolean disponible, String equipamiento) {
+                              boolean disponible, String equipamiento, BigDecimal duracionMaximaHoras) {
         public static EspacioView from(Espacio espacio) {
             return new EspacioView(espacio.getId(), espacio.getNombre(), espacio.getTipo(),
-                    espacio.getCapacidad(), espacio.getPrecio(), espacio.isDisponible(), espacio.getEquipamiento());
+                    espacio.getCapacidad(), espacio.getPrecio(), espacio.isDisponible(), espacio.getEquipamiento(),
+                    espacio.getDuracionMaximaHoras());
         }
     }
 

@@ -106,6 +106,6 @@ class CotizacionAlquilerIntegrationTest {
                 "auditorio", true, 80, 0, 10, "capacidad", "desc"
         );
         assertEquals(1, pagina.totalElementos());
-        assertEquals(idEspacio, pagina.contenido().getFirst().idEspacio());
+        assertEquals(idEspacio, pagina.contenido().get(0).idEspacio());
     }
 }

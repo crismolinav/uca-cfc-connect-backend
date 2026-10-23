@@ -83,7 +83,7 @@ class DocenteIntegrationTest {
         var asignados = asignacionService.asignarCurso(
                 primero.idCurso(), new AsignacionDocentesDTO(List.of(docente.idDocente()))
         );
-        assertEquals("Carlos López", asignados.getFirst().nombre());
+        assertEquals("Carlos López", asignados.get(0).nombre());
 
         ConflictException conflicto = assertThrows(ConflictException.class,
                 () -> asignacionService.asignarCurso(
@@ -140,9 +140,11 @@ class DocenteIntegrationTest {
         dto.setFechaInicio(proximoLunes);
         dto.setFechaFin(proximoLunes);
         dto.setHorario(horario);
+        dto.setContenidoPrograma("""
+                [{"titulo":"Fundamentos"},{"titulo":"Aplicación práctica"},{"titulo":"Proyecto final"}]
+                """);
         dto.setIdCategoria(idCategoria);
         dto.setIdModalidad(idModalidad);
-        dto.setContenidoPrograma("[{\"titulo\":\"Introducción\"},{\"titulo\":\"Práctica\"},{\"titulo\":\"Proyecto\"}]");
         return dto;
     }
 }
