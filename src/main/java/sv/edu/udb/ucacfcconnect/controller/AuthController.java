@@ -1,7 +1,9 @@
 package sv.edu.udb.ucacfcconnect.controller;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sv.edu.udb.ucacfcconnect.dto.auth.AceptarInvitacionRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.AuthResponse;
 import sv.edu.udb.ucacfcconnect.dto.auth.DuiRequest;
+import sv.edu.udb.ucacfcconnect.dto.auth.EliminarCuentaRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.LoginRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.RegistroRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.RestablecerPasswordRequest;
@@ -27,6 +31,7 @@ import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.security.AuthCookieService;
 import sv.edu.udb.ucacfcconnect.service.AuthService;
 import sv.edu.udb.ucacfcconnect.service.AuthSession;
+import sv.edu.udb.ucacfcconnect.service.EliminacionCuentaService;
 import sv.edu.udb.ucacfcconnect.service.InvitacionClienteService;
 import sv.edu.udb.ucacfcconnect.service.RecuperacionPasswordService;
 
@@ -41,19 +46,22 @@ public class AuthController {
     private final AuthCookieService authCookies;
     private final InvitacionClienteService invitaciones;
     private final RecuperacionPasswordService recuperacionPassword;
+    private final EliminacionCuentaService eliminacionCuenta;
 
     public AuthController(
             AuthService authService,
             ObjectProvider<ClientRegistrationRepository> clientRegistrations,
             AuthCookieService authCookies,
             InvitacionClienteService invitaciones,
-            RecuperacionPasswordService recuperacionPassword
+            RecuperacionPasswordService recuperacionPassword,
+            EliminacionCuentaService eliminacionCuenta
     ) {
         this.authService = authService;
         this.clientRegistrations = clientRegistrations;
         this.authCookies = authCookies;
         this.invitaciones = invitaciones;
         this.recuperacionPassword = recuperacionPassword;
+        this.eliminacionCuenta = eliminacionCuenta;
     }
 
     @PostMapping("/registro")
@@ -133,5 +141,17 @@ public class AuthController {
     @PostMapping("/me/dui")
     public UsuarioResponse completarDui(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DuiRequest request) {
         return UsuarioResponse.from(authService.completarDui(Long.valueOf(jwt.getSubject()), request));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> eliminarCuenta(@AuthenticationPrincipal Jwt jwt,
+                                                @Valid @RequestBody EliminarCuentaRequest request,
+                                                HttpServletRequest httpRequest,
+                                                HttpServletResponse response) {
+        eliminacionCuenta.eliminar(Long.valueOf(jwt.getSubject()), request.confirmacion());
+        authCookies.eliminar(response);
+        HttpSession session = httpRequest.getSession(false);
+        if (session != null) session.invalidate();
+        return ResponseEntity.noContent().build();
     }
 }

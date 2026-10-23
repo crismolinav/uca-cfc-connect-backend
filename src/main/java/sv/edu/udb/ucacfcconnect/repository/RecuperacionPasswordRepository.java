@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface RecuperacionPasswordRepository extends JpaRepository<RecuperacionPassword, Long> {
     Optional<RecuperacionPassword> findTopByUsuarioIdOrderByCreadoEnDesc(Long usuarioId);
+    void deleteAllByUsuarioId(Long usuarioId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<RecuperacionPassword> findByTokenHash(String tokenHash);

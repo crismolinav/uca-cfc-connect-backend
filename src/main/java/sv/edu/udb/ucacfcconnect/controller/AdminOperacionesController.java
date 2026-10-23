@@ -54,6 +54,14 @@ public class AdminOperacionesController {
         return operaciones.registrarServicio(request);
     }
 
+    @GetMapping("/catering")
+    public List<Map<String, Object>> solicitudesCatering() { return operaciones.solicitudesCatering(); }
+
+    @PatchMapping("/catering/{id}/aprobar")
+    public AdminOperacionesService.SolicitudCateringAprobada aprobarCatering(@PathVariable Long id) {
+        return administracion.aprobarCatering(id);
+    }
+
     @GetMapping("/pagos")
     public List<Map<String, Object>> pagos() { return operaciones.pagos(); }
 

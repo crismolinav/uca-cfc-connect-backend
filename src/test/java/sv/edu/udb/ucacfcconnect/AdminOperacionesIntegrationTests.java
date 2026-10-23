@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.CotizacionRequest;
+import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.CateringRequest;
 import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.PagoRequest;
 import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.ServicioRequest;
 import sv.edu.udb.ucacfcconnect.entity.Cliente;
@@ -16,12 +17,14 @@ import sv.edu.udb.ucacfcconnect.entity.Usuario;
 import sv.edu.udb.ucacfcconnect.repository.ClienteRepository;
 import sv.edu.udb.ucacfcconnect.repository.EspacioRepository;
 import sv.edu.udb.ucacfcconnect.repository.RolRepository;
+import sv.edu.udb.ucacfcconnect.repository.SolicitudCateringRepository;
 import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 import sv.edu.udb.ucacfcconnect.service.JwtService;
 import sv.edu.udb.ucacfcconnect.service.RecepcionOperacionesService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Map;
 
@@ -42,6 +45,7 @@ class AdminOperacionesIntegrationTests {
     @Autowired UsuarioRepository usuarios;
     @Autowired ClienteRepository clientes;
     @Autowired EspacioRepository espacios;
+    @Autowired SolicitudCateringRepository catering;
     @Autowired JwtService jwt;
     @Autowired RecepcionOperacionesService operaciones;
 
@@ -122,6 +126,45 @@ class AdminOperacionesIntegrationTests {
                         .param("desde", hoy.toString()).param("hasta", hoy.minusDays(1).toString())
                         .header("Authorization", "Bearer " + admin))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void adminApruebaSolicitudCateringYRecepcionVeElEstado() throws Exception {
+        String admin = token("ADMIN", "admin-catering@example.com");
+        String recepcion = token("RECEPCIONISTA", "recepcion-catering@example.com");
+        Cliente cliente = new Cliente();
+        cliente.setNombre("Cliente catering");
+        cliente = clientes.save(cliente);
+        Long servicioId = ((Number) operaciones.registrarServicio(new ServicioRequest(
+                "Coffee break", "Refrigerio", new BigDecimal("12.00"), null)).get("id")).longValue();
+        Long solicitudId = ((Number) operaciones.solicitarCatering(new CateringRequest(
+                cliente.getId(), servicioId, LocalDate.now(ZoneId.of("America/El_Salvador")).plusDays(1),
+                LocalTime.of(10, 0), "Sala 1", 20, "Café y fruta")).get("id")).longValue();
+
+        mvc.perform(get("/api/v1/admin/operaciones/catering")
+                        .header("Authorization", "Bearer " + recepcion))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/operaciones/catering")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(solicitudId))
+                .andExpect(jsonPath("$[0].estado").value("PENDIENTE"));
+        mvc.perform(patch("/api/v1/admin/operaciones/catering/" + solicitudId + "/aprobar")
+                        .with(csrf()).header("Authorization", "Bearer " + recepcion))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch("/api/v1/admin/operaciones/catering/" + solicitudId + "/aprobar")
+                        .with(csrf()).header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.estado").value("APROBADA"));
+        mvc.perform(get("/api/v1/recepcion/catering")
+                        .header("Authorization", "Bearer " + recepcion))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].estado").value("APROBADA"));
+        assertEquals("APROBADA", catering.findById(solicitudId).orElseThrow().getEstado());
+        mvc.perform(patch("/api/v1/admin/operaciones/catering/" + solicitudId + "/aprobar")
+                        .with(csrf()).header("Authorization", "Bearer " + admin))
+                .andExpect(status().isConflict());
+        mvc.perform(patch("/api/v1/admin/operaciones/catering/999999999/aprobar")
+                        .with(csrf()).header("Authorization", "Bearer " + admin))
+                .andExpect(status().isNotFound());
     }
 
     private String token(String rolNombre, String correo) {
