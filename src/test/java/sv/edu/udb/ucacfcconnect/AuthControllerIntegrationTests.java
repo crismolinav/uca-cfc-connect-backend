@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.mock.web.MockHttpSession;
+import jakarta.servlet.http.Cookie;
 import sv.edu.udb.ucacfcconnect.entity.Usuario;
 import sv.edu.udb.ucacfcconnect.repository.RolRepository;
 import sv.edu.udb.ucacfcconnect.repository.ClienteRepository;
@@ -55,6 +56,32 @@ class AuthControllerIntegrationTests {
         clienteRepository.deleteAll();
         usuarioRepository.deleteAll();
         rolRepository.deleteAll();
+    }
+
+    @Test
+    void cookieInvalidaNoBloqueaPaginasPublicasPeroProtegeLaCuenta() throws Exception {
+        Cookie cookieInvalida = new Cookie("uca_cfc_session", "token-invalido");
+
+        mockMvc.perform(get("/").cookie(cookieInvalida))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/css/cliente.css").cookie(cookieInvalida))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/cursos").cookie(cookieInvalida))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/auth/me").cookie(cookieInvalida))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/auth/registro").with(csrf()).cookie(cookieInvalida)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "nombre": "Usuario Nuevo",
+                                  "dui": "12345678-9",
+                                  "correo": "nuevo@example.com",
+                                  "password": "ClaveSegura123",
+                                  "aceptaTerminos": true
+                                }
+                                """))
+                .andExpect(status().isCreated());
     }
 
     @Test

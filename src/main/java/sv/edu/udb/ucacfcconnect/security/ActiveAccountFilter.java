@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -35,8 +36,15 @@ public class ActiveAccountFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/api/")
-                || request.getRequestURI().equals("/api/v1/auth/logout");
+        String ruta = request.getRequestURI();
+        return !ruta.startsWith("/api/")
+                || (HttpMethod.GET.matches(request.getMethod())
+                    && (ruta.startsWith("/api/v1/cursos")
+                        || ruta.startsWith("/api/v1/diplomados")
+                        || ruta.startsWith("/api/v1/espacios")))
+                || (ruta.startsWith("/api/v1/auth/")
+                    && !ruta.equals("/api/v1/auth/me")
+                    && !ruta.startsWith("/api/v1/auth/me/"));
     }
 
     @Override
@@ -53,7 +61,10 @@ public class ActiveAccountFilter extends OncePerRequestFilter {
                 rechazar(request, response);
                 return;
             }
-            if (!usuarios.existsByIdAndActivoTrue(usuarioId)) {
+            var usuario = usuarios.findById(usuarioId).orElse(null);
+            Number version = jwt.getToken().getClaim("pwdv");
+            if (usuario == null || !usuario.isActivo()
+                    || usuario.getPasswordVersion() != (version == null ? 0L : version.longValue())) {
                 rechazar(request, response);
                 return;
             }
@@ -68,6 +79,6 @@ public class ActiveAccountFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), new ErrorResponse(
                 Instant.now(), HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(),
-                "La cuenta está desactivada", request.getRequestURI()));
+                "La sesión ya no es válida. Inicia sesión de nuevo", request.getRequestURI()));
     }
 }

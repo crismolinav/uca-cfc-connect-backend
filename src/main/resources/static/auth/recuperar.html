@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Recuperar contraseña | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body data-page="recuperar">
+<main class="auth-layout">
+    <section class="auth-panel" aria-labelledby="page-title">
+        <div class="auth-card">
+            <a class="brand" href="/" aria-label="UCA CFC Connect, inicio">
+                <span class="brand-mark" aria-hidden="true">U</span><span>UCA CFC Connect</span>
+            </a>
+            <header class="auth-heading">
+                <h1 id="page-title">Recupera tu contraseña</h1>
+                <p>Escribe tu correo. Si tienes una cuenta con contraseña, recibirás un enlace para cambiarla.</p>
+            </header>
+            <form id="recovery-form" class="auth-form" novalidate>
+                <div class="field">
+                    <label for="correo">Correo electrónico</label>
+                    <input id="correo" name="correo" type="email" autocomplete="email" spellcheck="false"
+                           placeholder="nombre@correo.com" maxlength="120" required aria-describedby="correo-error">
+                    <p id="correo-error" class="field-error" aria-live="polite"></p>
+                </div>
+                <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+                <button class="primary-button" type="submit" data-idle-label="Enviar enlace">Enviar enlace</button>
+            </form>
+            <p class="auth-switch"><a href="/auth/login.html">Volver a iniciar sesión</a></p>
+        </div>
+    </section>
+    <aside class="auth-visual" aria-hidden="true"><img src="/assets/students-studying.png" alt=""></aside>
+</main>
+</body>
+</html>

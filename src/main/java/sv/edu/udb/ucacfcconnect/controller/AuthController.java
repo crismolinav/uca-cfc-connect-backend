@@ -20,12 +20,15 @@ import sv.edu.udb.ucacfcconnect.dto.auth.AuthResponse;
 import sv.edu.udb.ucacfcconnect.dto.auth.DuiRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.LoginRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.RegistroRequest;
+import sv.edu.udb.ucacfcconnect.dto.auth.RestablecerPasswordRequest;
+import sv.edu.udb.ucacfcconnect.dto.auth.SolicitarRecuperacionRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.UsuarioResponse;
 import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.security.AuthCookieService;
 import sv.edu.udb.ucacfcconnect.service.AuthService;
 import sv.edu.udb.ucacfcconnect.service.AuthSession;
 import sv.edu.udb.ucacfcconnect.service.InvitacionClienteService;
+import sv.edu.udb.ucacfcconnect.service.RecuperacionPasswordService;
 
 import java.net.URI;
 import java.util.Map;
@@ -37,17 +40,20 @@ public class AuthController {
     private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
     private final AuthCookieService authCookies;
     private final InvitacionClienteService invitaciones;
+    private final RecuperacionPasswordService recuperacionPassword;
 
     public AuthController(
             AuthService authService,
             ObjectProvider<ClientRegistrationRepository> clientRegistrations,
             AuthCookieService authCookies,
-            InvitacionClienteService invitaciones
+            InvitacionClienteService invitaciones,
+            RecuperacionPasswordService recuperacionPassword
     ) {
         this.authService = authService;
         this.clientRegistrations = clientRegistrations;
         this.authCookies = authCookies;
         this.invitaciones = invitaciones;
+        this.recuperacionPassword = recuperacionPassword;
     }
 
     @PostMapping("/registro")
@@ -80,6 +86,20 @@ public class AuthController {
         AuthSession sesion = authService.login(request);
         authCookies.crear(response, sesion.token(), Boolean.TRUE.equals(request.recordar()));
         return new AuthResponse(sesion.expiraEnSegundos(), sesion.usuario());
+    }
+
+    @PostMapping("/recuperar-password")
+    public ResponseEntity<Void> solicitarRecuperacion(@Valid @RequestBody SolicitarRecuperacionRequest request) {
+        recuperacionPassword.solicitar(request.correo());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/restablecer-password")
+    public ResponseEntity<Void> restablecerPassword(@Valid @RequestBody RestablecerPasswordRequest request,
+                                                     HttpServletResponse response) {
+        recuperacionPassword.restablecer(request);
+        authCookies.eliminar(response);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/csrf")
