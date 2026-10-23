@@ -346,11 +346,6 @@
             if (email) email.textContent = usuario.correo;
             const settingsName = document.getElementById("settings-name");
             if (settingsName) settingsName.value = nombre;
-            const settingsEmail = document.getElementById("settings-email");
-            if (settingsEmail) settingsEmail.value = usuario.correo || "";
-            const settingsTimezone = document.getElementById("settings-timezone");
-            if (settingsTimezone) settingsTimezone.options[0].textContent =
-                Intl.DateTimeFormat().resolvedOptions().timeZone || "Zona local del navegador";
             const provider = document.getElementById("client-provider");
             if (provider) provider.textContent =
                 usuario.proveedor === "google" ? "Google" : "Correo y contraseña";
@@ -370,6 +365,70 @@
             document.getElementById("client-error").textContent =
                 "No pudimos cargar tu espacio. Actualiza la página para intentar nuevamente.";
         }
+    }
+
+    function prepararActualizarNombre() {
+        const formulario = document.getElementById("settings-name-form");
+        const campo = document.getElementById("settings-name");
+        const error = document.getElementById("settings-name-error");
+        const estado = document.getElementById("settings-name-status");
+        const boton = formulario.querySelector("button[type='submit']");
+
+        campo.addEventListener("input", () => {
+            campo.removeAttribute("aria-invalid");
+            error.textContent = "";
+            estado.textContent = "";
+            estado.classList.remove("is-error");
+        });
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const nombre = campo.value.trim();
+            if (!nombre) {
+                error.textContent = "Escribe tu nombre.";
+                campo.setAttribute("aria-invalid", "true");
+                campo.focus();
+                return;
+            }
+            boton.disabled = true;
+            estado.textContent = "Guardando nombre...";
+            estado.classList.remove("is-error");
+            error.textContent = "";
+            try {
+                const csrf = await obtenerCsrf();
+                const respuesta = await fetch("/api/v1/auth/me/nombre", {
+                    method: "PATCH",
+                    credentials: "same-origin",
+                    headers: {"Content-Type": "application/json", "X-CSRF-TOKEN": csrf},
+                    body: JSON.stringify({nombre})
+                });
+                const contenido = await respuesta.json().catch(() => ({}));
+                if (respuesta.status === 401 || respuesta.status === 403) {
+                    window.location.replace("/auth/login.html");
+                    return;
+                }
+                if (!respuesta.ok) {
+                    if (contenido.nombre) {
+                        error.textContent = contenido.nombre;
+                        campo.setAttribute("aria-invalid", "true");
+                        campo.focus();
+                        estado.textContent = "";
+                    } else {
+                        estado.textContent = contenido.mensaje ||
+                            "No se pudo guardar el nombre. Intenta nuevamente.";
+                        estado.classList.add("is-error");
+                    }
+                    return;
+                }
+                campo.value = contenido.nombre;
+                document.getElementById("client-avatar").textContent = contenido.nombre.charAt(0).toUpperCase();
+                estado.textContent = "Nombre actualizado.";
+            } catch (_error) {
+                estado.textContent = "No se pudo conectar con el servidor. Revisa tu conexión e intenta nuevamente.";
+                estado.classList.add("is-error");
+            } finally {
+                boton.disabled = false;
+            }
+        });
     }
 
     function prepararEliminacionCuenta() {
@@ -495,6 +554,9 @@
         prepararCompletarDui();
         cargarPanelCliente();
     }
-    if (pagina === "configuracion") prepararEliminacionCuenta();
+    if (pagina === "configuracion") {
+        prepararActualizarNombre();
+        prepararEliminacionCuenta();
+    }
     if (pagina === "aprendizaje" || pagina === "configuracion") cargarPanelCliente();
 })();

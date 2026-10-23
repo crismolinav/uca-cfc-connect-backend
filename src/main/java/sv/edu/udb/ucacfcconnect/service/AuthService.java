@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.auth.DuiRequest;
+import sv.edu.udb.ucacfcconnect.dto.auth.ActualizarNombreRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.LoginRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.RegistroRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.UsuarioResponse;
@@ -110,7 +111,6 @@ public class AuthService {
 
         if (porProveedor != null) {
             validarActivo(porProveedor);
-            porProveedor.setNombre(nombre.trim());
             porProveedor.setCorreo(correoNormalizado);
             porProveedor.setEmailVerificado(true);
             return usuarioRepository.save(porProveedor);
@@ -130,7 +130,7 @@ public class AuthService {
             validarActivo(usuario);
         }
 
-        usuario.setNombre(nombre.trim());
+        if (usuario.getId() == null) usuario.setNombre(nombre.trim());
         usuario.setOauthProvider(GOOGLE);
         usuario.setOauthProviderId(providerId);
         usuario.setEmailVerificado(true);
@@ -176,6 +176,21 @@ public class AuthService {
         clienteRepository.saveAndFlush(cliente);
         usuario.setCliente(cliente);
         return usuario;
+    }
+
+    @Transactional
+    public UsuarioResponse actualizarNombre(Long usuarioId, ActualizarNombreRequest request) {
+        Usuario usuario = obtenerUsuarioPorId(usuarioId);
+        if (!"CLIENTE".equalsIgnoreCase(usuario.getRol().getNombre())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Solo una cuenta de cliente puede cambiar su nombre aquí");
+        }
+        String nombre = request.nombre().trim();
+        if (nombre.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Escribe tu nombre");
+        }
+        usuario.setNombre(nombre);
+        clienteRepository.findByUsuarioId(usuarioId).ifPresent(cliente -> cliente.setNombre(nombre));
+        return UsuarioResponse.from(usuario);
     }
 
     private AuthSession crearRespuesta(Usuario usuario) {

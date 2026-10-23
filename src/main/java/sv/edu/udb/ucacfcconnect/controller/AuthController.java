@@ -14,11 +14,13 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sv.edu.udb.ucacfcconnect.dto.auth.AceptarInvitacionRequest;
+import sv.edu.udb.ucacfcconnect.dto.auth.ActualizarNombreRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.AuthResponse;
 import sv.edu.udb.ucacfcconnect.dto.auth.DuiRequest;
 import sv.edu.udb.ucacfcconnect.dto.auth.EliminarCuentaRequest;
@@ -141,6 +143,12 @@ public class AuthController {
     @PostMapping("/me/dui")
     public UsuarioResponse completarDui(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DuiRequest request) {
         return UsuarioResponse.from(authService.completarDui(Long.valueOf(jwt.getSubject()), request));
+    }
+
+    @PatchMapping("/me/nombre")
+    public UsuarioResponse actualizarNombre(@AuthenticationPrincipal Jwt jwt,
+                                             @Valid @RequestBody ActualizarNombreRequest request) {
+        return authService.actualizarNombre(Long.valueOf(jwt.getSubject()), request);
     }
 
     @DeleteMapping("/me")
