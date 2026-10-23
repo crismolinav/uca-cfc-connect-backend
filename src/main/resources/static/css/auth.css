@@ -149,6 +149,24 @@ input {
     gap: 1.15rem;
 }
 
+.auth-card-register { width: min(100%, 32rem); }
+.auth-card-register .auth-heading { margin: 2rem 0 1.5rem; }
+.registration-names {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+.registration-names .field { min-width: 0; align-content: start; }
+.registration-names .field label { min-height: 2.5em; line-height: 1.4; }
+.registration-names .field input { padding-inline: .75rem; }
+.registration-names .field-error:empty { display: none; }
+.field-optional { color: var(--text-muted); font-size: .75rem; font-weight: 400; }
+
+@media (max-width: 520px) {
+    .registration-names { grid-template-columns: 1fr; gap: 1rem; }
+    .registration-names .field label { min-height: auto; }
+}
+
 .field {
     display: grid;
     gap: 0.45rem;

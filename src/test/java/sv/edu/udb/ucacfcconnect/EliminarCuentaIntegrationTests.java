@@ -39,10 +39,13 @@ class EliminarCuentaIntegrationTests {
     @Autowired RecuperacionPasswordRepository recuperaciones;
     @Autowired JwtService jwtService;
 
+    @Autowired sv.edu.udb.ucacfcconnect.repository.ParticipanteRepository participantes;
+
     @BeforeEach
     @AfterEach
     void limpiar() {
         recuperaciones.deleteAll();
+        participantes.deleteAll();
         clientes.deleteAll();
         usuarios.deleteAll();
         roles.deleteAll();
@@ -53,7 +56,7 @@ class EliminarCuentaIntegrationTests {
         var registro = mvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Ana López","dui":"12345678-9","correo":"ana@example.test",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"12345678-9","correo":"ana@example.test",
                                  "password":"ClaveSegura123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated()).andReturn();
@@ -87,13 +90,13 @@ class EliminarCuentaIntegrationTests {
         assertThat(conservado.getUsuario()).isNull();
         assertThat(conservado.getCorreo()).isNull();
         assertThat(conservado.getDuiNit()).isNull();
-        assertThat(conservado.getNombre()).isEqualTo("Ana López");
+        assertThat(conservado.getNombre()).isEqualTo("Ana López Díaz");
         mvc.perform(get("/api/v1/auth/me").cookie(sesion)).andExpect(status().isForbidden());
 
         mvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nombre":"Ana López","dui":"12345678-9","correo":"ana@example.test",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"12345678-9","correo":"ana@example.test",
                                  "password":"OtraClave123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated());

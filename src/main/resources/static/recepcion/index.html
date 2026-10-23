@@ -79,35 +79,38 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             <section id="panel-clientes" class="panel" aria-labelledby="clientes-title" hidden>
                 <div class="section-heading"><div><h2 id="clientes-title">Clientes</h2><p>Registra a la persona o empresa a quien se asignará un servicio. Si proporcionas un correo, podrá recibir una invitación para crear su cuenta.</p></div></div>
                 <section class="form-card"><h3>Nuevo cliente</h3><form id="client-form" class="form-grid">
-                    <label>Nombre completo<input name="nombre" required maxlength="120"></label>
+                    <label>Primer nombre<input name="primerNombre" required maxlength="60" autocomplete="given-name"></label>
+                    <label>Segundo nombre (opcional)<input name="segundoNombre" maxlength="60" autocomplete="additional-name"></label>
+                    <label>Primer apellido<input name="primerApellido" required maxlength="60"></label>
+                    <label>Segundo apellido<input name="segundoApellido" required maxlength="60"></label>
                     <label>DUI o NIT<input name="duiNit" maxlength="20"></label>
                     <label>Empresa<input name="empresa" maxlength="150"></label>
                     <label>Correo para la invitación<input name="correo" type="email" autocomplete="email" maxlength="120"></label>
                     <label>Teléfono<input name="telefono" type="tel" maxlength="20"></label>
                     <label>Dirección<input name="direccion" maxlength="255"></label>
                     <button type="submit">Guardar cliente</button>
+                    <button type="button" id="cancel-client-edit" hidden>Cancelar edición</button>
                 </form></section>
                 <p id="invitation-result" role="status" aria-live="polite"></p>
                 <section class="list-card"><h3>Clientes registrados</h3><div id="clients-list" class="item-list"></div></section>
             </section>
 
             <section id="panel-participantes" class="panel" aria-labelledby="participants-title" hidden>
-                <div class="section-heading"><div><h2 id="participants-title">Participantes</h2><p>Vincula participantes con el cliente responsable.</p></div></div>
-                <section class="form-card"><h3>Nuevo participante</h3><form id="participant-form" class="form-grid">
-                    <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
-                    <label>Nombre<input name="nombre" required maxlength="100"></label>
-                    <label>Apellido<input name="apellido" required maxlength="100"></label>
-                    <label>Correo<input name="correo" type="email" maxlength="120"></label>
-                    <label>Teléfono<input name="telefono" type="tel" maxlength="20"></label>
-                    <button type="submit">Guardar participante</button>
+                <div class="section-heading"><div><h2 id="participants-title">Participantes</h2><p>Cada cliente se registra automáticamente como participante al crear su cuenta o al ser registrado por recepción.</p></div></div>
+                <section class="form-card"><h3>Consultar participante</h3><form id="participant-form" class="form-grid">
+                    <label>Carnet del cliente<input name="carnet" list="carnet-suggestions" required maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="participant-lookup-result"></label>
+                    <button type="button" data-carnet-search>Buscar participante</button>
+                    <p id="participant-lookup-result" class="carnet-result" role="status" aria-live="polite">Escribe al menos dos caracteres del carnet y elige una sugerencia. El alta como participante es automática.</p>
                 </form></section>
                 <section class="list-card"><h3>Participantes registrados</h3><div id="participants-list" class="item-list"></div></section>
             </section>
 
             <section id="panel-inscripciones" class="panel" aria-labelledby="enroll-title" hidden>
-                <div class="section-heading"><div><h2 id="enroll-title">Inscripciones</h2><p>Solo aparecen participantes con una cuenta de cliente activa vinculada a su correo. No necesitan tener la sesión abierta en este momento.</p></div></div>
+                <div class="section-heading"><div><h2 id="enroll-title">Inscripciones</h2><p>Busca por carnet. Los clientes se registran automáticamente como participantes; no necesitan tener una cuenta de acceso para inscribirse desde recepción.</p></div></div>
                 <section class="form-card"><h3>Nueva inscripción</h3><form id="enrollment-form" class="form-grid">
-                    <label>Participante<select name="participanteId" data-options="participantesInscribibles" required></select></label>
+                    <label>Carnet del participante<input name="carnet" list="carnet-suggestions" required maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="enrollment-lookup-result"></label>
+                    <button type="button" data-carnet-search>Buscar participante</button>
+                    <p id="enrollment-lookup-result" class="carnet-result" role="status" aria-live="polite">Escribe al menos dos caracteres del carnet y elige una sugerencia para consultar al participante.</p>
                     <label>Tipo de programa<select name="programaTipo" data-dependent="programaId" required><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option></select></label>
                     <label>Programa<select name="programaId" required></select></label>
                     <button type="submit">Crear inscripción</button>
@@ -178,15 +181,38 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                     <label>Cliente<select name="clienteId" data-options="clientes" required></select></label>
                     <label>Concepto<select name="conceptoTipo" data-dependent="conceptoId" required><option value="INSCRIPCION">Inscripción</option><option value="ALQUILER">Reserva</option><option value="CATERING">Catering</option><option value="COTIZACION">Cotización</option></select></label>
                     <label>Registro<select name="conceptoId" required></select></label>
-                    <label>Monto<input name="monto" type="number" min="0.01" step="0.01" required></label>
+                    <label>Monto<input name="monto" type="number" min="0.01" step="0.01" required readonly aria-describedby="payment-amount-help"></label>
+                    <p id="payment-amount-help" class="carnet-result" role="status" aria-live="polite">Selecciona un cliente y una inscripción pendiente de pago. El monto se completará automáticamente.</p>
                     <label>Método<select name="metodo" required><option value="">Seleccionar</option><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option><option value="TARJETA">Tarjeta</option></select></label>
                     <label>Referencia<input name="referencia" maxlength="100"></label>
                     <button type="submit">Registrar pago pendiente</button>
                 </form></section>
-                <section class="list-card"><h3>Pagos registrados</h3><div id="payments-list" class="item-list"></div></section>
+                <section class="list-card"><h3>Pagos pendientes de confirmar</h3><div id="payments-list" class="item-list"></div></section>
+                <section class="list-card" aria-labelledby="payment-history-title">
+                    <h3 id="payment-history-title">Historial de pagos</h3>
+                    <p class="history-description">Consulta los pagos registrados, incluidos los confirmados. Las fechas filtran el día del pago.</p>
+                    <form id="payment-history-filters" class="form-grid history-filters" role="search" aria-label="Filtrar historial de pagos">
+                        <label>Fecha desde<input name="desde" type="date"></label>
+                        <label>Fecha hasta<input name="hasta" type="date"></label>
+                        <label>Estado<select name="estado"><option value="">Todos los estados</option><option value="PENDIENTE">Pendiente</option><option value="CONFIRMADO">Confirmado</option><option value="RECHAZADO">Rechazado</option><option value="CANCELADO">Cancelado</option></select></label>
+                        <label>Cliente<select name="clienteId" data-options="clientes" data-empty-label="Todos los clientes"></select></label>
+                        <label>Método<select name="metodo"><option value="">Todos los métodos</option><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option><option value="TARJETA">Tarjeta</option></select></label>
+                        <label>Pagos por página<select name="size"><option value="10">10 pagos</option><option value="25">25 pagos</option><option value="50">50 pagos</option></select></label>
+                        <label class="full">Buscar cliente, carnet o referencia<input name="q" type="search" maxlength="120" placeholder="Nombre, carnet o referencia del pago" autocomplete="off"></label>
+                        <div class="history-actions"><button type="submit">Aplicar filtros</button><button id="payment-history-clear" class="history-clear" type="button">Limpiar filtros</button></div>
+                    </form>
+                    <p id="payment-history-status" class="history-status" role="status" aria-live="polite">Cargando historial...</p>
+                    <div id="payment-history-list" class="item-list" aria-busy="false"></div>
+                    <nav class="history-pagination" aria-label="Páginas del historial de pagos">
+                        <button id="payment-history-previous" type="button" disabled>Anterior</button>
+                        <span id="payment-history-page">Sin resultados</span>
+                        <button id="payment-history-next" type="button" disabled>Siguiente</button>
+                    </nav>
+                </section>
             </section>
         </div>
-    </main>
+</main>
 </div>
+<datalist id="carnet-suggestions"></datalist>
 </body>
 </html>

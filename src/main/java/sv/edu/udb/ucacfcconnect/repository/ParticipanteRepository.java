@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface ParticipanteRepository extends JpaRepository<Participante, Long> {
     Optional<Participante> findFirstByClienteIdAndCorreoIgnoreCase(Long clienteId, String correo);
+    Optional<Participante> findFirstByClienteIdOrderByIdAsc(Long clienteId);
+    boolean existsByClienteId(Long clienteId);
 }

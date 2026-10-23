@@ -16,6 +16,16 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
     long countByCursoIdCursoAndEstadoNot(Long cursoId, String estado);
     List<Inscripcion> findByParticipanteClienteIdOrderByFechaDescIdDesc(Long clienteId);
 
+    @Query("""
+            select i from Inscripcion i
+            where i.estado = 'PENDIENTE' and i.total > 0
+              and (:clienteId is null or i.participante.cliente.id = :clienteId)
+              and not exists (select p.id from Pago p where p.inscripcion = i
+                              and p.estado in ('PENDIENTE', 'CONFIRMADO'))
+            order by i.id desc
+            """)
+    List<Inscripcion> pendientesDePago(@Param("clienteId") Long clienteId);
+
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"curso"})
     @Query("select i from Inscripcion i join i.participante p join p.cliente cl " +
             "where cl.usuario.id = :usuarioId and i.curso.idCurso = :cursoId " +

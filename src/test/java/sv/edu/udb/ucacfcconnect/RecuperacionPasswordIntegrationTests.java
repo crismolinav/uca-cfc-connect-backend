@@ -41,9 +41,12 @@ class RecuperacionPasswordIntegrationTests {
     @Autowired RolRepository roles;
     @MockitoBean JavaMailSender mailSender;
 
+    @Autowired sv.edu.udb.ucacfcconnect.repository.ParticipanteRepository participantes;
+
     @BeforeEach
     void limpiar() {
         recuperaciones.deleteAll();
+        participantes.deleteAll();
         clientes.deleteAll();
         usuarios.deleteAll();
         roles.deleteAll();
@@ -53,7 +56,7 @@ class RecuperacionPasswordIntegrationTests {
     void recuperaPasswordUnaSolaVezYRevocaSesionAnterior() throws Exception {
         var registro = mvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content("""
-                                {"nombre":"Ana López","dui":"12345678-9","correo":"ana@example.test",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"12345678-9","correo":"ana@example.test",
                                  "password":"ClaveAnterior123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated()).andReturn();
@@ -111,7 +114,7 @@ class RecuperacionPasswordIntegrationTests {
         mvc.perform(get("/auth/restablecer.html")).andExpect(status().isOk());
         mvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content("""
-                                {"nombre":"Ana López","dui":"12345678-9","correo":"ana@example.test",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"12345678-9","correo":"ana@example.test",
                                  "password":"ClaveAnterior123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated());
@@ -129,7 +132,7 @@ class RecuperacionPasswordIntegrationTests {
     void enlaceVencidoSeRechaza() throws Exception {
         mvc.perform(post("/api/v1/auth/registro").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content("""
-                                {"nombre":"Ana López","dui":"12345678-9","correo":"ana@example.test",
+                                {"primerNombre":"Ana","primerApellido":"López","segundoApellido":"Díaz","dui":"12345678-9","correo":"ana@example.test",
                                  "password":"ClaveAnterior123","aceptaTerminos":true}
                                 """))
                 .andExpect(status().isCreated());

@@ -1,6 +1,7 @@
 package sv.edu.udb.ucacfcconnect.service;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.PagoRequest;
 import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.ParticipanteRequest;
 import sv.edu.udb.ucacfcconnect.dto.recepcion.RecepcionRequests.ServicioRequest;
 import sv.edu.udb.ucacfcconnect.entity.*;
+import sv.edu.udb.ucacfcconnect.dto.admin.ClienteResumen;
 import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.repository.*;
 
@@ -22,6 +24,7 @@ import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 @Service
 public class RecepcionOperacionesService {
@@ -39,6 +42,7 @@ public class RecepcionOperacionesService {
     private final AlquilerRepository alquileres;
     private final ActividadRepository actividades;
     private final PagoRepository pagos;
+    private final ParticipanteRegistroService registroParticipantes;
 
     public RecepcionOperacionesService(ClienteRepository clientes, ParticipanteRepository participantes,
                                         InscripcionRepository inscripciones, CursoRepository cursos,
@@ -46,7 +50,7 @@ public class RecepcionOperacionesService {
                                         SolicitudCateringRepository catering, CotizacionRepository cotizaciones,
                                         DetalleCotizacionRepository detalles, EspacioRepository espacios,
                                         AlquilerRepository alquileres, ActividadRepository actividades,
-                                        PagoRepository pagos) {
+                                        PagoRepository pagos, ParticipanteRegistroService registroParticipantes) {
         this.clientes = clientes;
         this.participantes = participantes;
         this.inscripciones = inscripciones;
@@ -60,13 +64,13 @@ public class RecepcionOperacionesService {
         this.alquileres = alquileres;
         this.actividades = actividades;
         this.pagos = pagos;
+        this.registroParticipantes = registroParticipantes;
     }
 
     @Transactional(readOnly = true)
     public Map<String, Object> catalogos() {
         return item("clientes", clientes.findAll(Sort.by("nombre")).stream()
-                        .map(c -> item("id", c.getId(), "nombre", c.getNombre(), "duiNit", c.getDuiNit(),
-                                "correo", c.getCorreo(), "tieneCuenta", c.getUsuario() != null)).toList(),
+                        .map(ClienteResumen::from).toList(),
                 "participantes", participantes.findAll(Sort.by("apellido", "nombre")).stream()
                         .map(this::participanteView).toList(),
                 "participantesInscribibles", participantes.findAll(Sort.by("apellido", "nombre")).stream()
@@ -91,13 +95,21 @@ public class RecepcionOperacionesService {
 
     @Transactional
     public Map<String, Object> registrarParticipante(ParticipanteRequest request) {
-        Participante participante = new Participante();
-        participante.setCliente(cliente(request.clienteId()));
-        participante.setNombre(request.nombre().trim());
-        participante.setApellido(request.apellido().trim());
-        participante.setCorreo(opcional(request.correo()));
-        participante.setTelefono(opcional(request.telefono()));
-        return participanteView(participantes.save(participante));
+        return participanteView(registroParticipantes.asegurar(clientePorCarnet(request.carnet())));
+    }
+
+    private Cliente clientePorCarnet(String carnet) {
+        return clientes.findByCarnetIgnoreCase(carnet.trim())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No existe un cliente con ese carnet"));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> buscarCarnet(String carnet) {
+        Cliente cliente = clientePorCarnet(carnet);
+        Participante participante = participantes.findFirstByClienteIdOrderByIdAsc(cliente.getId()).orElse(null);
+        return item("clienteId", cliente.getId(), "carnet", cliente.getCarnet(), "nombre", cliente.getNombre(),
+                "correo", cliente.getCorreo(), "esParticipante", participante != null,
+                "puedeInscribirse", participante != null && puedeInscribirse(participante));
     }
 
     @Transactional(readOnly = true)
@@ -107,10 +119,12 @@ public class RecepcionOperacionesService {
 
     @Transactional
     public Map<String, Object> inscribir(InscripcionRequest request) {
-        Participante participante = participantes.findById(request.participanteId())
-                .orElseThrow(() -> notFound("participante"));
+        Cliente encontrado = clientePorCarnet(request.carnet());
+        Cliente cliente = clientes.bloquear(encontrado.getId()).orElseThrow(() -> notFound("cliente"));
+        Participante participante = participantes.findFirstByClienteIdOrderByIdAsc(cliente.getId())
+                .orElseThrow(() -> conflicto("El carnet existe, pero el cliente aún no es participante. Regístralo en Participantes"));
         if (!puedeInscribirse(participante)) {
-            throw conflicto("El participante debe tener una cuenta de cliente activa vinculada a su correo antes de inscribirse");
+            throw conflicto("La cuenta del cliente está inactiva. Solicita su reactivación antes de inscribirlo");
         }
         Inscripcion inscripcion = new Inscripcion();
         inscripcion.setParticipante(participante);
@@ -343,7 +357,39 @@ public class RecepcionOperacionesService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> pagos() {
-        return pagos.findAll(Sort.by(Sort.Direction.DESC, "id")).stream().map(this::pagoView).toList();
+        return pagos.pendientesRecepcion().stream().map(this::pagoView).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> historialPagos(LocalDate desde, LocalDate hasta, String estado,
+                                               String metodo, Long clienteId, String q, int page, int size) {
+        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+            throw invalido("La fecha desde no puede ser posterior a la fecha hasta");
+        }
+        if (page < 0 || size < 1 || size > 100 || (clienteId != null && clienteId < 1)
+                || (q != null && q.length() > 120)) {
+            throw invalido("Los filtros del historial no son válidos");
+        }
+        estado = opcional(estado);
+        metodo = opcional(metodo);
+        if (estado != null) estado = estado.toUpperCase(Locale.ROOT);
+        if (metodo != null) metodo = metodo.toUpperCase(Locale.ROOT);
+        if (estado != null && !List.of("PENDIENTE", "CONFIRMADO", "RECHAZADO", "CANCELADO").contains(estado)) {
+            throw invalido("Selecciona un estado de pago válido");
+        }
+        if (metodo != null && !List.of("EFECTIVO", "TRANSFERENCIA", "TARJETA").contains(metodo)) {
+            throw invalido("Selecciona un método de pago válido");
+        }
+        var resultado = pagos.historialRecepcion(desde, hasta, estado, metodo, clienteId,
+                q == null ? "" : q.trim(), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha", "id")));
+        return item("content", resultado.getContent().stream().map(this::pagoView).toList(),
+                "totalElements", resultado.getTotalElements(), "totalPages", resultado.getTotalPages(),
+                "number", resultado.getNumber(), "size", resultado.getSize());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> inscripcionesPendientesPago(Long clienteId) {
+        return inscripciones.pendientesDePago(clienteId).stream().map(this::inscripcionView).toList();
     }
 
     @Transactional
@@ -363,9 +409,19 @@ public class RecepcionOperacionesService {
         Long id = request.conceptoId();
         switch (request.conceptoTipo()) {
             case "INSCRIPCION" -> {
-                Inscripcion inscripcion = inscripciones.findById(id).orElseThrow(() -> notFound("inscripción"));
+                Inscripcion inscripcion = inscripciones.bloquear(id).orElseThrow(() -> notFound("inscripción"));
                 verificarCliente(cliente, inscripcion.getParticipante().getCliente().getId());
+                if (!"PENDIENTE".equals(inscripcion.getEstado())) {
+                    throw conflicto("Solo se puede registrar el pago de una inscripción pendiente");
+                }
+                if (pagos.existsByInscripcionIdAndEstadoIn(id, List.of("PENDIENTE", "CONFIRMADO"))) {
+                    throw conflicto("Esta inscripción ya tiene un pago pendiente o confirmado");
+                }
+                if (inscripcion.getTotal().compareTo(request.monto()) != 0) {
+                    throw invalido("El monto debe coincidir con el total de la inscripción");
+                }
                 pago.setInscripcion(inscripcion);
+                pago.setMonto(inscripcion.getTotal());
             }
             case "ALQUILER" -> {
                 Alquiler alquiler = alquileres.findById(id).orElseThrow(() -> notFound("reserva"));
@@ -391,10 +447,20 @@ public class RecepcionOperacionesService {
 
     @Transactional
     public Map<String, Object> confirmarPago(Long id) {
-        Pago pago = pagos.findById(id).orElseThrow(() -> notFound("pago"));
+        Pago pago = pagos.bloquear(id).orElseThrow(() -> notFound("pago"));
         if (!"PENDIENTE".equals(pago.getEstado())) throw conflicto("El pago ya fue confirmado");
+        if (pago.getInscripcion() != null) {
+            Inscripcion inscripcion = inscripciones.bloquear(pago.getInscripcion().getId())
+                    .orElseThrow(() -> notFound("inscripción"));
+            if (!"PENDIENTE".equals(inscripcion.getEstado())) {
+                throw conflicto("La inscripción ya está confirmada o fue cancelada");
+            }
+            if (pago.getMonto().compareTo(inscripcion.getTotal()) != 0) {
+                throw invalido("El monto del pago no coincide con el total de la inscripción");
+            }
+            inscripcion.setEstado("CONFIRMADA");
+        }
         pago.setEstado("CONFIRMADO");
-        if (pago.getInscripcion() != null) pago.getInscripcion().setEstado("CONFIRMADA");
         return pagoView(pago);
     }
 
@@ -410,10 +476,7 @@ public class RecepcionOperacionesService {
 
     private boolean puedeInscribirse(Participante participante) {
         Usuario usuario = participante.getCliente().getUsuario();
-        return usuario != null && usuario.isActivo() &&
-                "CLIENTE".equalsIgnoreCase(usuario.getRol().getNombre()) &&
-                participante.getCorreo() != null &&
-                participante.getCorreo().equalsIgnoreCase(usuario.getCorreo());
+        return usuario == null || (usuario.isActivo() && "CLIENTE".equalsIgnoreCase(usuario.getRol().getNombre()));
     }
 
     private void validarDinero(BigDecimal valor, boolean mayorQueCero) {
@@ -430,13 +493,15 @@ public class RecepcionOperacionesService {
 
     private Map<String, Object> participanteView(Participante p) {
         return item("id", p.getId(), "nombre", p.getNombre(), "apellido", p.getApellido(), "correo", p.getCorreo(),
-                "telefono", p.getTelefono(), "clienteId", p.getCliente().getId(), "cliente", p.getCliente().getNombre());
+                "telefono", p.getTelefono(), "clienteId", p.getCliente().getId(), "cliente", p.getCliente().getNombre(),
+                "carnet", p.getCliente().getCarnet());
     }
     private Map<String, Object> inscripcionView(Inscripcion i) {
         return item("id", i.getId(), "participanteId", i.getParticipante().getId(),
                 "participante", i.getParticipante().getNombre() + " " + i.getParticipante().getApellido(),
-                "clienteId", i.getParticipante().getCliente().getId(),
+                "clienteId", i.getParticipante().getCliente().getId(), "carnet", i.getParticipante().getCliente().getCarnet(),
                 "programa", i.getCurso() != null ? i.getCurso().getTitulo() : i.getDiplomado().getNombre(),
+                "programaTipo", i.getCurso() != null ? "CURSO" : "DIPLOMADO",
                 "total", i.getTotal(), "fecha", i.getFecha(), "estado", i.getEstado());
     }
     private Map<String, Object> servicioView(ServicioCatering s) {
@@ -493,8 +558,21 @@ public class RecepcionOperacionesService {
     }
     private Map<String, Object> pagoView(Pago p) {
         return item("id", p.getId(), "clienteId", p.getCliente().getId(), "cliente", p.getCliente().getNombre(),
+                "carnet", p.getCliente().getCarnet(), "concepto", conceptoPago(p),
                 "monto", p.getMonto(), "fecha", p.getFecha(), "metodo", p.getMetodo(),
                 "referencia", p.getReferencia(), "estado", p.getEstado());
+    }
+
+    private String conceptoPago(Pago pago) {
+        if (pago.getInscripcion() != null) {
+            Inscripcion i = pago.getInscripcion();
+            return i.getCurso() != null ? "Curso: " + i.getCurso().getTitulo()
+                    : i.getDiplomado() != null ? "Diplomado: " + i.getDiplomado().getNombre() : "Inscripción";
+        }
+        if (pago.getAlquiler() != null) return "Reserva: " + pago.getAlquiler().getEspacio().getNombre();
+        if (pago.getSolicitudCatering() != null) return "Catering: " + pago.getSolicitudCatering().getServicioCatering().getNombre();
+        if (pago.getCotizacion() != null) return "Cotización #" + pago.getCotizacion().getId();
+        return "Sin concepto asociado";
     }
 
     private static Map<String, Object> item(Object... values) {

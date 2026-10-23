@@ -19,12 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.auth.AceptarInvitacionRequest;
 import sv.edu.udb.ucacfcconnect.entity.Cliente;
-import sv.edu.udb.ucacfcconnect.entity.Participante;
 import sv.edu.udb.ucacfcconnect.entity.Rol;
 import sv.edu.udb.ucacfcconnect.entity.Usuario;
 import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.repository.ClienteRepository;
-import sv.edu.udb.ucacfcconnect.repository.ParticipanteRepository;
 import sv.edu.udb.ucacfcconnect.repository.RolRepository;
 import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 
@@ -37,7 +35,7 @@ public class InvitacionClienteService {
     private final ClienteRepository clientes;
     private final UsuarioRepository usuarios;
     private final RolRepository roles;
-    private final ParticipanteRepository participantes;
+    private final ParticipanteRegistroService registroParticipantes;
     private final PasswordEncoder passwords;
     private final JwtEncoder encoder;
     private final JwtDecoder decoder;
@@ -49,7 +47,7 @@ public class InvitacionClienteService {
     private final String mailUsername;
 
     public InvitacionClienteService(ClienteRepository clientes, UsuarioRepository usuarios, RolRepository roles,
-                                     ParticipanteRepository participantes, PasswordEncoder passwords,
+                                     ParticipanteRegistroService registroParticipantes, PasswordEncoder passwords,
                                      JwtEncoder encoder, JwtDecoder decoder, JwtService jwtService,
                                      ObjectProvider<JavaMailSender> mailSender,
                                      @Value("${app.jwt.issuer:uca-cfc-connect}") String issuer,
@@ -59,7 +57,7 @@ public class InvitacionClienteService {
         this.clientes = clientes;
         this.usuarios = usuarios;
         this.roles = roles;
-        this.participantes = participantes;
+        this.registroParticipantes = registroParticipantes;
         this.passwords = passwords;
         this.encoder = encoder;
         this.decoder = decoder;
@@ -152,21 +150,9 @@ public class InvitacionClienteService {
         cliente.setDuiNit(dui);
         cliente.setUsuario(usuario);
         usuario.setCliente(cliente);
-        if (participantes.findFirstByClienteIdAndCorreoIgnoreCase(cliente.getId(), correo).isEmpty()) {
-            crearParticipante(cliente, correo);
-        }
+        registroParticipantes.asegurar(cliente);
         return new AuthSession(jwtService.generarToken(usuario), jwtService.getExpirationSeconds(),
                 sv.edu.udb.ucacfcconnect.dto.auth.UsuarioResponse.from(usuario));
-    }
-
-    private Participante crearParticipante(Cliente cliente, String correo) {
-        String[] partes = cliente.getNombre().trim().split("\\s+", 2);
-        Participante participante = new Participante();
-        participante.setCliente(cliente);
-        participante.setNombre(partes[0]);
-        participante.setApellido(partes.length > 1 ? partes[1] : "—");
-        participante.setCorreo(correo);
-        return participantes.save(participante);
     }
 
     private Cliente clienteVigente(String token, boolean bloquear) {

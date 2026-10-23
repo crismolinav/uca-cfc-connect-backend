@@ -52,24 +52,10 @@ public class ClienteFormacionService {
     @Transactional
     public InscripcionClienteDTO inscribir(Long usuarioId, InscripcionCursoRequest request) {
         Usuario usuario = usuarioCliente(usuarioId);
-        Cliente cliente = clientes.findByUsuarioId(usuarioId).orElseGet(() -> {
-            Cliente nuevo = new Cliente();
-            nuevo.setUsuario(usuario);
-            nuevo.setNombre(usuario.getNombre());
-            nuevo.setCorreo(usuario.getCorreo());
-            return clientes.save(nuevo);
-        });
-        String correo = usuario.getCorreo().trim().toLowerCase(Locale.ROOT);
-        Participante participante = participantes.findFirstByClienteIdAndCorreoIgnoreCase(cliente.getId(), correo)
-                .orElseGet(() -> {
-                    Participante nuevo = new Participante();
-                    nuevo.setCliente(cliente);
-                    String[] partes = usuario.getNombre().trim().split("\\s+", 2);
-                    nuevo.setNombre(partes[0]);
-                    nuevo.setApellido(partes.length > 1 ? partes[1] : "Cliente");
-                    nuevo.setCorreo(correo);
-                    return participantes.save(nuevo);
-                });
+        Cliente cliente = clientes.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> conflicto("Solicita a recepción que complete tu ficha de cliente y tu carnet"));
+        Participante participante = participantes.findFirstByClienteIdOrderByIdAsc(cliente.getId())
+                .orElseThrow(() -> conflicto("Debes estar registrado como participante por recepción antes de inscribirte"));
 
         Curso curso = cursos.bloquear(request.idCurso()).orElseThrow(() -> noEncontrado("curso"));
         if (!Boolean.TRUE.equals(curso.getActivo())) throw conflicto("El curso no está activo");

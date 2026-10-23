@@ -108,8 +108,11 @@
             <button class="dialog-close" id="dialog-close" type="button" aria-label="Cerrar">Cerrar</button>
         </div>
         <div class="dialog-fields">
-            <div class="field"><label for="client-name">Nombre completo *</label>
-                <input id="client-name" name="nombre" type="text" maxlength="120" autocomplete="name" required></div>
+            <div class="field"><label for="client-name">Primer nombre *</label><input id="client-name" name="primerNombre" maxlength="60" autocomplete="given-name" required></div>
+            <div class="field"><label for="client-second-name">Segundo nombre</label><input id="client-second-name" name="segundoNombre" maxlength="60" autocomplete="additional-name"></div>
+            <div class="field"><label for="client-first-surname">Primer apellido *</label><input id="client-first-surname" name="primerApellido" maxlength="60" required></div>
+            <div class="field"><label for="client-second-surname">Segundo apellido *</label><input id="client-second-surname" name="segundoApellido" maxlength="60" required></div>
+            <div class="field field-wide"><label for="client-carnet">Carnet (permanente)</label><input id="client-carnet" name="carnet" readonly></div>
             <div class="field"><label for="client-document">DUI / NIT</label>
                 <input id="client-document" name="duiNit" type="text" maxlength="20" autocomplete="off"></div>
             <div class="field"><label for="client-company">Empresa</label>

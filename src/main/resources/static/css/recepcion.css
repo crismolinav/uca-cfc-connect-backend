@@ -161,3 +161,20 @@ body{background:radial-gradient(ellipse at 60% -10%,#fff 0,#f3f6fb 52%,#e9eef6 1
 @media(max-width:760px){.workspace-heading{align-items:flex-start;flex-direction:column;gap:10px;min-height:0;padding:22px}.role-badge{display:inline-flex}.stats>div{min-width:115px}}
 @media(max-width:540px){.workspace{padding:20px 15px 36px}.workspace-heading{padding:19px;border-radius:14px}.section-heading{gap:10px}.stats{gap:7px}.stats>div{padding:10px 11px}.agenda-card,.form-card,.list-card{padding:15px}}
 @media(prefers-reduced-motion:reduce){.nav-link,.logout-button,.menu-button,.form-grid input,.form-grid select,.form-grid textarea,.form-grid button,.item-action,.sidebar{transition:none}}
+
+.carnet-result{grid-column:1 / -1;margin:0;color:var(--ink);font-size:.8rem;line-height:1.6;overflow-wrap:anywhere}.carnet-result.is-error{color:#a02c3e}.form-grid button[data-carnet-search]{grid-column:auto;align-self:end}.form-grid button:disabled{cursor:not-allowed;opacity:.6}.form-grid input[readonly]{background:#f4f7fb}.form-grid input[name="carnet"]{text-transform:uppercase}
+.history-filters{grid-template-columns:repeat(3,minmax(0,1fr))}
+.history-description{max-width:72ch;margin:8px 0 0;color:#405574;font-size:.85rem;line-height:1.6}
+.history-filters label{font-size:.8rem}
+.history-filters input,.history-filters select{font-size:.85rem}
+.history-actions{display:flex;flex-wrap:wrap;gap:10px;grid-column:1 / -1}
+.history-actions .history-clear{border-color:#c6d4e7;background:#fff;color:#23456d;box-shadow:none}
+.history-actions .history-clear:hover{background:#edf3fc;color:#17345d;box-shadow:none}
+.history-status{margin:20px 0 5px;color:#405574;font-size:.85rem;line-height:1.5}
+.history-status.is-error{color:#a02c3e}
+.history-pagination{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:18px;color:#405574;font-size:.8rem}
+.history-pagination button{min-height:40px;padding:8px 14px;border:1px solid #c6d4e7;border-radius:8px;background:#fff;color:#23456d}
+.history-pagination button:hover:not(:disabled){background:#edf3fc;border-color:#8cace0}
+.history-pagination button:disabled{cursor:not-allowed;color:#65738a;background:#f4f6fa}
+@media(max-width:760px){.history-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.history-filters{grid-template-columns:1fr}.history-pagination{justify-content:space-between;gap:8px}}

@@ -25,6 +25,7 @@
             <button type="submit" aria-label="Buscar cursos"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m16 16 4.3 4.3"></path></svg></button>
         </form>
         <div class="account-control">
+            <span id="client-carnet" class="student-carnet" hidden></span>
             <button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button>
             <nav id="account-menu" class="account-menu" aria-label="Cuenta" hidden>
                 <a href="/cliente/aprendizaje.html">Mi aprendizaje</a>
@@ -41,10 +42,14 @@
         <h1>Configuración de cuenta</h1>
         <p class="settings-lead">Consulta tus datos y administra el acceso a tu cuenta.</p>
         <section class="settings-card personal-card" aria-labelledby="personal-title">
-            <div class="settings-card-heading"><h2 id="personal-title">Datos personales</h2><p>Actualiza el nombre que aparece en tu cuenta.</p></div>
+            <div class="settings-card-heading"><h2 id="personal-title">Datos personales</h2><p>Actualiza tus nombres y apellidos. Tu carnet es permanente.</p></div>
+            <div class="personal-fields"><div><label for="settings-carnet">Carnet (permanente)</label><input id="settings-carnet" type="text" readonly aria-describedby="carnet-help"><small id="carnet-help">Se genera automáticamente al registrarte y no se puede modificar.</small></div></div>
             <form id="settings-name-form" class="personal-fields">
-                <div><label for="settings-name">Nombre completo</label><input id="settings-name" name="nombre" type="text" autocomplete="name" maxlength="100" aria-describedby="settings-name-error" required></div>
-                <p id="settings-name-error" class="settings-name-error"></p>
+                <div><label for="settings-primerNombre">Primer nombre</label><input id="settings-primerNombre" name="primerNombre" type="text" maxlength="60" autocomplete="given-name" aria-describedby="settings-name-error" required></div>
+                <div><label for="settings-segundoNombre">Segundo nombre (opcional)</label><input id="settings-segundoNombre" name="segundoNombre" type="text" maxlength="60" autocomplete="off" aria-describedby="settings-name-error"></div>
+                <div><label for="settings-primerApellido">Primer apellido</label><input id="settings-primerApellido" name="primerApellido" type="text" maxlength="60" autocomplete="family-name" aria-describedby="settings-name-error" required></div>
+                <div><label for="settings-segundoApellido">Segundo apellido</label><input id="settings-segundoApellido" name="segundoApellido" type="text" maxlength="60" autocomplete="off" aria-describedby="settings-name-error" required></div>
+                <p id="settings-name-error" class="settings-name-error" role="alert"></p>
                 <button class="settings-save" type="submit">Guardar cambios</button>
                 <p id="settings-name-status" class="settings-name-status" role="status"></p>
             </form>

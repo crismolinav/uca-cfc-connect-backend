@@ -120,17 +120,19 @@ class RecepcionIntegrationTests {
     }
 
     @Test
-    void inscripcionRechazaParticipanteSinCuenta() {
+    void inscripcionRechazaClienteQueTodaviaNoEsParticipante() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Cliente sin cuenta");
+        cliente.setPrimerNombre("Ana");
+        cliente.setPrimerApellido("Portillo");
+        cliente.setSegundoApellido("Díaz");
         cliente = clientes.save(cliente);
-        Map<String, Object> participante = operaciones.registrarParticipante(new ParticipanteRequest(
-                cliente.getId(), "Persona", "Invitada", "persona@example.test", null));
-        Long id = ((Number) participante.get("id")).longValue();
-        assertThatThrownBy(() -> operaciones.inscribir(new InscripcionRequest(id, "CURSO", 1L)))
-                .isInstanceOf(ApiException.class).hasMessageContaining("cuenta de cliente activa");
-        assertThat((java.util.List<Map<String, Object>>) operaciones.catalogos().get("participantesInscribibles"))
-                .noneMatch(item -> id.equals(((Number) item.get("id")).longValue()));
+        String carnet = cliente.getCarnet();
+        assertThat(operaciones.buscarCarnet(carnet)).containsEntry("esParticipante", false);
+        assertThatThrownBy(() -> operaciones.inscribir(new InscripcionRequest(carnet, "CURSO", 1L)))
+                .isInstanceOf(ApiException.class).hasMessageContaining("aún no es participante");
+        operaciones.registrarParticipante(new ParticipanteRequest(carnet));
+        assertThat(operaciones.buscarCarnet(carnet)).containsEntry("puedeInscribirse", true);
     }
 
     @Test
@@ -288,11 +290,14 @@ class RecepcionIntegrationTests {
     void inscripcionVinculaParticipanteYRespetaCupoDelCurso() {
         Cliente cliente = new Cliente();
         cliente.setNombre("Cliente Formación");
+        cliente.setPrimerNombre("Luis");
+        cliente.setPrimerApellido("Prueba");
+        cliente.setSegundoApellido("Díaz");
         cliente.setCorreo("luis@example.test");
         cliente.setUsuario(usuarioCliente("Luis Prueba", "luis@example.test"));
         cliente = clientes.save(cliente);
         Map<String, Object> participante = operaciones.registrarParticipante(new ParticipanteRequest(
-                cliente.getId(), "Luis", "Prueba", "luis@example.test", null));
+                cliente.getCarnet()));
         Categoria categoria = new Categoria();
         categoria.setNombre("Pruebas de formación");
         categoria = categorias.save(categoria);
@@ -309,20 +314,24 @@ class RecepcionIntegrationTests {
         curso = cursos.save(curso);
         Long participanteId = ((Number) participante.get("id")).longValue();
         Map<String, Object> inscripcion = operaciones.inscribir(new InscripcionRequest(
-                participanteId, "CURSO", curso.getIdCurso()));
+                cliente.getCarnet(), "CURSO", curso.getIdCurso()));
         assertThat(inscripcion.get("total")).isEqualTo(new BigDecimal("35.00"));
         assertThat(inscripcion.get("estado")).isEqualTo("PENDIENTE");
         assertThat(operaciones.inscripciones()).anyMatch(i -> i.get("id").equals(inscripcion.get("id")));
         Cliente otraCliente = new Cliente();
         otraCliente.setNombre("Ana Prueba");
+        otraCliente.setPrimerNombre("Ana");
+        otraCliente.setPrimerApellido("Prueba");
+        otraCliente.setSegundoApellido("Díaz");
         otraCliente.setCorreo("ana@example.test");
         otraCliente.setUsuario(usuarioCliente("Ana Prueba", "ana@example.test"));
         otraCliente = clientes.save(otraCliente);
         Map<String, Object> segundo = operaciones.registrarParticipante(new ParticipanteRequest(
-                otraCliente.getId(), "Ana", "Prueba", "ana@example.test", null));
+                otraCliente.getCarnet()));
         Long segundoId = ((Number) segundo.get("id")).longValue();
         Long cursoId = curso.getIdCurso();
-        assertThatThrownBy(() -> operaciones.inscribir(new InscripcionRequest(segundoId, "CURSO", cursoId)))
+        String otroCarnet = otraCliente.getCarnet();
+        assertThatThrownBy(() -> operaciones.inscribir(new InscripcionRequest(otroCarnet, "CURSO", cursoId)))
                 .isInstanceOf(ApiException.class)
                 .hasMessageContaining("cupo máximo");
     }
