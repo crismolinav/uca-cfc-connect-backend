@@ -76,6 +76,44 @@
         target.replaceChildren(...(registros.length ? registros.map(render) : [texto('p', emptyText, 'list-empty')]));
     }
 
+    function escaparHtml(value) {
+        const element = document.createElement('span');
+        element.textContent = value == null ? '' : String(value);
+        return element.innerHTML;
+    }
+
+    function moneda(value) {
+        return new Intl.NumberFormat('es-SV', {style: 'currency', currency: 'USD'}).format(Number(value) || 0);
+    }
+
+    function abrirConstancia(cotizacion) {
+        const ventana = window.open('', '_blank', 'width=960,height=720');
+        if (!ventana) {
+            aviso('Permite las ventanas emergentes para abrir la constancia.', true);
+            return;
+        }
+        const detalles = cotizacion.detalles || [];
+        const filas = detalles.map((detalle) => '<tr><td>' + escaparHtml(detalle.tipo) + '</td><td>' +
+            escaparHtml(detalle.nombre) + '</td><td>' + escaparHtml(detalle.descripcion || 'Sin programación especificada') +
+            '</td><td>' + escaparHtml(detalle.cantidad) + '</td><td>' + moneda(detalle.precioUnitario) +
+            '</td><td>' + moneda(detalle.subtotal) + '</td></tr>').join('');
+        const emitida = new Intl.DateTimeFormat('es-SV', {dateStyle: 'long', timeStyle: 'short'}).format(new Date());
+        ventana.document.open();
+        ventana.document.write('<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Constancia de cotización #' +
+            escaparHtml(cotizacion.id) + '</title><style>@page{size:A4;margin:18mm}*{box-sizing:border-box}body{margin:0;padding:30px;color:#24364b;font:14px Arial,sans-serif}header{display:flex;justify-content:space-between;align-items:start;padding-bottom:18px;border-bottom:3px solid #245fd6}h1{margin:4px 0 0;color:#17345d;font-size:26px}h2{margin:30px 0 12px;font-size:17px}.brand{color:#245fd6;font-weight:700;font-size:18px}.status{padding:7px 11px;border-radius:999px;background:#e9f2fc;color:#225a9d;font-weight:700}.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin:26px 0}.meta div{padding:11px 0;border-bottom:1px solid #dfe7f0}.meta strong{display:block;margin-bottom:5px;color:#60738d;font-size:11px;text-transform:uppercase}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:11px 9px;border:1px solid #dfe7f0;text-align:left;vertical-align:top}th{background:#eff4fb;color:#17345d}.total{margin-top:20px;text-align:right;color:#17345d;font-size:20px;font-weight:700}.observaciones{padding:15px;border-radius:7px;background:#f4f7fb;line-height:1.55}.actions{margin-top:30px;text-align:right}.actions button{padding:11px 17px;border:0;border-radius:7px;background:#245fd6;color:#fff;font-weight:700}@media print{body{padding:0}.actions{display:none}}</style></head><body><header><div><div class="brand">UCA CFC Connect</div><h1>Constancia de cotización</h1></div><span class="status">' +
+            escaparHtml(cotizacion.estado) + '</span></header><section class="meta"><div><strong>Número</strong>#' +
+            escaparHtml(cotizacion.id) + '</div><div><strong>Cliente</strong>' + escaparHtml(cotizacion.cliente) +
+            '</div><div><strong>Fecha de cotización</strong>' + escaparHtml(cotizacion.fecha) +
+            '</div><div><strong>Constancia emitida</strong>' + escaparHtml(emitida) +
+            '</div></section><h2>Servicios cotizados</h2><table><thead><tr><th>Tipo</th><th>Servicio</th><th>Fecha y horario</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead><tbody>' +
+            (filas || '<tr><td colspan="6">No hay servicios asociados.</td></tr>') +
+            '</tbody></table><div class="total">Total estimado: ' + moneda(cotizacion.montoEstimado) +
+            '</div><h2>Observaciones</h2><div class="observaciones">' + escaparHtml(cotizacion.observaciones || 'Sin observaciones') +
+            '</div><div class="actions"><button id="print-button" type="button">Imprimir / Guardar como PDF</button></div></body></html>');
+        ventana.document.close();
+        ventana.document.getElementById('print-button').addEventListener('click', () => ventana.print());
+    }
+
     function opciones(select, items, label) {
         const previous = select.value;
         select.replaceChildren(new Option('Seleccionar...', ''));
@@ -121,6 +159,42 @@
             items = items.filter((item) => String(item.clienteId) === cliente.value);
         }
         opciones(target, items, (item) => item.nombre);
+        if (form.id === 'quote-form') actualizarProgramacionCotizacion();
+    }
+
+    function actualizarProgramacionCotizacion() {
+        const form = document.getElementById('quote-form');
+        const tipo = form.elements.namedItem('conceptoTipo').value;
+        const academico = tipo === 'CURSO' || tipo === 'DIPLOMADO';
+        document.querySelectorAll('[data-quote-schedule]').forEach((label) => { label.hidden = academico; });
+        for (const name of ['fechaServicio', 'horaInicio', 'horaFin']) {
+            const input = form.elements.namedItem(name);
+            input.disabled = academico;
+            input.required = !academico;
+        }
+        const summary = document.getElementById('quote-program');
+        summary.hidden = !academico;
+        if (!academico) return;
+        const item = recursosPorTipo(tipo, form.id).find((value) =>
+            String(value.id) === form.elements.namedItem('conceptoId').value);
+        if (!item) {
+            summary.textContent = 'Selecciona el ' + (tipo === 'CURSO' ? 'curso' : 'diplomado') +
+                ' para consultar su programación registrada.';
+            return;
+        }
+        if (tipo === 'CURSO') {
+            summary.textContent = 'Programación registrada: ' + (item.fechaInicio || 'fecha por confirmar') +
+                (item.fechaFin ? ' al ' + item.fechaFin : '') + ' · ' + (item.horario || 'horario por confirmar') +
+                '. Recepción no puede modificarla desde la cotización.';
+            return;
+        }
+        const sesiones = item.sesiones || [];
+        summary.textContent = sesiones.length
+            ? 'Sesiones registradas: ' + sesiones.map((session) => session.fecha + ' · ' +
+                session.horaInicio.slice(0, 5) + '–' + session.horaFin.slice(0, 5)).join('; ') +
+                '. Recepción no puede modificarlas desde la cotización.'
+            : 'Programación registrada: ' + (item.fechaInicio || 'fecha por confirmar') +
+                (item.fechaFin ? ' al ' + item.fechaFin : '') + ' · sesiones por confirmar.';
     }
 
     function fechaLocal() {
@@ -312,12 +386,24 @@
             'No hay servicios de catering registrados.');
         }
         if (name === 'cotizaciones') {
-            state.cotizaciones = await request(api + '/cotizaciones');
-            mostrarLista('quotes-list', state.cotizaciones, (q) => fila('Cotización #' + q.id + ' · ' + q.cliente,
-                q.fecha + ' · ' + (q.detalles || []).map((detalle) =>
-                    detalle.tipo + ': ' + detalle.nombre + ' × ' + detalle.cantidad).join(' · ') +
-                ' · Estimado $' + q.montoEstimado + (q.observaciones ? ' · ' + q.observaciones : ''),
-                q.estado), 'No hay cotizaciones registradas.');
+            const summaries = await request(api + '/cotizaciones');
+            state.cotizaciones = await Promise.all(summaries.map(async (quote) => {
+                try { return await request(api + '/cotizaciones/' + quote.id); }
+                catch { return quote; }
+            }));
+            mostrarLista('quotes-list', state.cotizaciones, (q) => {
+                const button = q.estado === 'APROBADA' ? texto('button', 'Ver constancia', 'item-action') : null;
+                if (button) {
+                    button.type = 'button';
+                    button.addEventListener('click', () => abrirConstancia(q));
+                }
+                return fila('Cotización #' + q.id + ' · ' + q.cliente,
+                    q.fecha + ' · ' + (q.detalles || []).map((detalle) =>
+                        detalle.tipo + ': ' + detalle.nombre + ' × ' + detalle.cantidad +
+                        (detalle.descripcion ? ' · ' + detalle.descripcion : '')).join(' · ') +
+                    ' · Estimado ' + moneda(q.montoEstimado) + (q.observaciones ? ' · ' + q.observaciones : ''),
+                    q.estado, button);
+            }, 'No hay cotizaciones registradas.');
         }
         if (name === 'actividades') {
             [state.actividades, state.allAlquileres, state.catering] = await Promise.all([
@@ -372,7 +458,7 @@
         ['enrollment-form', '/inscripciones', 'Inscripción creada.', ['participanteId', 'programaTipo', 'programaId']],
         ['catering-form', '/catering', 'Solicitud de catering registrada.', ['clienteId', 'servicioId', 'fecha', 'hora', 'numeroAsistentes', 'lugar', 'menu']],
         ['service-form', '/servicios-catering', 'Servicio registrado.', ['nombre', 'tipoServicio', 'precioBase', 'descripcion']],
-        ['quote-form', '/cotizaciones', 'Cotización creada.', ['clienteId', 'conceptoTipo', 'conceptoId', 'cantidad', 'observaciones']],
+        ['quote-form', '/cotizaciones', 'Cotización creada.', ['clienteId', 'conceptoTipo', 'conceptoId', 'cantidad', 'fechaServicio', 'horaInicio', 'horaFin', 'observaciones']],
         ['activity-form', '/actividades', 'Actividad programada.', ['titulo', 'fecha', 'horaInicio', 'horaFin', 'cupo', 'vinculacionTipo', 'vinculacionId']],
         ['payment-form', '/pagos', 'Pago pendiente registrado.', ['clienteId', 'conceptoTipo', 'conceptoId', 'monto', 'metodo', 'referencia']]
     ];
@@ -397,6 +483,7 @@
             fields.forEach((field) => {
                 const element = form.elements.namedItem(field);
                 if (element.type === 'checkbox') data[field] = element.checked;
+                else if (element.disabled) data[field] = null;
                 else if (element.type === 'number') data[field] = element.value === '' ? null : Number(element.value);
                 else if (field.endsWith('Id')) data[field] = element.value === '' ? null : Number(element.value);
                 else data[field] = element.value.trim();
@@ -415,6 +502,16 @@
                     button.textContent = original;
                     return;
                 }
+            }
+            if (id === 'quote-form' && data.horaInicio && data.horaFin &&
+                    minutos(data.horaFin) <= minutos(data.horaInicio)) {
+                const mensaje = 'La hora final del servicio debe ser posterior a la inicial.';
+                feedback.textContent = mensaje;
+                feedback.classList.add('is-error');
+                aviso(mensaje, true);
+                button.disabled = false;
+                button.textContent = original;
+                return;
             }
             try {
                 const editingId = form.dataset.editingId;
@@ -436,6 +533,7 @@
                 if (id === 'catering-form' || id === 'activity-form') {
                     form.elements.namedItem('fecha').value = fechaLocal();
                 }
+                if (id === 'quote-form') form.elements.namedItem('fechaServicio').value = fechaLocal();
                 aviso(success);
                 feedback.textContent = success;
                 await cargarCatalogos();
@@ -466,6 +564,7 @@
     document.querySelectorAll('select[data-dependent]').forEach((select) => {
         select.addEventListener('change', () => actualizarDependiente(select));
     });
+    document.querySelector('#quote-form [name="conceptoId"]').addEventListener('change', actualizarProgramacionCotizacion);
     document.querySelector('#payment-form [name="clienteId"]').addEventListener('change', () =>
         actualizarDependiente(document.querySelector('#payment-form [name="conceptoTipo"]')));
     document.getElementById('agenda-date').addEventListener('change', () => cargarAgenda().catch((e) => aviso(e.message, true)));
@@ -512,6 +611,9 @@
             document.querySelector('#booking-form [name="fecha"]').value = today;
             document.querySelector('#catering-form [name="fecha"]').value = today;
             document.querySelector('#activity-form [name="fecha"]').value = today;
+            const quoteDate = document.querySelector('#quote-form [name="fechaServicio"]');
+            quoteDate.value = today;
+            quoteDate.min = today;
             await cargarCatalogos();
             await mostrarPanel(window.location.hash.slice(1));
         } catch (error) { aviso(error.message, true); }

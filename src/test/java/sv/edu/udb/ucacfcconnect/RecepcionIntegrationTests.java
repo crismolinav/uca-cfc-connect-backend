@@ -256,13 +256,16 @@ class RecepcionIntegrationTests {
                 cliente.getId(), servicioId, manana, LocalTime.of(10, 0), "Aula 1", 12, "Café y fruta"));
         Long solicitudId = ((Number) solicitud.get("id")).longValue();
         Map<String, Object> cotizacion = operaciones.cotizar(new CotizacionRequest(
-                cliente.getId(), "CATERING", servicioId, 12, "Evento del equipo"));
+                cliente.getId(), "CATERING", servicioId, 12,
+                manana, LocalTime.of(10, 0), LocalTime.of(12, 0), "Evento del equipo"));
         assertThat(cotizacion.get("montoEstimado")).isEqualTo(new BigDecimal("150.00"));
         List<Map<String, Object>> detallesCotizacion = (List<Map<String, Object>>) cotizacion.get("detalles");
         assertThat(detallesCotizacion).singleElement().satisfies(detalle -> {
             assertThat(detalle.get("tipo")).isEqualTo("CATERING");
             assertThat(detalle.get("nombre")).isEqualTo("Coffee Break");
             assertThat(detalle.get("cantidad")).isEqualTo(12);
+            assertThat(detalle.get("descripcion")).isEqualTo(
+                    "Fecha: " + manana + " · Horario: 10:00–12:00");
         });
         Long cotizacionId = ((Number) cotizacion.get("id")).longValue();
         assertThat(cotizacionService.obtenerPorId(cotizacionId).detalles())

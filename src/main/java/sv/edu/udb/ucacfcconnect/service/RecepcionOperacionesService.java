@@ -72,9 +72,14 @@ public class RecepcionOperacionesService {
                 "participantesInscribibles", participantes.findAll(Sort.by("apellido", "nombre")).stream()
                         .filter(this::puedeInscribirse).map(this::participanteView).toList(),
                 "cursos", cursos.findAll(Sort.by("titulo")).stream().filter(c -> Boolean.TRUE.equals(c.getActivo()))
-                        .map(c -> item("id", c.getIdCurso(), "nombre", c.getTitulo(), "precio", c.getCosto())).toList(),
+                        .map(c -> item("id", c.getIdCurso(), "nombre", c.getTitulo(), "precio", c.getCosto(),
+                                "fechaInicio", c.getFechaInicio(), "fechaFin", c.getFechaFin(),
+                                "horario", c.getHorario())).toList(),
                 "diplomados", diplomados.findAll(Sort.by("nombre")).stream().filter(Diplomado::isActivo)
-                        .map(d -> item("id", d.getId(), "nombre", d.getNombre(), "precio", d.getCosto())).toList(),
+                        .map(d -> item("id", d.getId(), "nombre", d.getNombre(), "precio", d.getCosto(),
+                                "fechaInicio", d.getFechaInicio(), "fechaFin", d.getFechaFin(),
+                                "sesiones", actividades.findByDiplomado_IdOrderByFechaAscHoraInicioAsc(d.getId())
+                                        .stream().map(this::actividadView).toList())).toList(),
                 "servicios", servicios.findAll(Sort.by("nombre")).stream().filter(ServicioCatering::isActivo)
                         .map(this::servicioView).toList());
     }
@@ -186,12 +191,18 @@ public class RecepcionOperacionesService {
         return cotizaciones.findAll(Sort.by(Sort.Direction.DESC, "id")).stream().map(this::cotizacionView).toList();
     }
 
+    @Transactional(readOnly = true)
+    public Map<String, Object> cotizacion(Long id) {
+        return cotizacionView(cotizaciones.buscarPorId(id).orElseThrow(() -> notFound("cotización")));
+    }
+
     @Transactional
     public Map<String, Object> cotizar(CotizacionRequest request) {
         Cliente cliente = cliente(request.clienteId());
         DetalleCotizacion detalle = new DetalleCotizacion();
         BigDecimal precio;
         String descripcion;
+        boolean programacionPropia = true;
         switch (request.conceptoTipo()) {
             case "ESPACIO" -> {
                 Espacio espacio = espacios.findById(request.conceptoId()).orElseThrow(() -> notFound("espacio"));
@@ -213,7 +224,8 @@ public class RecepcionOperacionesService {
                 if (!Boolean.TRUE.equals(curso.getActivo())) throw conflicto("El curso no está activo");
                 detalle.setCurso(curso);
                 precio = curso.getCosto();
-                descripcion = curso.getTitulo();
+                descripcion = programacionCurso(curso);
+                programacionPropia = false;
             }
             case "DIPLOMADO" -> {
                 Diplomado diplomado = diplomados.findById(request.conceptoId())
@@ -221,7 +233,8 @@ public class RecepcionOperacionesService {
                 if (!diplomado.isActivo()) throw conflicto("El diplomado no está activo");
                 detalle.setDiplomado(diplomado);
                 precio = diplomado.getCosto();
-                descripcion = diplomado.getNombre();
+                descripcion = programacionDiplomado(diplomado);
+                programacionPropia = false;
             }
             default -> throw invalido("Selecciona un concepto válido para la cotización");
         }
@@ -230,7 +243,7 @@ public class RecepcionOperacionesService {
         cotizacion.setFecha(LocalDate.now(ZONA));
         cotizacion.setEstado("PENDIENTE");
         cotizacion.setObservaciones(opcional(request.observaciones()));
-        detalle.setDescripcion(descripcion);
+        detalle.setDescripcion(programacionPropia ? descripcionCotizacion(request) : descripcion);
         detalle.setCantidad(request.cantidad());
         detalle.setPrecioUnitario(precio);
         BigDecimal total = precio.multiply(BigDecimal.valueOf(request.cantidad()));
@@ -242,6 +255,45 @@ public class RecepcionOperacionesService {
         detalles.save(detalle);
         cotizacion.getDetalles().add(detalle);
         return cotizacionView(cotizacion);
+    }
+
+    private String descripcionCotizacion(CotizacionRequest request) {
+        boolean tieneFecha = request.fechaServicio() != null;
+        boolean tieneInicio = request.horaInicio() != null;
+        boolean tieneFin = request.horaFin() != null;
+        if (!tieneFecha && !tieneInicio && !tieneFin) {
+            throw invalido("Indica la fecha, la hora de inicio y la hora de fin del servicio");
+        }
+        if (!tieneFecha || !tieneInicio || !tieneFin) {
+            throw invalido("Indica la fecha, la hora de inicio y la hora de fin del servicio");
+        }
+        if (request.fechaServicio().isBefore(LocalDate.now(ZONA))) {
+            throw invalido("La fecha del servicio debe ser hoy o una fecha futura");
+        }
+        if (!request.horaFin().isAfter(request.horaInicio())) {
+            throw invalido("La hora final del servicio debe ser posterior a la inicial");
+        }
+        return "Fecha: " + request.fechaServicio() + " · Horario: "
+                + request.horaInicio() + "–" + request.horaFin();
+    }
+
+    private String programacionCurso(Curso curso) {
+        String fechas = curso.getFechaInicio() == null ? "Fechas por confirmar" : "Del " + curso.getFechaInicio()
+                + (curso.getFechaFin() == null ? "" : " al " + curso.getFechaFin());
+        return fechas + " · Horario: " + (curso.getHorario() == null || curso.getHorario().isBlank()
+                ? "por confirmar" : curso.getHorario());
+    }
+
+    private String programacionDiplomado(Diplomado diplomado) {
+        List<Actividad> sesiones = actividades.findByDiplomado_IdOrderByFechaAscHoraInicioAsc(diplomado.getId());
+        if (!sesiones.isEmpty()) {
+            return "Sesiones: " + sesiones.stream().map(s -> s.getFecha() + " " + s.getHoraInicio()
+                    + "–" + s.getHoraFin()).reduce((a, b) -> a + "; " + b).orElse("");
+        }
+        if (diplomado.getFechaInicio() == null) return "Programación por confirmar";
+        return "Del " + diplomado.getFechaInicio()
+                + (diplomado.getFechaFin() == null ? "" : " al " + diplomado.getFechaFin())
+                + " · Sesiones por confirmar";
     }
 
     @Transactional(readOnly = true)
@@ -406,25 +458,34 @@ public class RecepcionOperacionesService {
     private Map<String, Object> detalleCotizacionView(DetalleCotizacion detalle) {
         String tipo;
         String nombre;
+        String programacion = detalle.getDescripcion();
         if (detalle.getCurso() != null) {
             tipo = "CURSO";
             nombre = detalle.getCurso().getTitulo();
+            programacion = programacionCurso(detalle.getCurso());
         } else if (detalle.getDiplomado() != null) {
             tipo = "DIPLOMADO";
             nombre = detalle.getDiplomado().getNombre();
+            programacion = programacionDiplomado(detalle.getDiplomado());
         } else if (detalle.getEspacio() != null) {
             tipo = "ESPACIO";
             nombre = detalle.getEspacio().getNombre();
+            if (programacion == null || programacion.isBlank() || programacion.equals(nombre)) {
+                programacion = "Fecha y horario no registrados en esta cotización anterior";
+            }
         } else if (detalle.getServicioCatering() != null) {
             tipo = "CATERING";
             nombre = detalle.getServicioCatering().getNombre();
+            if (programacion == null || programacion.isBlank() || programacion.equals(nombre)) {
+                programacion = "Fecha y horario no registrados en esta cotización anterior";
+            }
         } else {
             tipo = "SERVICIO";
             nombre = detalle.getDescripcion();
         }
         return item("id", detalle.getId(), "tipo", tipo, "nombre", nombre,
                 "cantidad", detalle.getCantidad(), "precioUnitario", detalle.getPrecioUnitario(),
-                "subtotal", detalle.getSubtotal(), "descripcion", detalle.getDescripcion());
+                "subtotal", detalle.getSubtotal(), "descripcion", programacion);
     }
     private Map<String, Object> actividadView(Actividad a) {
         return item("id", a.getId(), "titulo", a.getTitulo(), "tipo", a.getTipo(), "fecha", a.getFecha(),

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Agenda y operaciones de recepción de UCA CFC Connect.">
     <title>Recepción | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/recepcion.css?v=20261023-1">
-    <script src="/js/recepcion.js?v=20261023-2" defer></script>
+    <link rel="stylesheet" href="/css/recepcion.css?v=20261023-2">
+    <script src="/js/recepcion.js?v=20261023-4" defer></script>
 </head>
 <body>
 <!-- THESIS: La jornada de recepción se organiza desde una agenda visible y tareas directas.
@@ -147,6 +147,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                     <label>Concepto<select name="conceptoTipo" data-dependent="conceptoId" required><option value="ESPACIO">Espacio</option><option value="CATERING">Catering</option><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option></select></label>
                     <label>Elemento<select name="conceptoId" required></select></label>
                     <label>Cantidad<input name="cantidad" type="number" min="1" step="1" required></label>
+                    <label data-quote-schedule>Fecha del servicio<input name="fechaServicio" type="date" required></label>
+                    <label data-quote-schedule>Hora de inicio<input name="horaInicio" type="time" required></label>
+                    <label data-quote-schedule>Hora de fin<input name="horaFin" type="time" required></label>
+                    <div id="quote-program" class="quote-program full" hidden></div>
                     <label class="full">Observaciones<input name="observaciones" maxlength="255"></label>
                     <button type="submit">Crear cotización</button>
                 </form></section>

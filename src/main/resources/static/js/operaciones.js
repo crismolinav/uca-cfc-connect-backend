@@ -87,6 +87,13 @@
         try {
             const data = await request(api + '?' + buildParams()); if (sequence !== loadNumber) return;
             if (!data.contenido.length && page > 0) { page--; return load(); }
+            if (moduleName === 'cotizaciones') {
+                data.contenido = await Promise.all(data.contenido.map(async item => {
+                    try { return await request(api + '/' + item.idCotizacion); }
+                    catch { return item; }
+                }));
+                if (sequence !== loadNumber) return;
+            }
             data.contenido.forEach((item, index) => body.append(row(item, page * size + index + 1)));
             status.textContent = data.contenido.length ? data.totalElementos + ' ' + plural + ' encontrados.' : 'No hay resultados para los filtros seleccionados.';
             status.classList.toggle('visually-hidden', data.contenido.length > 0);
@@ -104,7 +111,19 @@
             populateSelect(form.elements.idCliente, clients, 'id', 'nombre', 'Selecciona un cliente'); populateSelect(form.elements.idEspacio || document.createElement('select'), spaces, 'idEspacio', 'nombre', 'Selecciona un espacio');
             if (moduleName === 'alquileres') populateSelect(document.getElementById('space-filter'), spaces, 'idEspacio', 'nombre', 'Todos');
         }
-        if (moduleName === 'cotizaciones') quoteCatalog = await request('/api/v1/cotizaciones/catalogos');
+        if (moduleName === 'cotizaciones') {
+            const [coursePage, diplomaPage, cateringServices] = await Promise.all([
+                request('/api/v1/cursos?pagina=0&tamano=100&activo=true'),
+                request('/api/v1/diplomados?pagina=0&tamano=100&activo=true'),
+                request('/api/v1/admin/operaciones/servicios-catering')
+            ]);
+            quoteCatalog = [
+                ...coursePage.contenido.map(item => ({idReferencia: item.idCurso, tipo: 'CURSO', nombre: item.titulo, precio: item.costo})),
+                ...diplomaPage.contenido.map(item => ({idReferencia: item.idDiplomado, tipo: 'DIPLOMADO', nombre: item.nombre, precio: item.costo})),
+                ...spaces.filter(item => item.disponible).map(item => ({idReferencia: item.idEspacio, tipo: 'ESPACIO', nombre: item.nombre, precio: item.precio})),
+                ...cateringServices.filter(item => item.activo).map(item => ({idReferencia: item.id, tipo: 'CATERING', nombre: item.nombre, precio: item.precioBase}))
+            ];
+        }
     }
     function setDisabled(disabled) { [...form.elements].forEach(el => { if (!['button', 'submit'].includes(el.type)) el.disabled = disabled; }); document.getElementById('dialog-save').hidden = disabled; }
     function openForm(mode, item = null) {

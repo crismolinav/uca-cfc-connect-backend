@@ -178,6 +178,8 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().contentTypeCompatibleWith("text/javascript"))
                 .andExpect(content().string(containsString("/api/v1/")))
                 .andExpect(content().string(containsString("addDetail")))
+                .andExpect(content().string(containsString("/api/v1/admin/operaciones/servicios-catering")))
+                .andExpect(content().string(containsString("/api/v1/diplomados?pagina=0&tamano=100&activo=true")))
                 .andExpect(content().string(containsString("saveState")));
     }
 }
