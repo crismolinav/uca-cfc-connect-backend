@@ -29,10 +29,14 @@ class CotizacionAlquilerIntegrationTest {
     @Autowired private CursoRepository cursoRepository;
     @Autowired private CategoriaRepository categoriaRepository;
     @Autowired private ModalidadRepository modalidadRepository;
+    @Autowired private DiplomadoRepository diplomadoRepository;
+    @Autowired private ServicioCateringRepository servicioCateringRepository;
 
     private Long idCliente;
     private Long idCurso;
     private Long idEspacio;
+    private Long idDiplomado;
+    private Long idServicioCatering;
 
     @BeforeEach
     void prepararDatos() {
@@ -59,6 +63,23 @@ class CotizacionAlquilerIntegrationTest {
         curso.setActivo(true);
         idCurso = cursoRepository.save(curso).getIdCurso();
 
+        Diplomado diplomado = new Diplomado();
+        diplomado.setNombre("Diplomado empresarial");
+        diplomado.setDescripcion("Diplomado cotizable");
+        diplomado.setDuracionHoras(24);
+        diplomado.setCosto(new BigDecimal("75.00"));
+        diplomado.setCategoria(categoria);
+        diplomado.setModalidad(modalidad);
+        diplomado.setActivo(true);
+        idDiplomado = diplomadoRepository.save(diplomado).getId();
+
+        ServicioCatering catering = new ServicioCatering();
+        catering.setNombre("Coffee break empresarial");
+        catering.setTipoServicio("REFRIGERIO");
+        catering.setPrecioBase(new BigDecimal("25.00"));
+        catering.setActivo(true);
+        idServicioCatering = servicioCateringRepository.save(catering).getId();
+
         idEspacio = alquilerService.crearEspacio(new EspacioDTO(
                 "Auditorio de prueba", "AUDITORIO", 100, new BigDecimal("250.00"),
                 "Proyector y sonido", new BigDecimal("4.00"), true
@@ -70,12 +91,18 @@ class CotizacionAlquilerIntegrationTest {
         CotizacionResponseDTO creada = cotizacionService.crear(new CotizacionDTO(
                 idCliente, "Evento empresarial", List.of(
                 new DetalleCotizacionDTO(idCurso, null, 2, "Dos grupos"),
-                new DetalleCotizacionDTO(null, idEspacio, 1, "Auditorio")
+                new DetalleCotizacionDTO(null, idEspacio, 1, "Auditorio"),
+                new DetalleCotizacionDTO(null, null, idDiplomado, null, 1, "Diplomado"),
+                new DetalleCotizacionDTO(null, null, null, idServicioCatering, 2, "Refrigerios")
         )));
 
         assertEquals("PENDIENTE", creada.estado());
-        assertEquals(new BigDecimal("450.00"), creada.montoEstimado());
-        assertEquals(2, creada.detalles().size());
+        assertEquals(new BigDecimal("575.00"), creada.montoEstimado());
+        assertEquals(4, creada.detalles().size());
+        assertEquals(List.of("CURSO", "ESPACIO", "DIPLOMADO", "CATERING"),
+                creada.detalles().stream().map(DetalleCotizacionResponseDTO::tipo).toList());
+        assertEquals(4, cotizacionService.listarCatalogos().stream()
+                .map(CotizacionCatalogoItemDTO::tipo).distinct().count());
         assertEquals("APROBADA", cotizacionService.cambiarEstado(creada.idCotizacion(), "aprobada").estado());
     }
 

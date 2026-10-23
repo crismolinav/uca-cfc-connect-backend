@@ -34,12 +34,14 @@ import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 import sv.edu.udb.ucacfcconnect.repository.ParticipanteRepository;
 import sv.edu.udb.ucacfcconnect.service.InvitacionClienteService;
 import sv.edu.udb.ucacfcconnect.service.JwtService;
+import sv.edu.udb.ucacfcconnect.service.CotizacionService;
 import sv.edu.udb.ucacfcconnect.service.RecepcionOperacionesService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,6 +68,7 @@ class RecepcionIntegrationTests {
     @Autowired CursoRepository cursos;
     @Autowired JwtService jwt;
     @Autowired RecepcionOperacionesService operaciones;
+    @Autowired CotizacionService cotizacionService;
     @Autowired InvitacionClienteService invitaciones;
     @Autowired ParticipanteRepository participantes;
     @Autowired PasswordEncoder passwords;
@@ -255,6 +258,17 @@ class RecepcionIntegrationTests {
         Map<String, Object> cotizacion = operaciones.cotizar(new CotizacionRequest(
                 cliente.getId(), "CATERING", servicioId, 12, "Evento del equipo"));
         assertThat(cotizacion.get("montoEstimado")).isEqualTo(new BigDecimal("150.00"));
+        List<Map<String, Object>> detallesCotizacion = (List<Map<String, Object>>) cotizacion.get("detalles");
+        assertThat(detallesCotizacion).singleElement().satisfies(detalle -> {
+            assertThat(detalle.get("tipo")).isEqualTo("CATERING");
+            assertThat(detalle.get("nombre")).isEqualTo("Coffee Break");
+            assertThat(detalle.get("cantidad")).isEqualTo(12);
+        });
+        Long cotizacionId = ((Number) cotizacion.get("id")).longValue();
+        assertThat(cotizacionService.obtenerPorId(cotizacionId).detalles())
+                .singleElement().satisfies(detalle -> assertThat(detalle.tipo()).isEqualTo("CATERING"));
+        assertThat(cotizacionService.cambiarEstado(cotizacionId, "APROBADA").estado())
+                .isEqualTo("APROBADA");
         Map<String, Object> actividad = operaciones.programarActividad(new ActividadRequest(
                 "Preparar servicio", manana, LocalTime.of(9, 0), LocalTime.of(10, 0), 12,
                 "CATERING", solicitudId));

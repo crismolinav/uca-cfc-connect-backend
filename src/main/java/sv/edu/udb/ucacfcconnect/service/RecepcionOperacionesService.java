@@ -75,7 +75,8 @@ public class RecepcionOperacionesService {
                         .map(c -> item("id", c.getIdCurso(), "nombre", c.getTitulo(), "precio", c.getCosto())).toList(),
                 "diplomados", diplomados.findAll(Sort.by("nombre")).stream().filter(Diplomado::isActivo)
                         .map(d -> item("id", d.getId(), "nombre", d.getNombre(), "precio", d.getCosto())).toList(),
-                "servicios", servicios.findAll(Sort.by("nombre")).stream().map(this::servicioView).toList());
+                "servicios", servicios.findAll(Sort.by("nombre")).stream().filter(ServicioCatering::isActivo)
+                        .map(this::servicioView).toList());
     }
 
     @Transactional(readOnly = true)
@@ -194,6 +195,7 @@ public class RecepcionOperacionesService {
         switch (request.conceptoTipo()) {
             case "ESPACIO" -> {
                 Espacio espacio = espacios.findById(request.conceptoId()).orElseThrow(() -> notFound("espacio"));
+                if (!espacio.isDisponible()) throw conflicto("El espacio seleccionado no está disponible");
                 detalle.setEspacio(espacio);
                 precio = espacio.getPrecio();
                 descripcion = espacio.getNombre();
@@ -201,12 +203,14 @@ public class RecepcionOperacionesService {
             case "CATERING" -> {
                 ServicioCatering servicio = servicios.findById(request.conceptoId())
                         .orElseThrow(() -> notFound("servicio de catering"));
+                if (!servicio.isActivo()) throw conflicto("El servicio de catering está inactivo");
                 detalle.setServicioCatering(servicio);
                 precio = servicio.getPrecioBase();
                 descripcion = servicio.getNombre();
             }
             case "CURSO" -> {
                 Curso curso = cursos.findById(request.conceptoId()).orElseThrow(() -> notFound("curso"));
+                if (!Boolean.TRUE.equals(curso.getActivo())) throw conflicto("El curso no está activo");
                 detalle.setCurso(curso);
                 precio = curso.getCosto();
                 descripcion = curso.getTitulo();
@@ -214,6 +218,7 @@ public class RecepcionOperacionesService {
             case "DIPLOMADO" -> {
                 Diplomado diplomado = diplomados.findById(request.conceptoId())
                         .orElseThrow(() -> notFound("diplomado"));
+                if (!diplomado.isActivo()) throw conflicto("El diplomado no está activo");
                 detalle.setDiplomado(diplomado);
                 precio = diplomado.getCosto();
                 descripcion = diplomado.getNombre();
@@ -235,6 +240,7 @@ public class RecepcionOperacionesService {
         cotizaciones.save(cotizacion);
         detalle.setCotizacion(cotizacion);
         detalles.save(detalle);
+        cotizacion.getDetalles().add(detalle);
         return cotizacionView(cotizacion);
     }
 
@@ -394,7 +400,31 @@ public class RecepcionOperacionesService {
     private Map<String, Object> cotizacionView(Cotizacion c) {
         return item("id", c.getId(), "clienteId", c.getCliente().getId(), "cliente", c.getCliente().getNombre(),
                 "fecha", c.getFecha(), "montoEstimado", c.getMontoEstimado(), "estado", c.getEstado(),
-                "observaciones", c.getObservaciones());
+                "observaciones", c.getObservaciones(), "detalles",
+                c.getDetalles().stream().map(this::detalleCotizacionView).toList());
+    }
+    private Map<String, Object> detalleCotizacionView(DetalleCotizacion detalle) {
+        String tipo;
+        String nombre;
+        if (detalle.getCurso() != null) {
+            tipo = "CURSO";
+            nombre = detalle.getCurso().getTitulo();
+        } else if (detalle.getDiplomado() != null) {
+            tipo = "DIPLOMADO";
+            nombre = detalle.getDiplomado().getNombre();
+        } else if (detalle.getEspacio() != null) {
+            tipo = "ESPACIO";
+            nombre = detalle.getEspacio().getNombre();
+        } else if (detalle.getServicioCatering() != null) {
+            tipo = "CATERING";
+            nombre = detalle.getServicioCatering().getNombre();
+        } else {
+            tipo = "SERVICIO";
+            nombre = detalle.getDescripcion();
+        }
+        return item("id", detalle.getId(), "tipo", tipo, "nombre", nombre,
+                "cantidad", detalle.getCantidad(), "precioUnitario", detalle.getPrecioUnitario(),
+                "subtotal", detalle.getSubtotal(), "descripcion", detalle.getDescripcion());
     }
     private Map<String, Object> actividadView(Actividad a) {
         return item("id", a.getId(), "titulo", a.getTitulo(), "tipo", a.getTipo(), "fecha", a.getFecha(),

@@ -8,11 +8,22 @@ import jakarta.validation.constraints.Size;
 public record DetalleCotizacionDTO(
         @Positive Long idCurso,
         @Positive Long idEspacio,
+        @Positive Long idDiplomado,
+        @Positive Long idServicioCatering,
         @NotNull @Positive Integer cantidad,
         @Size(max = 255) String descripcion
 ) {
-    @AssertTrue(message = "Debe seleccionar exactamente un curso o un espacio")
+    public DetalleCotizacionDTO(Long idCurso, Long idEspacio, Integer cantidad, String descripcion) {
+        this(idCurso, idEspacio, null, null, cantidad, descripcion);
+    }
+
+    @AssertTrue(message = "Debe seleccionar exactamente un servicio cotizable")
     public boolean isReferenciaValida() {
-        return (idCurso == null) != (idEspacio == null);
+        int referencias = 0;
+        if (idCurso != null) referencias++;
+        if (idEspacio != null) referencias++;
+        if (idDiplomado != null) referencias++;
+        if (idServicioCatering != null) referencias++;
+        return referencias == 1;
     }
 }

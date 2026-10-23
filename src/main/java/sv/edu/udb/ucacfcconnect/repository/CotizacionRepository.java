@@ -13,7 +13,8 @@ import java.util.Optional;
 
 @Repository
 public interface CotizacionRepository extends JpaRepository<Cotizacion, Long> {
-    @EntityGraph(attributePaths = {"cliente", "detalles", "detalles.curso", "detalles.espacio"})
+    @EntityGraph(attributePaths = {"cliente", "detalles", "detalles.curso", "detalles.espacio",
+            "detalles.diplomado", "detalles.servicioCatering"})
     @Query("select distinct c from Cotizacion c where c.id = :id")
     Optional<Cotizacion> buscarPorId(@Param("id") Long id);
 

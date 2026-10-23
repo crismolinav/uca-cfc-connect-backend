@@ -13,6 +13,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import sv.edu.udb.ucacfcconnect.dto.*;
 import sv.edu.udb.ucacfcconnect.service.CotizacionService;
 import java.net.URI;
+import java.util.List;
 
 @Validated
 @RestController
@@ -40,6 +41,12 @@ public class CotizacionController {
     @Operation(summary = "Consultar una cotización con sus detalles")
     public ResponseEntity<CotizacionResponseDTO> obtener(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(servicio.obtenerPorId(id));
+    }
+
+    @GetMapping("/catalogos")
+    @Operation(summary = "Listar todos los servicios disponibles para cotizar")
+    public ResponseEntity<List<CotizacionCatalogoItemDTO>> listarCatalogos() {
+        return ResponseEntity.ok(servicio.listarCatalogos());
     }
 
     @PostMapping
