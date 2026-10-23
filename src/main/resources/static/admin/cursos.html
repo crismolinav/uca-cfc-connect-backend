@@ -7,7 +7,7 @@
     <title>Cursos | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/admin.css">
     <script src="/js/docente-asignaciones.js?v=20260925-4" defer></script>
-    <script src="/js/cursos.js?v=20261022-7" defer></script>
+    <script src="/js/cursos.js?v=20261022-9" defer></script>
 </head>
 <body>
 <div class="admin-shell">
@@ -203,15 +203,22 @@
                     <label><input name="diasHorario" type="checkbox" value="Sábado">Sábado</label>
                     <label><input name="diasHorario" type="checkbox" value="Domingo">Domingo</label>
                 </div>
+                <div class="schedule-recommendations" id="schedule-recommendations" aria-live="polite" hidden>
+                    <div class="schedule-recommendations-heading">
+                        <strong>Horarios recomendados</strong>
+                        <span>Elige una opción o escribe tu propio horario.</span>
+                    </div>
+                    <div class="schedule-options" id="schedule-options"></div>
+                </div>
                 <div class="time-range">
                     <div class="field">
                         <label for="course-time-start">Hora de inicio *</label>
-                        <input id="course-time-start" name="horaInicio" type="time" step="300" required>
+                        <input id="course-time-start" name="horaInicio" type="time" step="60" required>
                     </div>
                     <span aria-hidden="true">hasta</span>
                     <div class="field">
                         <label for="course-time-end">Hora de fin *</label>
-                        <input id="course-time-end" name="horaFin" type="time" step="300" required>
+                        <input id="course-time-end" name="horaFin" type="time" step="60" required>
                     </div>
                 </div>
                 <p id="schedule-summary" class="schedule-summary" aria-live="polite">

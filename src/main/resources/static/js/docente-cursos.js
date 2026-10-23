@@ -6,10 +6,20 @@
     const editorModulos = document.getElementById('contenido-modulos-editor');
     const portadaArchivo = document.getElementById('portada-curso');
     const portadaPreview = document.getElementById('portada-vista-previa');
+    const buscarCurso = document.getElementById('buscar-curso-docente');
+    const filtroCategoria = document.getElementById('filtrar-categoria-docente');
+    const filtroModalidad = document.getElementById('filtrar-modalidad-docente');
+    const filtroEstado = document.getElementById('filtrar-estado-docente');
+    const ordenCursos = document.getElementById('ordenar-cursos-docente');
+    const paginacion = document.getElementById('paginacion-cursos-docente');
+    const paginaCursos = document.getElementById('pagina-cursos-docente');
+    const cursosPorPagina = 6;
     let cursoActual;
     let tokenCsrf;
     let modulos = [];
     let portadaPendiente = null;
+    let cursosAsignados = [];
+    let paginaActual = 0;
 
     async function solicitar(url, opciones = {}) {
         const headers = {...(opciones.headers || {})};
@@ -28,10 +38,56 @@
     }
 
     function mostrar(cursos) {
+        cursosAsignados = Array.isArray(cursos) ? cursos : [];
+        llenarOpciones(filtroCategoria, cursosAsignados.map(curso => curso.categoria));
+        llenarOpciones(filtroModalidad, cursosAsignados.map(curso => curso.modalidad));
+        filtrarCursos();
+    }
+
+    function llenarOpciones(control, valores) {
+        const seleccionado = control.value;
+        control.replaceChildren(new Option('Todas', ''));
+        [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'))
+            .forEach(valor => control.add(new Option(valor, valor)));
+        control.value = seleccionado;
+    }
+
+    function filtrarCursos() {
+        const texto = buscarCurso.value.trim().toLocaleLowerCase('es');
+        const categoria = filtroCategoria.value;
+        const modalidad = filtroModalidad.value;
+        const estadoSeleccionado = filtroEstado.value;
+        const cursos = cursosAsignados.filter(curso => {
+            const coincideTexto = !texto || [curso.titulo, curso.descripcion, curso.categoria]
+                .some(valor => String(valor || '').toLocaleLowerCase('es').includes(texto));
+            const coincideEstado = !estadoSeleccionado || Boolean(curso.activo) === (estadoSeleccionado === 'activo');
+            return coincideTexto && (!categoria || curso.categoria === categoria)
+                && (!modalidad || curso.modalidad === modalidad) && coincideEstado;
+        });
+        cursos.sort((a, b) => {
+            if (ordenCursos.value === 'fecha') return String(a.fechaInicio || '').localeCompare(String(b.fechaInicio || ''));
+            if (ordenCursos.value === 'estudiantes') return Number(b.estudiantesInscritos || 0) - Number(a.estudiantesInscritos || 0);
+            return String(a.titulo || '').localeCompare(String(b.titulo || ''), 'es');
+        });
         lista.replaceChildren();
-        if (!cursos.length) { estado.textContent = 'No tienes cursos asignados a tu cuenta.'; return; }
-        estado.textContent = '';
-        cursos.forEach(curso => {
+        paginacion.hidden = true;
+        if (!cursosAsignados.length) { estado.textContent = 'No tienes cursos asignados a tu cuenta.'; return; }
+        if (!cursos.length) {
+            estado.textContent = 'No encontramos cursos con esos filtros. Prueba con otros criterios.';
+            paginacion.hidden = true;
+            return;
+        }
+        const totalPaginas = Math.ceil(cursos.length / cursosPorPagina);
+        paginaActual = Math.min(paginaActual, totalPaginas - 1);
+        const visibles = cursos.slice(paginaActual * cursosPorPagina, (paginaActual + 1) * cursosPorPagina);
+        estado.textContent = 'Mostrando ' + (paginaActual * cursosPorPagina + 1) + '–'
+            + (paginaActual * cursosPorPagina + visibles.length) + ' de ' + cursos.length
+            + (cursos.length === 1 ? ' curso asignado.' : ' cursos asignados.');
+        paginacion.hidden = totalPaginas <= 1;
+        paginaCursos.textContent = 'Página ' + (paginaActual + 1) + ' de ' + totalPaginas;
+        document.getElementById('cursos-anterior-docente').disabled = paginaActual === 0;
+        document.getElementById('cursos-siguiente-docente').disabled = paginaActual >= totalPaginas - 1;
+        visibles.forEach(curso => {
             const tarjeta = document.createElement('article'); tarjeta.className = 'docente-course-card';
             const portada = document.createElement('div'); portada.className = 'docente-course-cover';
             const marca = document.createElement('span'); marca.textContent = curso.categoria || 'Formación continua'; portada.append(marca);
@@ -43,7 +99,9 @@
             const contenido = document.createElement('div'); contenido.className = 'docente-course-card-body';
             const encabezado = document.createElement('div'); encabezado.className = 'docente-course-card-heading';
             const nombre = document.createElement('h2'); nombre.textContent = curso.titulo;
-            const etiqueta = document.createElement('span'); etiqueta.className = 'docente-course-label'; etiqueta.textContent = 'Curso asignado';
+            const etiqueta = document.createElement('span'); etiqueta.className = 'docente-course-label';
+            etiqueta.textContent = curso.activo ? 'Activo' : 'Inactivo';
+            etiqueta.classList.toggle('is-inactive', !curso.activo);
             encabezado.append(nombre, etiqueta);
             const resumen = document.createElement('p'); resumen.className = 'docente-course-summary';
             resumen.textContent = curso.descripcion || 'Completa la descripción para presentar mejor este curso a tus estudiantes.';
@@ -52,10 +110,14 @@
             const fechaLabel = document.createElement('span'); fechaLabel.textContent = 'Fechas';
             const fechaValor = document.createElement('strong'); fechaValor.textContent = `${curso.fechaInicio || 'Por definir'} – ${curso.fechaFin || 'Por definir'}`;
             fecha.append(fechaLabel, fechaValor);
+            const modalidad = document.createElement('div'); modalidad.className = 'docente-course-fact';
+            const modalidadLabel = document.createElement('span'); modalidadLabel.textContent = 'Modalidad';
+            const modalidadValor = document.createElement('strong'); modalidadValor.textContent = curso.modalidad || 'Por definir';
+            modalidad.append(modalidadLabel, modalidadValor);
             const alumnos = document.createElement('div'); alumnos.className = 'docente-course-fact';
             const alumnosLabel = document.createElement('span'); alumnosLabel.textContent = 'Estudiantes';
             const alumnosValor = document.createElement('strong'); alumnosValor.textContent = String(curso.estudiantesInscritos || 0);
-            alumnos.append(alumnosLabel, alumnosValor); datos.append(fecha, alumnos);
+            alumnos.append(alumnosLabel, alumnosValor); datos.append(fecha, modalidad, alumnos);
             const acciones = document.createElement('div'); acciones.className = 'docente-course-card-actions';
             const boton = document.createElement('button'); boton.type = 'button'; boton.className = 'docente-edit-button'; boton.textContent = 'Editar contenido';
             boton.addEventListener('click', () => editar(curso));
@@ -63,6 +125,29 @@
             tarjeta.append(portada, contenido); lista.append(tarjeta);
         });
     }
+
+    [filtroCategoria, filtroModalidad, filtroEstado, ordenCursos].forEach(control => control.addEventListener('change', () => {
+        paginaActual = 0;
+        filtrarCursos();
+    }));
+    buscarCurso.addEventListener('input', () => { paginaActual = 0; filtrarCursos(); });
+    document.getElementById('cursos-anterior-docente').addEventListener('click', () => {
+        if (paginaActual > 0) { paginaActual -= 1; filtrarCursos(); }
+    });
+    document.getElementById('cursos-siguiente-docente').addEventListener('click', () => {
+        paginaActual += 1;
+        filtrarCursos();
+    });
+    document.getElementById('limpiar-filtros-docente').addEventListener('click', () => {
+        buscarCurso.value = '';
+        filtroCategoria.value = '';
+        filtroModalidad.value = '';
+        filtroEstado.value = '';
+        ordenCursos.value = 'titulo';
+        paginaActual = 0;
+        filtrarCursos();
+        buscarCurso.focus();
+    });
 
     function editar(curso) {
         cursoActual = curso;
@@ -157,6 +242,10 @@
         evento.preventDefault();
         if (!formulario.reportValidity()) return;
         const datos = Object.fromEntries(new FormData(formulario));
+        if (modulos.length < 3) {
+            document.getElementById('estado-guardado').textContent = 'Cada curso debe incluir al menos 3 módulos.';
+            return;
+        }
         if (modulos.some(modulo => !modulo.titulo.trim())) {
             document.getElementById('estado-guardado').textContent = 'Completa el título de cada módulo.';
             return;

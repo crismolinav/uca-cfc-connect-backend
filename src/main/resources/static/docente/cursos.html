@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Cursos asignados al docente en UCA CFC Connect.">
     <title>Mis cursos | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/admin.css?v=20261022-4">
-    <script src="/js/docente-cursos.js?v=20261022-4" defer></script>
+    <link rel="stylesheet" href="/css/admin.css?v=20261022-5">
+    <script src="/js/docente-cursos.js?v=20261022-6" defer></script>
 </head>
 <body class="docente-page">
 <a class="skip-link" href="#main-content">Ir al contenido</a>
@@ -35,10 +35,23 @@
         <section class="content" aria-labelledby="page-title">
             <div class="page-intro">
                 <div><span class="docente-eyebrow">Espacio docente</span><h1 id="page-title">Mis cursos</h1><p class="breadcrumb">Área docente <span aria-hidden="true">/</span> Mis cursos</p></div>
-                <p class="page-description">Organiza tus cursos y mantén sus materiales al día para tus estudiantes.</p>
+                <p class="page-description">Consulta tus cursos y actualiza el material para tus estudiantes.</p>
             </div>
+            <section class="docente-course-tools" aria-label="Buscar y filtrar cursos">
+                <label class="docente-course-search"><span>Buscar curso</span><input id="buscar-curso-docente" type="search" placeholder="Título o descripción" autocomplete="off"></label>
+                <label><span>Categoría</span><select id="filtrar-categoria-docente"><option value="">Todas</option></select></label>
+                <label><span>Modalidad</span><select id="filtrar-modalidad-docente"><option value="">Todas</option></select></label>
+                <label><span>Estado</span><select id="filtrar-estado-docente"><option value="">Todos</option><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></label>
+                <label><span>Ordenar por</span><select id="ordenar-cursos-docente"><option value="titulo">Título A–Z</option><option value="fecha">Fecha de inicio</option><option value="estudiantes">Estudiantes</option></select></label>
+                <button id="limpiar-filtros-docente" class="secondary-button" type="button">Limpiar filtros</button>
+            </section>
             <p id="estado-cursos" class="list-status" role="status">Cargando tus cursos...</p>
             <section id="lista-cursos" class="docente-course-grid" aria-label="Cursos asignados"></section>
+            <nav id="paginacion-cursos-docente" class="docente-pagination" aria-label="Páginas de cursos" hidden>
+                <button id="cursos-anterior-docente" type="button">Anterior</button>
+                <span id="pagina-cursos-docente" aria-live="polite">Página 1</span>
+                <button id="cursos-siguiente-docente" type="button">Siguiente</button>
+            </nav>
         </section>
     </main>
 </div>

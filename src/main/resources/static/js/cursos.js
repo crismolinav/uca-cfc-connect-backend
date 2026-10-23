@@ -25,6 +25,8 @@
     const scheduleStart = form.elements.namedItem('horaInicio');
     const scheduleEnd = form.elements.namedItem('horaFin');
     const scheduleSummary = document.getElementById('schedule-summary');
+    const scheduleRecommendations = document.getElementById('schedule-recommendations');
+    const scheduleOptions = document.getElementById('schedule-options');
     const modulesEditor = document.getElementById('course-modules-editor');
     const coverFile = document.getElementById('course-cover-file');
     const coverPreview = document.getElementById('course-cover-preview');
@@ -325,6 +327,7 @@
         scheduleDays.forEach((day) => { day.checked = false; });
         scheduleStart.value = '';
         scheduleEnd.value = '';
+        scheduleEnd.min = '';
         if (!horario) return;
 
         const horarioNormalizado = horario.toLocaleLowerCase('es');
@@ -405,6 +408,7 @@
     }
 
     function actualizarResumenHorario() {
+        actualizarRecomendacionesHorario();
         const carga = calcularCargaHoraria();
         scheduleSummary.classList.remove('is-valid', 'is-invalid');
         if (!carga) {
@@ -420,6 +424,90 @@
             : 'El horario programa ' + formatearDuracion(carga.minutosProgramados)
                 + ' en ' + carga.sesiones + (carga.sesiones === 1 ? ' sesión' : ' sesiones')
                 + '. La duración indicada es de ' + formatearDuracion(carga.minutosDeclarados) + '.';
+    }
+
+    function actualizarRecomendacionesHorario() {
+        const inicio = fechaUtc(form.elements.namedItem('fechaInicio').value);
+        const fin = fechaUtc(form.elements.namedItem('fechaFin').value);
+        const duracion = Number(form.elements.namedItem('duracionHoras').value);
+        scheduleOptions.replaceChildren();
+        scheduleRecommendations.hidden = !inicio || !fin || fin < inicio || !Number.isInteger(duracion) || duracion <= 0;
+        if (scheduleRecommendations.hidden) return;
+
+        const dias = new Set(scheduleDays.filter((day) => day.checked).map((day) => dayIndexes[day.value]));
+        if (!dias.size) {
+            const aviso = document.createElement('p');
+            aviso.className = 'schedule-recommendation-note';
+            aviso.textContent = 'Selecciona los días de clase para calcular cuánto debe durar cada sesión.';
+            scheduleOptions.append(aviso);
+            return;
+        }
+
+        let sesiones = 0;
+        const fecha = new Date(inicio.getTime());
+        while (fecha <= fin) {
+            if (dias.has(fecha.getUTCDay())) sesiones += 1;
+            fecha.setUTCDate(fecha.getUTCDate() + 1);
+        }
+        if (!sesiones) {
+            const aviso = document.createElement('p');
+            aviso.className = 'schedule-recommendation-note';
+            aviso.textContent = 'Los días seleccionados no coinciden con las fechas del curso.';
+            scheduleOptions.append(aviso);
+            return;
+        }
+
+        const minutosSesion = duracion * 60 / sesiones;
+        if (!Number.isInteger(minutosSesion)) {
+            const aviso = document.createElement('p');
+            aviso.className = 'schedule-recommendation-note';
+            aviso.textContent = 'La duración no se puede repartir en minutos exactos entre las ' + sesiones + ' sesiones. Ajusta los días o la duración para obtener recomendaciones.';
+            scheduleOptions.append(aviso);
+            return;
+        }
+
+        const franjas = [
+            {inicio: 8 * 60, nombre: 'Mañana'},
+            {inicio: 13 * 60, nombre: 'Tarde'},
+            {inicio: 18 * 60, nombre: 'Noche'}
+        ];
+        const opciones = franjas.filter((franja) => franja.inicio + minutosSesion < 24 * 60);
+        opciones.forEach((franja) => {
+            const finSesion = franja.inicio + minutosSesion;
+            const horaInicio = formatearHora(franja.inicio);
+            const horaFin = formatearHora(finSesion);
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'schedule-option';
+            boton.setAttribute('aria-pressed', String(scheduleStart.value === horaInicio && scheduleEnd.value === horaFin));
+            const nombre = document.createElement('strong');
+            nombre.textContent = franja.nombre;
+            const rango = document.createElement('span');
+            rango.textContent = horaInicio + ' a ' + horaFin;
+            const detalle = document.createElement('small');
+            detalle.textContent = formatearDuracion(minutosSesion) + ' por sesión · ' + sesiones + (sesiones === 1 ? ' sesión' : ' sesiones');
+            boton.append(nombre, rango, detalle);
+            boton.addEventListener('click', () => {
+                scheduleStart.value = horaInicio;
+                scheduleEnd.value = horaFin;
+                scheduleEnd.min = horaInicio;
+                actualizarResumenHorario();
+            });
+            scheduleOptions.append(boton);
+        });
+
+        if (opciones.length < 3) {
+            const aviso = document.createElement('p');
+            aviso.className = 'schedule-recommendation-note';
+            aviso.textContent = opciones.length
+                ? 'Por la duración de cada sesión, estas son las franjas recomendadas que caben en el día. También puedes escribir otro horario.'
+                : 'Cada sesión supera las franjas sugeridas. Escribe el horario que prefieras en los campos de abajo.';
+            scheduleOptions.append(aviso);
+        }
+    }
+
+    function formatearHora(minutos) {
+        return String(Math.floor(minutos / 60)).padStart(2, '0') + ':' + String(minutos % 60).padStart(2, '0');
     }
 
     function validarFormulario() {
@@ -658,6 +746,11 @@
         const error = document.getElementById('dialog-error');
         error.textContent = '';
         if (!validarFormulario()) return;
+        if (courseModules.length < 3) {
+            error.textContent = 'Agrega al menos 3 módulos al curso.';
+            document.getElementById('add-course-module').focus();
+            return;
+        }
         if (courseModules.some(module => !module.titulo.trim())) {
             error.textContent = 'Completa el título de cada módulo del curso.';
             return;
@@ -809,11 +902,11 @@
     form.elements.namedItem('fechaFin').addEventListener('change', actualizarResumenHorario);
     form.elements.namedItem('duracionHoras').addEventListener('input', actualizarResumenHorario);
     scheduleDays.forEach((day) => day.addEventListener('change', actualizarResumenHorario));
-    scheduleStart.addEventListener('change', () => {
+    scheduleStart.addEventListener('input', () => {
         scheduleEnd.min = scheduleStart.value;
         actualizarResumenHorario();
     });
-    scheduleEnd.addEventListener('change', actualizarResumenHorario);
+    scheduleEnd.addEventListener('input', actualizarResumenHorario);
     [statusDialog, deleteDialog].forEach((modal) => modal.addEventListener('close', () => {
         if (dialogTrigger?.isConnected) dialogTrigger.focus();
         selectedCourse = null;
