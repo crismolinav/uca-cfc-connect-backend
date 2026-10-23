@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Cambiar contraseña | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body data-page="restablecer">
+<main class="auth-layout">
+    <section class="auth-panel" aria-labelledby="page-title">
+        <div class="auth-card">
+            <a class="brand" href="/" aria-label="UCA CFC Connect, inicio">
+                <span class="brand-mark" aria-hidden="true">U</span><span>UCA CFC Connect</span>
+            </a>
+            <header class="auth-heading">
+                <h1 id="page-title">Cambia tu contraseña</h1>
+                <p>Elige una contraseña nueva para tu cuenta.</p>
+            </header>
+            <form id="reset-form" class="auth-form" novalidate>
+                <div class="field">
+                    <label for="password">Contraseña nueva</label>
+                    <div class="password-control">
+                        <input id="password" name="password" type="password" autocomplete="new-password"
+                               minlength="8" maxlength="72" required aria-describedby="password-help password-error">
+                        <button class="password-toggle" type="button" data-password-toggle
+                                aria-controls="password" aria-label="Mostrar contraseña">Mostrar</button>
+                    </div>
+                    <p id="password-help" class="field-help">Utiliza entre 8 y 72 caracteres.</p>
+                    <p id="password-error" class="field-error" aria-live="polite"></p>
+                </div>
+                <div class="field">
+                    <label for="confirmar">Confirma la contraseña</label>
+                    <input id="confirmar" name="confirmar" type="password" autocomplete="new-password"
+                           minlength="8" maxlength="72" required aria-describedby="confirmar-error">
+                    <p id="confirmar-error" class="field-error" aria-live="polite"></p>
+                </div>
+                <button class="primary-button" type="submit" data-idle-label="Guardar contraseña">Guardar contraseña</button>
+            </form>
+            <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+            <p class="auth-switch"><a href="/auth/login.html">Volver a iniciar sesión</a></p>
+        </div>
+    </section>
+    <aside class="auth-visual" aria-hidden="true"><img src="/assets/students-studying.png" alt=""></aside>
+</main>
+</body>
+</html>
