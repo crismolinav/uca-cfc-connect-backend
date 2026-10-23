@@ -219,14 +219,16 @@ h2,h3,p{margin-top:0}
 .settings-card p{max-width:35ch;margin:0;color:var(--muted);font-size:.76rem;line-height:1.5}
 .personal-card,.delete-card{display:block}
 .personal-card .settings-card-heading p{max-width:none}
-.personal-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;margin-top:1.2rem}
+.personal-fields{display:grid;grid-template-columns:minmax(0,1fr);max-width:30rem;gap:.45rem;margin-top:1.2rem}
 .personal-fields label{display:block;margin-bottom:.35rem;font-size:.75rem;font-weight:600}
-.personal-fields input,.personal-fields select{width:100%;min-height:43px;padding:.55rem .7rem;border:1px solid #a8bcdf;border-radius:5px;background:#fff;color:#263850;font-size:.78rem}
-.personal-fields input[readonly]{background:#fff}
-.personal-fields select:disabled{opacity:1;background:#f7f9fd;color:#5e6d83}
-.settings-save{min-height:40px;margin-top:1rem;padding:.55rem 1rem;border:0;border-radius:5px;background:#a6b5ca;color:#fff;font-size:.78rem;font-weight:600}
-.settings-save:disabled,.delete-card button:disabled{cursor:not-allowed}
-.settings-card .settings-availability{max-width:none;margin-top:.6rem;color:#596b83;font-size:.72rem}
+.personal-fields input{width:100%;min-height:43px;padding:.55rem .7rem;border:1px solid #a8bcdf;border-radius:5px;background:#fff;color:#263850;font-size:1rem}
+.personal-fields input[aria-invalid='true']{border-color:#b02531}
+.settings-save{justify-self:start;min-height:42px;margin-top:.35rem;padding:.55rem 1rem;border:0;border-radius:5px;background:var(--blue);color:#fff;font-size:.78rem;font-weight:600}
+.settings-save:disabled{cursor:wait;opacity:.65}
+.settings-card .settings-name-error{max-width:none;color:#a31f2c;font-size:.76rem}
+.settings-card .settings-name-status{max-width:none;color:#245c33;font-size:.76rem}
+.settings-card .settings-name-status.is-error{color:#a31f2c}
+.settings-name-error:empty,.settings-name-status:empty{display:none}
 .delete-card h2{color:#b02531}
 .delete-card-row{display:flex;justify-content:space-between;align-items:center;gap:1rem}
 .delete-card-row p{max-width:54ch}
@@ -248,7 +250,7 @@ h2,h3,p{margin-top:0}
 .delete-confirm:hover:not(:disabled){background:#841924}
 .delete-dialog-actions button:disabled{cursor:wait;opacity:.65}
 @media(max-width:640px){.learning-intro{min-height:120px}.learning-intro-art{display:none}.inner-page{padding-top:1.5rem}.learning-empty{padding-top:4rem}.settings-card{align-items:stretch;flex-direction:column}}
-@media(max-width:560px){.personal-fields{grid-template-columns:1fr}.delete-card-row{align-items:stretch;flex-direction:column}.delete-card button{align-self:flex-start}}
+@media(max-width:560px){.delete-card-row{align-items:stretch;flex-direction:column}.delete-card button{align-self:flex-start}}
 @media(max-width:980px){.header-inner{flex-wrap:wrap;padding-block:.8rem}.site-search{order:5;flex-basis:100%;max-width:none}.primary-nav{margin-inline:auto}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.page-shell,.header-inner{width:min(100% - 2rem,1160px)}.brand{font-size:1rem}.primary-nav{order:4;justify-content:flex-start;gap:.8rem;width:100%;margin:0;overflow-x:auto}.primary-nav a{font-size:.7rem}.welcome-band .page-shell{padding-block:1.2rem}.dashboard-content{padding-top:1rem}.interest-panel{padding:1rem}.course-filter-grid{grid-template-columns:1fr}.clear-course-filters{justify-self:start}.resume-grid,.promo-grid,.account-section{grid-template-columns:1fr}.resume-empty{min-height:170px}.catalog-grid{gap:.65rem}.card-cover{height:110px}.card-body h3{font-size:.8rem}.card-body p{font-size:.69rem}.card-provider{font-size:.61rem}.card-type{font-size:.58rem}.course-cover,.space-cover{height:110px}.course-detail-data{grid-template-columns:1fr}.diploma-session-detail li{grid-template-columns:1fr}.promo{min-height:150px}.account-section dl{grid-template-columns:1fr 1fr}.dui-entry{align-items:stretch;flex-direction:column}.dui-entry button{align-self:flex-start}.space-catalog-section{margin-inline:-.35rem;padding:1.25rem}.reservation-fields{grid-template-columns:1fr}.reservation-reason{grid-column:auto}.reservation-summary,.rental-item{align-items:flex-start;flex-direction:column}.rental-controls{width:100%;justify-content:space-between}}
 

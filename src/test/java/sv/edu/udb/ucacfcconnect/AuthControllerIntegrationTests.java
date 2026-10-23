@@ -12,15 +12,18 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.mock.web.MockHttpSession;
 import jakarta.servlet.http.Cookie;
 import sv.edu.udb.ucacfcconnect.entity.Usuario;
+import sv.edu.udb.ucacfcconnect.entity.Rol;
 import sv.edu.udb.ucacfcconnect.repository.RolRepository;
 import sv.edu.udb.ucacfcconnect.repository.ClienteRepository;
 import sv.edu.udb.ucacfcconnect.repository.UsuarioRepository;
 import sv.edu.udb.ucacfcconnect.service.JwtService;
+import sv.edu.udb.ucacfcconnect.service.AuthService;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,6 +53,9 @@ class AuthControllerIntegrationTests {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private AuthService authService;
 
     @BeforeEach
     void limpiarBaseDeDatos() {
@@ -303,5 +309,90 @@ class AuthControllerIntegrationTests {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dui").value("87654321-0"));
+    }
+
+    @Test
+    void clienteActualizaSoloSuNombreYLaFichaVinculada() throws Exception {
+        var registro = mockMvc.perform(post("/api/v1/auth/registro").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Ana López","dui":"87654321-0","correo":"ana@example.com",
+                                 "password":"ClaveSegura123","aceptaTerminos":true}
+                                """))
+                .andExpect(status().isCreated()).andReturn();
+        Cookie cookie = registro.getResponse().getCookie("uca_cfc_session");
+        Usuario usuario = usuarioRepository.findByCorreoIgnoreCase("ana@example.com").orElseThrow();
+
+        mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"  Ana María Pérez  \",\"correo\":\"otro@example.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Ana María Pérez"))
+                .andExpect(jsonPath("$.correo").value("ana@example.com"));
+        assertThat(usuarioRepository.findById(usuario.getId()).orElseThrow().getNombre())
+                .isEqualTo("Ana María Pérez");
+        assertThat(clienteRepository.findByUsuarioId(usuario.getId()).orElseThrow().getNombre())
+                .isEqualTo("Ana María Pérez");
+        mockMvc.perform(get("/api/v1/auth/me").cookie(cookie))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.nombre").value("Ana María Pérez"));
+
+        mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"   \"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"" + "A".repeat(101) + "\"}"))
+                .andExpect(status().isBadRequest());
+        assertThat(usuarioRepository.findById(usuario.getId()).orElseThrow().getNombre())
+                .isEqualTo("Ana María Pérez");
+    }
+
+    @Test
+    void cambioDeNombreExigeSesionDeClienteYNoLoReemplazaGoogle() throws Exception {
+        mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"Sin sesión\"}"))
+                .andExpect(status().isUnauthorized());
+
+        Rol admin = new Rol();
+        admin.setNombre("ADMIN");
+        admin = rolRepository.saveAndFlush(admin);
+        Usuario administrador = new Usuario();
+        administrador.setNombre("Administrador");
+        administrador.setCorreo("admin@example.com");
+        administrador.setRol(admin);
+        administrador = usuarioRepository.saveAndFlush(administrador);
+        mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf())
+                        .header("Authorization", "Bearer " + jwtService.generarToken(administrador))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"Otro\"}"))
+                .andExpect(status().isForbidden());
+
+        var registro = mockMvc.perform(post("/api/v1/auth/registro").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Nombre original","dui":"87654321-0","correo":"google@example.com",
+                                 "password":"ClaveSegura123","aceptaTerminos":true}
+                                """))
+                .andExpect(status().isCreated()).andReturn();
+        Cookie cookie = registro.getResponse().getCookie("uca_cfc_session");
+        mockMvc.perform(patch("/api/v1/auth/me/nombre").with(csrf()).cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"Nombre elegido\"}"))
+                .andExpect(status().isOk());
+        authService.procesarUsuarioGoogle("google-id", "google@example.com", "Nombre de Google", true);
+        authService.procesarUsuarioGoogle("google-id", "google@example.com", "Otro nombre de Google", true);
+        assertThat(usuarioRepository.findByCorreoIgnoreCase("google@example.com").orElseThrow().getNombre())
+                .isEqualTo("Nombre elegido");
+    }
+
+    @Test
+    void configuracionSoloMuestraNombreEditableEnEspanol() throws Exception {
+        mockMvc.perform(get("/cliente/configuracion.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"settings-name-form\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("id=\"settings-email\""))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("id=\"settings-timezone\""))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("id=\"settings-language\""))));
     }
 }

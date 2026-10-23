@@ -41,15 +41,13 @@
         <h1>Configuración de cuenta</h1>
         <p class="settings-lead">Consulta tus datos y administra el acceso a tu cuenta.</p>
         <section class="settings-card personal-card" aria-labelledby="personal-title">
-            <div class="settings-card-heading"><h2 id="personal-title">Datos personales</h2><p>Consulta tus datos de cuenta y la zona horaria de este navegador.</p></div>
-            <div class="personal-fields">
-                <div><label for="settings-name">Nombre completo</label><input id="settings-name" type="text" readonly></div>
-                <div><label for="settings-email">Dirección de correo electrónico</label><input id="settings-email" type="email" readonly></div>
-                <div><label for="settings-timezone">Zona horaria del navegador</label><select id="settings-timezone" disabled><option>Zona local del navegador</option></select></div>
-                <div><label for="settings-language">Idioma</label><select id="settings-language" disabled><option>Español</option></select></div>
-            </div>
-            <button class="settings-save" type="button" disabled>Guardar cambios</button>
-            <p class="settings-availability">La edición de datos personales estará disponible próximamente.</p>
+            <div class="settings-card-heading"><h2 id="personal-title">Datos personales</h2><p>Actualiza el nombre que aparece en tu cuenta.</p></div>
+            <form id="settings-name-form" class="personal-fields">
+                <div><label for="settings-name">Nombre completo</label><input id="settings-name" name="nombre" type="text" autocomplete="name" maxlength="100" aria-describedby="settings-name-error" required></div>
+                <p id="settings-name-error" class="settings-name-error"></p>
+                <button class="settings-save" type="submit">Guardar cambios</button>
+                <p id="settings-name-status" class="settings-name-status" role="status"></p>
+            </form>
         </section>
         <section class="settings-card delete-card" aria-labelledby="delete-title">
             <div class="delete-card-row"><div><h2 id="delete-title">Eliminar cuenta</h2><p>Se eliminará tu acceso y se cerrará tu sesión. Las inscripciones y los pagos permanecerán como registros del centro.</p></div><button id="delete-account-open" type="button">Eliminar cuenta</button></div>
