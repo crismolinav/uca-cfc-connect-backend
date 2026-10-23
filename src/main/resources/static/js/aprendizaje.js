@@ -96,8 +96,8 @@
         enrollmentList.replaceChildren();
         paymentList.replaceChildren();
         if (!enrollments.length) {
-            enrollmentList.append(node('p', 'learning-note', 'Aún no tienes cursos inscritos. '));
-            const link = node('a', '', 'Explorar cursos');
+            enrollmentList.append(node('p', 'learning-note', 'Aún no tienes cursos ni diplomados inscritos. '));
+            const link = node('a', '', 'Explorar formación');
             link.href = '/cliente/index.html#explorar';
             enrollmentList.append(link);
         }
@@ -120,13 +120,17 @@
                 const detail = node('a', 'learning-course-link', 'Ver curso');
                 detail.href = '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso);
                 actions.append(detail);
+            } else if (enrollment.idDiplomado) {
+                const detail = node('a', 'learning-course-link', 'Ver diplomado');
+                detail.href = '/cliente/diplomado.html?id=' + encodeURIComponent(enrollment.idDiplomado);
+                actions.append(detail);
             }
             if (enrollment.idCurso && enrollment.finalizado) {
                 const certificate = node('a', 'learning-course-link', 'Descargar certificado PDF');
                 certificate.href = `/api/v1/cliente/cursos/${encodeURIComponent(enrollment.idCurso)}/certificado`;
                 actions.append(certificate);
             }
-            if (enrollment.idCurso && enrollment.estado === 'PENDIENTE' && (!payment || payment.estado === 'RECHAZADO')) {
+            if (enrollment.estado === 'PENDIENTE' && (!payment || payment.estado === 'RECHAZADO')) {
                 const action = node('button', 'learning-action', 'Pagar inscripción');
                 action.type = 'button';
                 action.addEventListener('click', () => abrirPago(enrollment));
@@ -134,15 +138,17 @@
             }
             const total = enrollment.total == null ? '' : money(enrollment.total) + ' · ';
             const courseUrl = enrollment.idCurso
-                ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null;
+                ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso)
+                : enrollment.idDiplomado ? '/cliente/diplomado.html?id=' + encodeURIComponent(enrollment.idDiplomado) : null;
+            const tipoFormacion = enrollment.idDiplomado ? 'Diplomado' : 'Curso';
             const estadoVisible = enrollment.finalizado ? 'Curso finalizado'
                 : enrollment.estado === 'CONFIRMADA' ? 'Acceso confirmado'
-                : enrollment.estado === 'PENDIENTE' ? 'Acceso bloqueado · pago pendiente'
+                : enrollment.estado === 'PENDIENTE' ? 'Inscripción pendiente de pago'
                     : enrollment.estado;
-            enrollmentList.append(row(enrollment.curso, total + 'Inscripción ' + enrollment.fecha,
+            enrollmentList.append(row(enrollment.curso, tipoFormacion + ' · ' + total + 'Inscripción ' + enrollment.fecha,
                 estadoVisible,
                 actions.childElementCount ? actions : null, enrollment.imagenUrl, courseUrl,
-                enrollment.estado === 'CONFIRMADA' && enrollment.totalModulos > 0
+                enrollment.idCurso && enrollment.estado === 'CONFIRMADA' && enrollment.totalModulos > 0
                     ? {completed: enrollment.modulosCompletados?.length || 0, total: enrollment.totalModulos,
                         percent: enrollment.progresoPorcentaje || 0}
                     : null));
@@ -155,7 +161,8 @@
             paymentList.append(row(payment.curso, money(payment.monto) + ' · ' + payment.fecha + ' · ' + payment.metodo,
                 payment.estado + (payment.referencia ? ' · ' + payment.referencia : ''), null,
                 enrollment?.imagenUrl, enrollment?.idCurso
-                    ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null));
+                    ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso)
+                    : enrollment?.idDiplomado ? '/cliente/diplomado.html?id=' + encodeURIComponent(enrollment.idDiplomado) : null));
         });
         updatePagination('enrollment-pagination', enrollmentPage, enrollments.length, (nextPage) => {
             enrollmentPage = nextPage;
@@ -165,11 +172,11 @@
             paymentPage = nextPage;
             render();
         });
-        status.textContent = 'Se actualizaron tus cursos y pagos.';
+        status.textContent = 'Se actualizaron tus cursos, diplomados y pagos.';
     }
 
     async function cargar() {
-        status.textContent = 'Cargando tus cursos y pagos...';
+        status.textContent = 'Cargando tus cursos, diplomados y pagos...';
         try {
             const [enrollments, payments] = await Promise.all([
                 request('/api/v1/cliente/inscripciones'), request('/api/v1/cliente/pagos')
@@ -188,7 +195,8 @@
         selectedEnrollment = enrollment;
         form.reset();
         error.textContent = '';
-        document.getElementById('client-payment-course').textContent = enrollment.curso + ' · ' + money(enrollment.total);
+        document.getElementById('client-payment-course').textContent = (enrollment.idDiplomado ? 'Diplomado · ' : 'Curso · ')
+            + enrollment.curso + ' · ' + money(enrollment.total);
         dialog.showModal();
     }
 

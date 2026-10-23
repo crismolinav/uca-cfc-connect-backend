@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Información, sesiones e inscripción al diplomado en UCA CFC Connect.">
+    <title>Detalle del diplomado | UCA CFC Connect</title>
+    <link rel="stylesheet" href="/css/cliente.css?v=20261023-3">
+    <script src="/js/client-shell.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/diplomado-detalle.js?v=20261023-1" defer></script>
+</head>
+<body data-page="cliente">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="site-header"><div class="header-inner">
+    <a class="brand" href="/cliente/index.html" aria-label="UCA CFC Connect, inicio">UCA <strong>CFC Connect</strong></a>
+    <nav class="primary-nav" aria-label="Principal"><a href="/cliente/index.html#explorar">Cursos</a><a href="/cliente/index.html#diplomados" aria-current="page">Diplomados</a><a href="/cliente/index.html#espacios">Espacios</a><a href="/cliente/aprendizaje.html">Mi aprendizaje</a></nav>
+    <div class="account-control"><button id="account-menu-button" class="account-menu-button" type="button" aria-label="Abrir menú de cuenta" aria-expanded="false" aria-controls="account-menu"><span id="client-avatar" aria-hidden="true">U</span></button><nav id="account-menu" class="account-menu" aria-label="Cuenta" hidden><a href="/cliente/aprendizaje.html">Mi aprendizaje</a><a href="/cliente/configuracion.html">Configuración</a><button id="logout-button" type="button">Cerrar sesión</button></nav></div>
+</div></header>
+<main id="contenido" class="course-page page-shell">
+    <p class="course-breadcrumb"><a href="/cliente/index.html#diplomados">← Volver a los diplomados</a><span aria-hidden="true">/</span><span id="diploma-breadcrumb-title">Detalle del diplomado</span></p>
+    <p id="diploma-loading" class="loading" role="status">Cargando información del diplomado...</p>
+    <p id="diploma-error" class="error-message" role="alert"></p>
+    <div id="diploma-content" hidden>
+        <section class="course-hero diploma-hero">
+            <div class="course-hero-copy"><span class="course-kicker">Formación continua · UCA</span><span id="diploma-category" class="course-category-pill"></span><h1 id="diploma-title"></h1><p id="diploma-description" class="course-lead"></p>
+                <div class="course-byline"><span>Modalidad: <strong id="diploma-modality"></strong></span><span>Docentes: <strong id="diploma-teachers"></strong></span><span>Fechas: <strong id="diploma-dates"></strong></span></div>
+            </div>
+            <div class="course-hero-art" aria-hidden="true"><span id="diploma-art-initial">D</span><div><i></i><i></i><i></i></div><small>UCA · CFC</small></div>
+        </section>
+        <div class="course-page-columns"><div class="course-main-column">
+            <section class="course-info-panel course-learning-panel"><span class="course-kicker">Programa académico</span><h2>Sobre este diplomado</h2><p id="diploma-summary"></p></section>
+            <section class="course-info-panel"><div class="course-section-heading"><div><span class="course-kicker">Calendario</span><h2>Sesiones programadas</h2></div><span id="diploma-session-count"></span></div><p id="diploma-sessions-status" role="status">Cargando sesiones...</p><ul id="diploma-sessions" class="course-program-list"></ul></section>
+            <section class="course-info-panel"><span class="course-kicker">Acompañamiento</span><h2>Conoce a tus docentes</h2><p id="diploma-teachers-summary"></p></section>
+        </div><aside class="course-enroll-card" aria-label="Inscripción al diplomado"><span class="course-enroll-label">Invierte en tu formación</span><strong id="diploma-cost" class="course-page-price"></strong><p id="diploma-enroll-status" role="status">La inscripción quedará pendiente de pago.</p><button id="diploma-enroll-button" class="course-enroll-cta" type="button">Inscribirme</button><a id="diploma-learning-link" href="/cliente/aprendizaje.html">Ir a Mi aprendizaje</a><ul class="course-quick-facts"><li><span>Modalidad</span><strong id="diploma-quick-modality"></strong></li><li><span>Duración</span><strong id="diploma-duration"></strong></li><li><span>Fechas</span><strong id="diploma-quick-dates"></strong></li><li><span>Sesiones</span><strong id="diploma-quick-sessions"></strong></li></ul></aside></div>
+    </div>
+</main>
+</body>
+</html>

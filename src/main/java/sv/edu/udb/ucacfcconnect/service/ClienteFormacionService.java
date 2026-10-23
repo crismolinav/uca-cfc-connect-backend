@@ -29,24 +29,26 @@ public class ClienteFormacionService {
     private final ParticipanteRepository participantes;
     private final InscripcionRepository inscripciones;
     private final CursoRepository cursos;
+    private final DiplomadoRepository diplomados;
     private final ResenaCursoRepository resenas;
 
     @Autowired
     public ClienteFormacionService(UsuarioRepository usuarios, ClienteRepository clientes,
                                    ParticipanteRepository participantes, InscripcionRepository inscripciones,
-                                   CursoRepository cursos, ResenaCursoRepository resenas) {
+                                   CursoRepository cursos, DiplomadoRepository diplomados, ResenaCursoRepository resenas) {
         this.usuarios = usuarios;
         this.clientes = clientes;
         this.participantes = participantes;
         this.inscripciones = inscripciones;
         this.cursos = cursos;
+        this.diplomados = diplomados;
         this.resenas = resenas;
     }
 
     public ClienteFormacionService(UsuarioRepository usuarios, ClienteRepository clientes,
                                    ParticipanteRepository participantes, InscripcionRepository inscripciones,
                                    CursoRepository cursos) {
-        this(usuarios, clientes, participantes, inscripciones, cursos, null);
+        this(usuarios, clientes, participantes, inscripciones, cursos, null, null);
     }
 
     @Transactional
@@ -57,21 +59,31 @@ public class ClienteFormacionService {
         Participante participante = participantes.findFirstByClienteIdOrderByIdAsc(cliente.getId())
                 .orElseThrow(() -> conflicto("Debes estar registrado como participante por recepción antes de inscribirte"));
 
-        Curso curso = cursos.bloquear(request.idCurso()).orElseThrow(() -> noEncontrado("curso"));
-        if (!Boolean.TRUE.equals(curso.getActivo())) throw conflicto("El curso no está activo");
-        if (inscripciones.existsByParticipanteIdAndCursoIdCurso(participante.getId(), curso.getIdCurso())) {
-            throw conflicto("Ya estás inscrito en este curso");
-        }
-        if (inscripciones.countByCursoIdCursoAndEstadoNot(curso.getIdCurso(), "CANCELADA") >= curso.getCupoMaximo()) {
-            throw conflicto("El curso ya alcanzó su cupo máximo");
-        }
-
         Inscripcion inscripcion = new Inscripcion();
         inscripcion.setParticipante(participante);
-        inscripcion.setCurso(curso);
+        if (request.idCurso() != null) {
+            Curso curso = cursos.bloquear(request.idCurso()).orElseThrow(() -> noEncontrado("curso"));
+            if (!Boolean.TRUE.equals(curso.getActivo())) throw conflicto("El curso no está activo");
+            if (inscripciones.existsByParticipanteIdAndCursoIdCurso(participante.getId(), curso.getIdCurso())) {
+                throw conflicto("Ya estás inscrito en este curso");
+            }
+            if (inscripciones.countByCursoIdCursoAndEstadoNot(curso.getIdCurso(), "CANCELADA") >= curso.getCupoMaximo()) {
+                throw conflicto("El curso ya alcanzó su cupo máximo");
+            }
+            inscripcion.setCurso(curso);
+            inscripcion.setTotal(curso.getCosto());
+        } else {
+            Diplomado diplomado = diplomados.findById(request.idDiplomado())
+                    .orElseThrow(() -> noEncontrado("diplomado"));
+            if (!diplomado.isActivo()) throw conflicto("El diplomado no está activo");
+            if (inscripciones.existsByParticipanteIdAndDiplomadoId(participante.getId(), diplomado.getId())) {
+                throw conflicto("Ya estás inscrito en este diplomado");
+            }
+            inscripcion.setDiplomado(diplomado);
+            inscripcion.setTotal(diplomado.getCosto());
+        }
         inscripcion.setFecha(LocalDate.now(ZONA));
         inscripcion.setEstado("PENDIENTE");
-        inscripcion.setTotal(curso.getCosto());
         return vista(inscripciones.save(inscripcion));
     }
 
@@ -156,8 +168,10 @@ public class ClienteFormacionService {
         if (finalizado && inscripcion.getFechaFinalizacion() == null) {
             inscripcion.setFechaFinalizacion(LocalDate.now(ZONA));
         }
+        Diplomado diplomado = inscripcion.getDiplomado();
         return new InscripcionClienteDTO(inscripcion.getId(), curso == null ? null : curso.getIdCurso(),
-                curso == null ? inscripcion.getDiplomado().getNombre() : curso.getTitulo(), inscripcion.getFecha(), inscripcion.getEstado(),
+                curso == null && diplomado != null ? diplomado.getId() : null,
+                curso == null && diplomado != null ? diplomado.getNombre() : curso.getTitulo(), inscripcion.getFecha(), inscripcion.getEstado(),
                 inscripcion.getTotal(), curso != null && resenas != null && resenas.existsByInscripcion_Id(inscripcion.getId()),
                 curso == null ? null : curso.getImagenUrl(), completados, totalModulos, porcentaje,
                 finalizado, finalizado ? inscripcion.getFechaFinalizacion() : null);

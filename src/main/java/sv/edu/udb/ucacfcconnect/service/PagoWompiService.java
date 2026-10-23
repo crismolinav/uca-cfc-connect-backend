@@ -74,8 +74,9 @@ public class PagoWompiService {
                 || !cliente.getId().equals(inscripcion.getParticipante().getCliente().getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "La inscripción no pertenece a tu cuenta");
         }
-        if (inscripcion.getCurso() == null || !"PENDIENTE".equals(inscripcion.getEstado())) {
-            throw new ApiException(HttpStatus.CONFLICT, "Solo puedes pagar cursos con inscripción pendiente");
+        if ((inscripcion.getCurso() == null && inscripcion.getDiplomado() == null)
+                || !"PENDIENTE".equals(inscripcion.getEstado())) {
+            throw new ApiException(HttpStatus.CONFLICT, "Solo puedes pagar cursos o diplomados con inscripción pendiente");
         }
         if (pagos.existsByInscripcionIdAndEstadoIn(inscripcionId, List.of("PENDIENTE", "CONFIRMADO"))) {
             throw new ApiException(HttpStatus.CONFLICT, "Ya hay un pago pendiente o confirmado para este curso");
@@ -83,7 +84,9 @@ public class PagoWompiService {
         String reference = "WOMPI-" + UUID.randomUUID();
         String email = usuario.getCorreo();
         try {
-            String url = wompi.crearEnlace(reference, inscripcion.getTotal(), inscripcion.getCurso().getTitulo(), email);
+            String nombrePrograma = inscripcion.getCurso() != null
+                    ? inscripcion.getCurso().getTitulo() : inscripcion.getDiplomado().getNombre();
+            String url = wompi.crearEnlace(reference, inscripcion.getTotal(), nombrePrograma, email);
             Pago pago = new Pago();
             pago.setCliente(cliente);
             pago.setInscripcion(inscripcion);

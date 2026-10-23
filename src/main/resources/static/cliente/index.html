@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Catálogo de cursos, diplomados y espacio de aprendizaje de UCA CFC Connect.">
     <title>Inicio | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/cliente.css?v=20261022-15">
+    <link rel="stylesheet" href="/css/cliente.css?v=20261023-3">
     <script src="/js/client-shell.js" defer></script>
     <script src="/js/auth.js" defer></script>
-    <script src="/js/cliente.js?v=20261022-9" defer></script>
+    <script src="/js/cliente.js?v=20261023-1" defer></script>
 </head>
 <body data-page="cliente">
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -63,7 +63,7 @@
                 </article>
                 <article class="overview-card overview-card-enrollments">
                     <span class="overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 8h5M19.5 5.5v5"></path></svg></span>
-                    <span class="overview-copy"><small>Tu actividad</small><strong id="overview-enrollment-count">—</strong><span>Cursos inscritos</span></span>
+                    <span class="overview-copy"><small>Tu actividad</small><strong id="overview-enrollment-count">—</strong><span>Programas inscritos</span></span>
                 </article>
                 <article class="overview-card overview-card-diplomas">
                     <span class="overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v13H4zM8 21h8M12 17v4M8 8h8M8 12h5"></path></svg></span>
@@ -147,26 +147,6 @@
         </div>
     </div>
 </main>
-<dialog id="diploma-detail-dialog" class="course-detail-dialog" aria-labelledby="diploma-detail-title">
-    <div class="course-detail-header diploma-detail-header">
-        <div><span id="diploma-detail-category" class="course-detail-category"></span><h2 id="diploma-detail-title"></h2></div>
-        <button id="diploma-detail-close" type="button" aria-label="Cerrar detalle">Cerrar</button>
-    </div>
-    <p id="diploma-detail-description" class="course-detail-description"></p>
-    <dl class="course-detail-data">
-        <div><dt>Modalidad</dt><dd id="diploma-detail-modality"></dd></div>
-        <div><dt>Duración total</dt><dd id="diploma-detail-duration"></dd></div>
-        <div><dt>Fechas</dt><dd id="diploma-detail-dates"></dd></div>
-        <div><dt>Costo</dt><dd id="diploma-detail-cost"></dd></div>
-        <div><dt>Docentes</dt><dd id="diploma-detail-teachers"></dd></div>
-    </dl>
-    <section class="diploma-session-detail" aria-labelledby="diploma-sessions-title">
-        <h3 id="diploma-sessions-title">Sesiones programadas</h3>
-        <p id="diploma-sessions-status" role="status">Cargando sesiones...</p>
-        <ul id="diploma-session-list"></ul>
-    </section>
-    <p class="course-detail-note">La inscripción en línea todavía no está habilitada. Esta pantalla permite consultar el programa publicado.</p>
-</dialog>
 <dialog id="space-reservation-dialog" class="course-detail-dialog reservation-dialog" aria-labelledby="reservation-title">
     <form id="reservation-form" novalidate>
         <div class="course-detail-header reservation-header"><div><span class="course-detail-category">Solicitud de alquiler</span><h2 id="reservation-title">Reservar espacio</h2></div><button id="reservation-close" type="button">Cerrar</button></div>
