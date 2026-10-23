@@ -114,8 +114,10 @@ class AdminOperacionesIntegrationTests {
         cliente = clientes.save(cliente);
         Long servicioId = ((Number) operaciones.registrarServicio(new ServicioRequest(
                 "Almuerzo", "Alimentación", new BigDecimal("10.00"), null)).get("id")).longValue();
+        LocalDate fechaServicio = LocalDate.now(ZoneId.of("America/El_Salvador")).plusDays(1);
         Long cotizacionId = ((Number) operaciones.cotizar(new CotizacionRequest(
-                cliente.getId(), "CATERING", servicioId, 3, null)).get("id")).longValue();
+                cliente.getId(), "CATERING", servicioId, 3, fechaServicio,
+                LocalTime.of(12, 0), LocalTime.of(14, 0), null)).get("id")).longValue();
         Long pagoId = ((Number) operaciones.registrarPago(new PagoRequest(
                 cliente.getId(), new BigDecimal("30.00"), "EFECTIVO", null,
                 "COTIZACION", cotizacionId)).get("id")).longValue();

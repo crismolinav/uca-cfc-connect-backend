@@ -69,8 +69,16 @@ public final class RecepcionRequests {
             @NotBlank String conceptoTipo,
             @NotNull Long conceptoId,
             @NotNull @Positive Integer cantidad,
+            @FutureOrPresent LocalDate fechaServicio,
+            LocalTime horaInicio,
+            LocalTime horaFin,
             @Size(max = 255) String observaciones
-    ) {}
+    ) {
+        public CotizacionRequest(Long clienteId, String conceptoTipo, Long conceptoId,
+                                 Integer cantidad, String observaciones) {
+            this(clienteId, conceptoTipo, conceptoId, cantidad, null, null, null, observaciones);
+        }
+    }
 
     public record ActividadRequest(
             @NotBlank @Size(max = 150) String titulo,

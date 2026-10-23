@@ -132,6 +132,9 @@ public class RecepcionController {
     @GetMapping("/cotizaciones")
     public List<Map<String, Object>> cotizaciones() { return operaciones.cotizaciones(); }
 
+    @GetMapping("/cotizaciones/{id}")
+    public Map<String, Object> cotizacion(@PathVariable Long id) { return operaciones.cotizacion(id); }
+
     @PostMapping("/cotizaciones")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> cotizar(@Valid @RequestBody CotizacionRequest request) {

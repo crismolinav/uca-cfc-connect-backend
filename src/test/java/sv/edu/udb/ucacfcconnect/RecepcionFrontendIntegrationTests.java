@@ -26,6 +26,10 @@ class RecepcionFrontendIntegrationTests {
                 .andExpect(content().string(containsString("id=\"panel-inscripciones\"")))
                 .andExpect(content().string(containsString("id=\"panel-catering\"")))
                 .andExpect(content().string(containsString("id=\"panel-cotizaciones\"")))
+                .andExpect(content().string(containsString("name=\"fechaServicio\"")))
+                .andExpect(content().string(containsString("name=\"horaInicio\"")))
+                .andExpect(content().string(containsString("name=\"horaFin\"")))
+                .andExpect(content().string(containsString("id=\"quote-program\"")))
                 .andExpect(content().string(containsString("id=\"panel-actividades\"")))
                 .andExpect(content().string(containsString("id=\"panel-pagos\"")))
                 .andExpect(content().string(containsString("/js/recepcion.js")));
@@ -38,6 +42,9 @@ class RecepcionFrontendIntegrationTests {
         mvc.perform(get("/js/recepcion.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("[state.catalogos, state.espacios]")))
-                .andExpect(content().string(containsString("request(api + '/espacios')")));
+                .andExpect(content().string(containsString("request(api + '/espacios')")))
+                .andExpect(content().string(containsString("Ver constancia")))
+                .andExpect(content().string(containsString("no puede modificarla desde la")))
+                .andExpect(content().string(containsString("Imprimir / Guardar como PDF")));
     }
 }
