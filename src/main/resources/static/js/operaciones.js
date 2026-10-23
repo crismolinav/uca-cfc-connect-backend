@@ -10,7 +10,14 @@
     const confirmDialog = document.getElementById('confirm-dialog');
     const stateDialog = document.getElementById('state-dialog');
     let page = 0, size = 10, editingId = null, selected = null, csrfToken, loadNumber = 0;
-    let clients = [], spaces = [], courses = [];
+    let clients = [], spaces = [], quoteCatalog = [];
+
+    if (moduleName === 'cotizaciones') {
+        document.querySelector('.page-description').textContent =
+            'Combina cursos, diplomados, espacios y catering en propuestas comerciales para cada cliente.';
+        document.querySelector('.dialog-header p').textContent =
+            'Agrega cursos, diplomados, espacios o servicios de catering.';
+    }
 
     async function csrf() {
         if (csrfToken) return csrfToken;
@@ -97,7 +104,7 @@
             populateSelect(form.elements.idCliente, clients, 'id', 'nombre', 'Selecciona un cliente'); populateSelect(form.elements.idEspacio || document.createElement('select'), spaces, 'idEspacio', 'nombre', 'Selecciona un espacio');
             if (moduleName === 'alquileres') populateSelect(document.getElementById('space-filter'), spaces, 'idEspacio', 'nombre', 'Todos');
         }
-        if (moduleName === 'cotizaciones') { const pageData = await request('/api/v1/cursos?pagina=0&tamano=100&activo=true'); courses = pageData.contenido; }
+        if (moduleName === 'cotizaciones') quoteCatalog = await request('/api/v1/cotizaciones/catalogos');
     }
     function setDisabled(disabled) { [...form.elements].forEach(el => { if (!['button', 'submit'].includes(el.type)) el.disabled = disabled; }); document.getElementById('dialog-save').hidden = disabled; }
     function openForm(mode, item = null) {
@@ -110,26 +117,35 @@
         setDisabled(mode === 'view'); if (moduleName === 'cotizaciones') document.getElementById('add-detail').hidden = mode === 'view';
         formDialog.showModal();
     }
-    function detailOptions(type, selectedId) {
-        const values = type === 'CURSO' ? courses : spaces, idKey = type === 'CURSO' ? 'idCurso' : 'idEspacio', labelKey = type === 'CURSO' ? 'titulo' : 'nombre';
-        return values.map(item => '<option value="' + item[idKey] + '" ' + (String(item[idKey]) === String(selectedId) ? 'selected' : '') + '>' + escapeHtml(item[labelKey]) + ' · ' + money(type === 'CURSO' ? item.costo : item.precio) + '</option>').join('');
+    function detailOptions(type, selectedId, currentDetail = null) {
+        const items = quoteCatalog.filter(item => item.tipo === type);
+        let options = items.map(item =>
+            '<option value="' + item.idReferencia + '" ' +
+            (String(item.idReferencia) === String(selectedId) ? 'selected' : '') + '>' +
+            escapeHtml(item.nombre) + ' · ' + money(item.precio) + '</option>').join('');
+        if (selectedId && currentDetail && !items.some(item => String(item.idReferencia) === String(selectedId))) {
+            options = '<option value="' + selectedId + '" selected>' + escapeHtml(currentDetail.nombre) +
+                ' · ' + money(currentDetail.precioUnitario) + ' (ya no disponible)</option>' + options;
+        }
+        return options;
     }
     function escapeHtml(value) { const span = document.createElement('span'); span.textContent = value || ''; return span.innerHTML; }
     function addDetail(detail = null) {
         const type = detail?.tipo || 'CURSO', div = document.createElement('div'); div.className = 'quote-detail';
-        div.innerHTML = '<div class="field"><label>Tipo</label><select class="detail-type"><option value="CURSO">Curso</option><option value="ESPACIO">Espacio</option></select></div><div class="field detail-service"><label>Servicio</label><select class="detail-reference" required><option value="">Selecciona</option>' + detailOptions(type, detail?.idReferencia) + '</select></div><div class="field"><label>Cantidad</label><input class="detail-quantity" type="number" min="1" value="' + (detail?.cantidad || 1) + '" required></div><div class="field detail-description"><label>Descripción</label><input class="detail-text" maxlength="255" value="' + escapeHtml(detail?.descripcion || '') + '"></div><button class="detail-remove" type="button" aria-label="Quitar servicio">Quitar</button>';
+        div.dataset.originalType = type; div.dataset.originalId = detail?.idReferencia || ''; div.dataset.originalPrice = detail?.precioUnitario || 0;
+        div.innerHTML = '<div class="field"><label>Tipo</label><select class="detail-type"><option value="CURSO">Curso</option><option value="DIPLOMADO">Diplomado</option><option value="ESPACIO">Espacio</option><option value="CATERING">Catering</option></select></div><div class="field detail-service"><label>Servicio</label><select class="detail-reference" required><option value="">Selecciona</option>' + detailOptions(type, detail?.idReferencia, detail) + '</select></div><div class="field"><label>Cantidad</label><input class="detail-quantity" type="number" min="1" value="' + (detail?.cantidad || 1) + '" required></div><div class="field detail-description"><label>Descripción</label><input class="detail-text" maxlength="255" value="' + escapeHtml(detail?.descripcion || '') + '"></div><button class="detail-remove" type="button" aria-label="Quitar servicio">Quitar</button>';
         const typeSelect = div.querySelector('.detail-type'); typeSelect.value = type; typeSelect.addEventListener('change', () => { const select = div.querySelector('.detail-reference'); select.innerHTML = '<option value="">Selecciona</option>' + detailOptions(typeSelect.value); calculateTotal(); });
         div.querySelectorAll('select,input').forEach(el => el.addEventListener('input', calculateTotal)); div.querySelector('.detail-remove').addEventListener('click', () => { div.remove(); calculateTotal(); }); document.getElementById('quote-details').append(div); calculateTotal();
     }
     function calculateTotal() {
         if (moduleName !== 'cotizaciones') return; let total = 0;
-        document.querySelectorAll('.quote-detail').forEach(row => { const type = row.querySelector('.detail-type').value, id = Number(row.querySelector('.detail-reference').value), quantity = Number(row.querySelector('.detail-quantity').value || 0); const item = (type === 'CURSO' ? courses : spaces).find(x => (type === 'CURSO' ? x.idCurso : x.idEspacio) === id); total += Number(type === 'CURSO' ? item?.costo : item?.precio) * quantity || 0; });
+        document.querySelectorAll('.quote-detail').forEach(row => { const type = row.querySelector('.detail-type').value, id = Number(row.querySelector('.detail-reference').value), quantity = Number(row.querySelector('.detail-quantity').value || 0); const item = quoteCatalog.find(x => x.tipo === type && x.idReferencia === id); const originalPrice = row.dataset.originalType === type && Number(row.dataset.originalId) === id ? Number(row.dataset.originalPrice) : 0; total += Number(item?.precio ?? originalPrice) * quantity || 0; });
         document.getElementById('quote-total').textContent = 'Total estimado: ' + money(total);
     }
     function payload() {
         if (moduleName === 'espacios') return {nombre: form.elements.nombre.value.trim(), tipo: form.elements.tipo.value.trim(), capacidad: Number(form.elements.capacidad.value), precio: Number(form.elements.precio.value), equipamiento: form.elements.equipamiento.value.trim(), duracionMaximaHoras: Number(form.elements.duracionMaximaHoras.value), disponible: form.elements.disponible.checked};
         if (moduleName === 'alquileres') return {idCliente: Number(form.elements.idCliente.value), idEspacio: Number(form.elements.idEspacio.value), fecha: form.elements.fecha.value, horaInicio: form.elements.horaInicio.value, horaFin: form.elements.horaFin.value, motivo: form.elements.motivo.value.trim()};
-        return {idCliente: Number(form.elements.idCliente.value), observaciones: form.elements.observaciones.value.trim(), detalles: [...document.querySelectorAll('.quote-detail')].map(row => { const type = row.querySelector('.detail-type').value, id = Number(row.querySelector('.detail-reference').value); return {idCurso: type === 'CURSO' ? id : null, idEspacio: type === 'ESPACIO' ? id : null, cantidad: Number(row.querySelector('.detail-quantity').value), descripcion: row.querySelector('.detail-text').value.trim()}; })};
+        return {idCliente: Number(form.elements.idCliente.value), observaciones: form.elements.observaciones.value.trim(), detalles: [...document.querySelectorAll('.quote-detail')].map(row => { const type = row.querySelector('.detail-type').value, id = Number(row.querySelector('.detail-reference').value); return {idCurso: type === 'CURSO' ? id : null, idEspacio: type === 'ESPACIO' ? id : null, idDiplomado: type === 'DIPLOMADO' ? id : null, idServicioCatering: type === 'CATERING' ? id : null, cantidad: Number(row.querySelector('.detail-quantity').value), descripcion: row.querySelector('.detail-text').value.trim()}; })};
     }
     async function save(event) {
         event.preventDefault(); if (!form.reportValidity()) return; if (moduleName === 'cotizaciones' && !document.querySelector('.quote-detail')) { document.getElementById('dialog-error').textContent = 'Agrega al menos un servicio.'; return; }

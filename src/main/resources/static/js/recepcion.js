@@ -312,7 +312,9 @@
         if (name === 'cotizaciones') {
             state.cotizaciones = await request(api + '/cotizaciones');
             mostrarLista('quotes-list', state.cotizaciones, (q) => fila('Cotización #' + q.id + ' · ' + q.cliente,
-                q.fecha + ' · Estimado $' + q.montoEstimado + (q.observaciones ? ' · ' + q.observaciones : ''),
+                q.fecha + ' · ' + (q.detalles || []).map((detalle) =>
+                    detalle.tipo + ': ' + detalle.nombre + ' × ' + detalle.cantidad).join(' · ') +
+                ' · Estimado $' + q.montoEstimado + (q.observaciones ? ' · ' + q.observaciones : ''),
                 q.estado), 'No hay cotizaciones registradas.');
         }
         if (name === 'actividades') {
