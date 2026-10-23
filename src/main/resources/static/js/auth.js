@@ -189,6 +189,83 @@
         });
     }
 
+    function prepararRecuperacion() {
+        const formulario = document.getElementById("recovery-form");
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            limpiarErrores(formulario);
+            document.getElementById("form-status").classList.remove("is-success");
+            if (!formulario.reportValidity()) return;
+            const boton = formulario.querySelector("button[type='submit']");
+            cambiarCarga(boton, true);
+            try {
+                const {respuesta, contenido} = await enviar("/api/v1/auth/recuperar-password", {
+                    correo: formulario.correo.value.trim()
+                });
+                if (!respuesta.ok) {
+                    if (contenido.correo) mostrarErrores(formulario, contenido);
+                    else document.getElementById("form-status").textContent = contenido.mensaje ||
+                        "No se pudo enviar el enlace. Intenta más tarde.";
+                    return;
+                }
+                const estado = document.getElementById("form-status");
+                estado.classList.add("is-success");
+                estado.textContent = "Si la cuenta existe, recibirás un correo con el enlace para cambiar la contraseña.";
+                formulario.reset();
+            } catch (_error) {
+                document.getElementById("form-status").textContent =
+                    "No se pudo conectar con el servidor. Intenta nuevamente.";
+            } finally {
+                cambiarCarga(boton, false);
+            }
+        });
+    }
+
+    function prepararRestablecimiento() {
+        const formulario = document.getElementById("reset-form");
+        const parametros = new URLSearchParams(window.location.hash.slice(1));
+        const token = parametros.get("token");
+        window.history.replaceState(null, document.title, window.location.pathname);
+        if (!token) {
+            document.getElementById("form-status").textContent =
+                "Falta el enlace de recuperación. Solicita uno nuevo.";
+            formulario.hidden = true;
+            return;
+        }
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            limpiarErrores(formulario);
+            const estado = document.getElementById("form-status");
+            estado.classList.remove("is-success");
+            if (!formulario.reportValidity()) return;
+            if (formulario.password.value !== formulario.confirmar.value) {
+                formulario.confirmar.setAttribute("aria-invalid", "true");
+                document.getElementById("confirmar-error").textContent = "Las contraseñas deben coincidir.";
+                formulario.confirmar.focus();
+                return;
+            }
+            const boton = formulario.querySelector("button[type='submit']");
+            cambiarCarga(boton, true);
+            try {
+                const {respuesta, contenido} = await enviar("/api/v1/auth/restablecer-password", {
+                    token, password: formulario.password.value
+                });
+                if (!respuesta.ok) {
+                    if (contenido.password) mostrarErrores(formulario, contenido);
+                    else estado.textContent = contenido.mensaje || "No se pudo cambiar la contraseña. Solicita un enlace nuevo.";
+                    return;
+                }
+                formulario.hidden = true;
+                estado.classList.add("is-success");
+                estado.textContent = "Contraseña actualizada. Ya puedes iniciar sesión.";
+            } catch (_error) {
+                estado.textContent = "No se pudo conectar con el servidor. Intenta nuevamente.";
+            } finally {
+                cambiarCarga(boton, false);
+            }
+        });
+    }
+
     async function procesarCallback() {
         const parametros = new URLSearchParams(window.location.hash.slice(1));
         const error = parametros.get("error");
@@ -330,6 +407,8 @@
     const pagina = document.body.dataset.page;
     if (pagina === "login") prepararLogin();
     if (pagina === "registro") prepararRegistro();
+    if (pagina === "recuperar") prepararRecuperacion();
+    if (pagina === "restablecer") prepararRestablecimiento();
     if (pagina === "callback") procesarCallback();
     if (pagina === "perfil") {
         prepararCompletarDui();

@@ -28,6 +28,8 @@ public class Usuario {
     private String oauthProviderId;
     @Column(name = "email_verificado", nullable = false)
     private boolean emailVerificado;
+    @Column(name = "password_version", nullable = false)
+    private long passwordVersion;
     @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY)
     private Cliente cliente;
     @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY)
@@ -52,6 +54,8 @@ public class Usuario {
     public void setOauthProviderId(String oauthProviderId) { this.oauthProviderId = oauthProviderId; }
     public boolean isEmailVerificado() { return emailVerificado; }
     public void setEmailVerificado(boolean emailVerificado) { this.emailVerificado = emailVerificado; }
+    public long getPasswordVersion() { return passwordVersion; }
+    public void setPasswordVersion(long passwordVersion) { this.passwordVersion = passwordVersion; }
     public Cliente getCliente() { return cliente; }
     public void setCliente(Cliente cliente) { this.cliente = cliente; }
     public Docente getDocente() { return docente; }

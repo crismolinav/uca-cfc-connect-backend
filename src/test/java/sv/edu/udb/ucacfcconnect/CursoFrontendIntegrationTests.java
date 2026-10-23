@@ -41,7 +41,7 @@ class CursoFrontendIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("<h1 id=\"page-title\">Cursos</h1>")))
-                .andExpect(content().string(containsString("Nuevo curso")))
+                .andExpect(content().string(containsString(">Nuevo curso</button>")))
                 .andExpect(content().string(containsString("name=\"diasHorario\"")))
                 .andExpect(content().string(containsString("type=\"time\"")))
                 .andExpect(content().string(containsString("name=\"cupoMaximo\" type=\"number\" min=\"1\" step=\"1\"")))
@@ -72,6 +72,7 @@ class CursoFrontendIntegrationTests {
         mockMvc.perform(get("/cliente/curso.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"course-content\"")))
+                .andExpect(content().string(containsString("id=\"course-enroll-button\"")))
                 .andExpect(content().string(containsString("/js/curso-detalle.js")));
 
         mockMvc.perform(get("/js/cliente.js"))
@@ -88,7 +89,7 @@ class CursoFrontendIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(containsString("<h1 id=\"page-title\">Diplomados</h1>")))
-                .andExpect(content().string(containsString("Nuevo diplomado")))
+                .andExpect(content().string(containsString(">Nuevo diplomado</button>")))
                 .andExpect(content().string(containsString("id=\"sessions-dialog\"")))
                 .andExpect(content().string(containsString("id=\"session-progress\"")))
                 .andExpect(content().string(containsString("/js/docente-asignaciones.js")))
@@ -154,14 +155,14 @@ class CursoFrontendIntegrationTests {
         mockMvc.perform(get("/admin/espacios.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("<h1 id=\"page-title\">Espacios</h1>")))
-                .andExpect(content().string(containsString("Nuevo espacio")))
+                .andExpect(content().string(containsString(">Nuevo espacio</button>")))
                 .andExpect(content().string(containsString("name=\"duracionMaximaHoras\"")))
                 .andExpect(content().string(containsString("name=\"equipamiento\"")));
 
         mockMvc.perform(get("/admin/alquileres.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("<h1 id=\"page-title\">Alquileres</h1>")))
-                .andExpect(content().string(containsString("Nuevo alquiler")))
+                .andExpect(content().string(containsString(">Nuevo alquiler</button>")))
                 .andExpect(content().string(containsString("name=\"horaInicio\"")));
 
         mockMvc.perform(get("/admin/cotizaciones.html"))
@@ -169,7 +170,7 @@ class CursoFrontendIntegrationTests {
                 .andExpect(content().string(containsString("<h1 id=\"page-title\">Cotizaciones</h1>")))
                 .andExpect(result -> assertThat(new String(
                         result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8))
-                        .contains("Nueva cotización"))
+                        .contains(">Nueva cotización</button>"))
                 .andExpect(content().string(containsString("id=\"quote-details\"")));
 
         mockMvc.perform(get("/js/operaciones.js"))

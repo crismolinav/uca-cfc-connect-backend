@@ -18,6 +18,7 @@ import sv.edu.udb.ucacfcconnect.entity.Modalidad;
 import sv.edu.udb.ucacfcconnect.exception.ConflictException;
 import sv.edu.udb.ucacfcconnect.exception.ReglaNegocioException;
 import sv.edu.udb.ucacfcconnect.exception.RecursoNoEncontradoException;
+import sv.edu.udb.ucacfcconnect.exception.SolicitudInvalidaException;
 import sv.edu.udb.ucacfcconnect.repository.CategoriaRepository;
 import sv.edu.udb.ucacfcconnect.repository.CursoRepository;
 import sv.edu.udb.ucacfcconnect.repository.ModalidadRepository;
@@ -115,6 +116,14 @@ class CursoServiceTest {
         );
 
         assertTrue(error.getMessage().contains("fecha de fin"));
+        verify(cursoRepository, never()).save(any());
+    }
+
+    @Test
+    void crearCursoRechazaMenosDeTresModulos() {
+        solicitud.setContenidoPrograma("[{\"titulo\":\"Introducción\"},{\"titulo\":\"Práctica\"}]");
+
+        assertThrows(SolicitudInvalidaException.class, () -> cursoService.crear(solicitud));
         verify(cursoRepository, never()).save(any());
     }
 

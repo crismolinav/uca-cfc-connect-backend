@@ -40,6 +40,7 @@ public class JwtService {
                 .claim("email", usuario.getCorreo())
                 .claim("nombre", usuario.getNombre())
                 .claim("role", autoridad)
+                .claim("pwdv", usuario.getPasswordVersion())
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

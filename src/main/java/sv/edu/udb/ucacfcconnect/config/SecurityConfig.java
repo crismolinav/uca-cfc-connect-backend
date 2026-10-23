@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
@@ -59,6 +61,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/aceptar-invitacion",
                                 "/api/v1/auth/aceptar-invitacion-docente",
                                 "/api/v1/auth/login",
+                                "/api/v1/auth/recuperar-password",
+                                "/api/v1/auth/restablecer-password",
                                 "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/cursos/*/contenido").hasAnyRole("ADMIN", "DOCENTE")
                         .requestMatchers(HttpMethod.POST, "/api/v1/cursos/*/recursos", "/api/v1/cursos/*/portada").hasAnyRole("ADMIN", "DOCENTE")
@@ -150,11 +154,20 @@ public class SecurityConfig {
     }
 
     @Bean
-    public BearerTokenResolver bearerTokenResolver(AuthCookieService authCookies) {
+    public BearerTokenResolver bearerTokenResolver(AuthCookieService authCookies, JwtDecoder jwtDecoder) {
         DefaultBearerTokenResolver authorizationHeader = new DefaultBearerTokenResolver();
         return request -> {
             String cookieToken = authCookies.resolver(request);
-            return cookieToken != null ? cookieToken : authorizationHeader.resolve(request);
+            if (cookieToken != null) {
+                try {
+                    jwtDecoder.decode(cookieToken);
+                    return cookieToken;
+                } catch (JwtException | IllegalArgumentException ignored) {
+                    // Una cookie vencida no debe impedir cargar páginas o rutas públicas.
+                    // Las rutas protegidas seguirán respondiendo 401 si no hay otro token válido.
+                }
+            }
+            return authorizationHeader.resolve(request);
         };
     }
 
