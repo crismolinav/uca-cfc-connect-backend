@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Tu espacio de aprendizaje en UCA CFC Connect.">
     <title>Mi aprendizaje | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/cliente.css?v=20261023-2">
+    <link rel="stylesheet" href="/css/cliente.css?v=20261023-3">
     <script src="/js/client-shell.js" defer></script>
     <script src="/js/auth.js" defer></script>
-    <script src="/js/aprendizaje.js?v=20261023-1" defer></script>
+    <script src="/js/aprendizaje.js?v=20261023-2" defer></script>
 </head>
 <body data-page="aprendizaje">
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -56,15 +56,15 @@
                     <div><span>Correo</span><strong id="client-email"></strong></div>
                 </div>
                 <div class="learning-summary" aria-label="Resumen de aprendizaje">
-                    <div><span>Cursos inscritos</span><strong id="learning-course-count">0</strong></div>
+                    <div><span>Programas inscritos</span><strong id="learning-course-count">0</strong></div>
                     <div><span>Avance promedio</span><strong id="learning-average-progress">0%</strong></div>
                     <div><span>Pagos pendientes</span><strong id="learning-pending-count">0</strong></div>
                 </div>
             </div>
         </section>
-        <p id="learning-status" class="learning-note" role="status">Cargando tus cursos y pagos...</p>
+        <p id="learning-status" class="learning-note" role="status">Cargando tus cursos, diplomados y pagos...</p>
         <div class="learning-dashboard-grid">
-            <section class="learning-section learning-enrollments-section" aria-labelledby="enrolled-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Sigue aprendiendo</span><h2 id="enrolled-title">Mis inscripciones</h2></div><a href="/cliente/index.html#explorar">Explorar cursos <span aria-hidden="true">→</span></a></div><div id="enrolled-courses" class="learning-list"></div><nav id="enrollment-pagination" class="learning-pagination" aria-label="Páginas de mis inscripciones" hidden><button type="button" data-page-direction="previous">Anterior</button><span aria-live="polite"></span><button type="button" data-page-direction="next">Siguiente</button></nav></section>
+            <section class="learning-section learning-enrollments-section" aria-labelledby="enrolled-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Sigue aprendiendo</span><h2 id="enrolled-title">Mis inscripciones</h2></div><a href="/cliente/index.html#explorar">Explorar formación <span aria-hidden="true">→</span></a></div><div id="enrolled-courses" class="learning-list"></div><nav id="enrollment-pagination" class="learning-pagination" aria-label="Páginas de mis inscripciones" hidden><button type="button" data-page-direction="previous">Anterior</button><span aria-live="polite"></span><button type="button" data-page-direction="next">Siguiente</button></nav></section>
             <section class="learning-section learning-payments-section" aria-labelledby="payments-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Estado de cuenta</span><h2 id="payments-title">Mis pagos</h2></div></div><div id="client-payments" class="learning-list"></div><nav id="payment-pagination" class="learning-pagination" aria-label="Páginas de mis pagos" hidden><button type="button" data-page-direction="previous">Anterior</button><span aria-live="polite"></span><button type="button" data-page-direction="next">Siguiente</button></nav></section>
         </div>
     </div>
@@ -72,7 +72,7 @@
 <dialog id="client-payment-dialog" class="course-detail-dialog client-payment-dialog" aria-labelledby="client-payment-title">
     <form id="client-payment-form">
         <div class="course-detail-header payment-dialog-header">
-            <div class="payment-heading-copy"><span class="payment-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h3"></path></svg></span><div><span class="course-detail-category">Inscripción de curso</span><h2 id="client-payment-title">Registrar pago</h2></div></div>
+            <div class="payment-heading-copy"><span class="payment-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h3"></path></svg></span><div><span class="course-detail-category">Inscripción académica</span><h2 id="client-payment-title">Registrar pago</h2></div></div>
             <button id="client-payment-close" class="payment-close-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg><span>Cerrar</span></button>
         </div>
         <div class="payment-dialog-body">

@@ -16,20 +16,19 @@
     const diplomaGrid = document.getElementById('diploma-grid');
     const diplomaStatus = document.getElementById('diploma-list-status');
     const diplomaPagination = document.getElementById('diploma-pagination');
-    const diplomaDetailDialog = document.getElementById('diploma-detail-dialog');
     const size = 6;
     let coursePage = 0;
     let diplomaPage = 0;
     let courseLoadNumber = 0;
     let diplomaLoadNumber = 0;
     let spaceLoadNumber = 0;
-    let diplomaDetailLoadNumber = 0;
     let detailTrigger = null;
     let spacePage = 0;
     let activeCatalogView = 'courses';
     let selectedSpace = null;
     let csrfToken = null;
     let enrolledCourseIds = new Set();
+    let enrolledDiplomaIds = new Set();
     let clientEnrollments = [];
     let enrollmentListLoaded = false;
 
@@ -287,7 +286,7 @@
         detail.type = 'button';
         detail.setAttribute('aria-label', 'Ver detalles de ' + title);
         detail.addEventListener('click', (event) => {
-            if (isDiploma) openDiplomaDetail(item, event.currentTarget);
+            if (isDiploma) window.location.assign('/cliente/diplomado.html?id=' + encodeURIComponent(item.idDiplomado));
             else window.location.assign('/cliente/curso.html?id=' + encodeURIComponent(item.idCurso));
         });
         footer.append(detail);
@@ -358,6 +357,9 @@
                 enrolledCourseIds = new Set(enrollments
                     .map((enrollment) => enrollment.idCurso == null ? null : String(enrollment.idCurso))
                     .filter((id) => id != null));
+                enrolledDiplomaIds = new Set(enrollments
+                    .map((enrollment) => enrollment.idDiplomado == null ? null : String(enrollment.idDiplomado))
+                    .filter((id) => id != null));
                 enrollmentListLoaded = true;
             }
             if (thisLoad !== courseLoadNumber) return;
@@ -405,16 +407,37 @@
         setGridLoading(diplomaGrid, true);
         preparePagination(diplomaPagination);
         try {
-            const data = await request(diplomaApi + '?' + query(diplomaPage));
+            const [firstPage, enrollments] = await Promise.all([
+                request(diplomaApi + '?' + query(0)),
+                enrollmentListLoaded ? Promise.resolve(null) : request('/api/v1/cliente/inscripciones').then((result) => {
+                    if (!Array.isArray(result)) throw new Error('No se pudo comprobar el estado de tus inscripciones. Recarga la página.');
+                    return result;
+                }).catch((error) => { if (error.status === 401 || error.status === 403) return []; throw error; })
+            ]);
+            if (Array.isArray(enrollments)) {
+                clientEnrollments = enrollments;
+                enrolledCourseIds = new Set(enrollments.map((item) => item.idCurso == null ? null : String(item.idCurso)).filter(Boolean));
+                enrolledDiplomaIds = new Set(enrollments.map((item) => item.idDiplomado == null ? null : String(item.idDiplomado)).filter(Boolean));
+                enrollmentListLoaded = true;
+            }
             if (thisLoad !== diplomaLoadNumber) return;
-            if (data.totalPaginas > 0 && diplomaPage >= data.totalPaginas) { diplomaPage = data.totalPaginas - 1; return loadDiplomas(); }
-            if (!data.totalPaginas) diplomaPage = 0;
-            updateOverviewCount('overview-diploma-count', data.totalElementos);
-            replaceGridCards(diplomaGrid, data.contenido.map((diploma) => catalogCard(diploma, 'diploma')));
-            diplomaStatus.textContent = data.totalElementos
-                ? data.contenido.length + (data.contenido.length === 1 ? ' diplomado en esta página.' : ' diplomados en esta página.')
+            const remainingPages = firstPage.totalPaginas > 1
+                ? await Promise.all(Array.from({length: firstPage.totalPaginas - 1}, (_, index) =>
+                    request(diplomaApi + '?' + query(index + 1)))) : [];
+            if (thisLoad !== diplomaLoadNumber) return;
+            const allDiplomas = [firstPage, ...remainingPages].flatMap((page) => page.contenido || []);
+            const availableDiplomas = allDiplomas.filter((item) => !enrolledDiplomaIds.has(String(item.idDiplomado)));
+            updateOverviewCount('overview-diploma-count', firstPage.totalElementos);
+            diplomaPage = Math.min(diplomaPage, Math.max(Math.ceil(availableDiplomas.length / size) - 1, 0));
+            const visibleDiplomas = availableDiplomas.slice(diplomaPage * size, (diplomaPage + 1) * size);
+            replaceGridCards(diplomaGrid, visibleDiplomas.map((diploma) => catalogCard(diploma, 'diploma')));
+            diplomaStatus.textContent = visibleDiplomas.length
+                ? visibleDiplomas.length + (visibleDiplomas.length === 1 ? ' diplomado disponible en esta página.' : ' diplomados disponibles en esta página.')
+                : firstPage.totalElementos
+                    ? 'Ya estás inscrito en todos los diplomados que coinciden con los filtros.'
                 : 'No hay diplomados activos que coincidan con los filtros seleccionados.';
-            renderPagination(data,
+            renderPagination({paginaActual: diplomaPage, totalPaginas: Math.ceil(availableDiplomas.length / size),
+                primera: diplomaPage === 0, ultima: diplomaPage >= Math.ceil(availableDiplomas.length / size) - 1},
                 document.getElementById('diploma-previous-page'), document.getElementById('diploma-next-page'),
                 document.getElementById('diploma-page-indicator'), diplomaPagination);
         } catch (error) {
@@ -428,40 +451,6 @@
     async function loadAll(scroll = false) {
         await Promise.all([loadCourses(), loadDiplomas()]);
         if (scroll) scrollToSection({courses: 'explorar', diplomas: 'diplomados', spaces: 'espacios'}[activeCatalogView]);
-    }
-
-    async function openDiplomaDetail(diploma, trigger) {
-        detailTrigger = trigger;
-        const thisLoad = ++diplomaDetailLoadNumber;
-        document.getElementById('diploma-detail-category').textContent = diploma.categoria;
-        document.getElementById('diploma-detail-title').textContent = diploma.nombre;
-        document.getElementById('diploma-detail-description').textContent = diploma.descripcion;
-        document.getElementById('diploma-detail-modality').textContent = diploma.modalidad;
-        document.getElementById('diploma-detail-duration').textContent = hours(diploma.duracionHoras);
-        document.getElementById('diploma-detail-dates').textContent = date(diploma.fechaInicio) + ' – ' + date(diploma.fechaFin);
-        document.getElementById('diploma-detail-cost').textContent = money(diploma.costo);
-        document.getElementById('diploma-detail-teachers').textContent = teacherNames(diploma.docentes);
-        const sessionStatus = document.getElementById('diploma-sessions-status');
-        const sessionList = document.getElementById('diploma-session-list');
-        sessionStatus.textContent = 'Cargando sesiones...';
-        sessionList.replaceChildren();
-        diplomaDetailDialog.showModal();
-        try {
-            const sessions = await request(diplomaApi + '/' + diploma.idDiplomado + '/actividades');
-            if (thisLoad !== diplomaDetailLoadNumber) return;
-            sessions.forEach((session) => {
-                const item = document.createElement('li');
-                const schedule = session.horaInicio.slice(0, 5) + ' – ' + session.horaFin.slice(0, 5);
-                const details = session.titulo + ' · ' + schedule + (session.cupo ? ' · Cupo: ' + session.cupo : '');
-                item.append(element('strong', '', date(session.fecha, true)), element('span', '', details));
-                sessionList.append(item);
-            });
-            sessionStatus.textContent = sessions.length
-                ? sessions.length + (sessions.length === 1 ? ' sesión programada.' : ' sesiones programadas.')
-                : 'No hay sesiones programadas.';
-        } catch (error) {
-            if (thisLoad === diplomaDetailLoadNumber) sessionStatus.textContent = error.message;
-        }
     }
 
     function restoreDetailFocus() {
@@ -505,8 +494,6 @@
     document.getElementById('diploma-next-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { diplomaPage += 1; scrollToSection('diplomados'); loadDiplomas(); } });
     document.getElementById('space-previous-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { spacePage = Math.max(0, spacePage - 1); scrollToSection('espacios'); loadSpaces(); } });
     document.getElementById('space-next-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { spacePage += 1; scrollToSection('espacios'); loadSpaces(); } });
-    document.getElementById('diploma-detail-close').addEventListener('click', () => diplomaDetailDialog.close());
-    diplomaDetailDialog.addEventListener('close', restoreDetailFocus);
     document.getElementById('reservation-form').addEventListener('submit', submitReservation);
     document.getElementById('reservation-close').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());
     document.getElementById('reservation-cancel').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());
@@ -515,7 +502,7 @@
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) {
             enrollmentListLoaded = false;
-            loadCourses();
+            loadAll();
         }
     });
 

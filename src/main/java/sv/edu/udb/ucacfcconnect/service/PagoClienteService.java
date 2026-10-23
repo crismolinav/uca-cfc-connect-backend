@@ -47,7 +47,9 @@ public class PagoClienteService {
         if (!cliente.getId().equals(inscripcion.getParticipante().getCliente().getId())) {
             throw new ApiException(HttpStatus.FORBIDDEN, "La inscripción no pertenece a tu cuenta");
         }
-        if (inscripcion.getCurso() == null) throw invalido("El pago en línea solo está disponible para cursos");
+        if (inscripcion.getCurso() == null && inscripcion.getDiplomado() == null) {
+            throw invalido("La inscripción no está asociada a un curso o diplomado");
+        }
         if (!"PENDIENTE".equals(inscripcion.getEstado())) {
             throw conflicto("Solo puedes pagar una inscripción pendiente");
         }
@@ -78,7 +80,7 @@ public class PagoClienteService {
     private Cliente clienteExistente(Long usuarioId) {
         usuarioCliente(usuarioId);
         return clientes.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new ApiException(HttpStatus.CONFLICT, "Inscríbete en un curso antes de registrar un pago"));
+                .orElseThrow(() -> new ApiException(HttpStatus.CONFLICT, "Inscríbete en un curso o diplomado antes de registrar un pago"));
     }
 
     private void usuarioCliente(Long usuarioId) {

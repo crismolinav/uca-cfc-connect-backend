@@ -157,6 +157,13 @@ h2,h3,p{margin-top:0}
 .diploma-session-detail ul{display:grid;gap:.55rem;margin:.8rem 0 0;padding:0;list-style:none}
 .diploma-session-detail li{display:grid;grid-template-columns:minmax(135px,.75fr) 1.4fr;gap:.8rem;padding:.62rem .7rem;border-radius:6px;background:#fff;color:#43536a;font-size:.7rem;line-height:1.4}
 .diploma-session-detail li strong{color:#233c61;text-transform:capitalize}
+.diploma-enrollment-panel{display:flex;align-items:center;justify-content:space-between;gap:1.25rem;margin:0 1.5rem 1.4rem!important;border-color:#d4e1f2!important;background:#f6f9fe}
+.diploma-enrollment-panel h3{margin:.3rem 0;color:#203653;font-size:1rem}
+.diploma-enrollment-panel strong{display:block;color:#102a53;font-size:1.35rem}
+.diploma-enrollment-panel p{margin:.35rem 0 0;font-size:.72rem}
+.diploma-enrollment-actions{min-width:210px;text-align:center}
+.diploma-enrollment-actions a{display:block;color:#0755c3;font-size:.72rem;font-weight:650;text-decoration:none}
+.diploma-enrollment-actions .course-enroll-cta{margin:.25rem 0}
 .show-more{min-height:38px;margin-top:1rem;padding:.45rem .85rem;border:1px solid #0056d2;border-radius:5px;background:#fff;color:#0056d2;font-size:.75rem;font-weight:600}
 .show-more:hover{background:#eef5ff}
 .promo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding-top:3rem;scroll-margin-top:1.5rem}
@@ -255,7 +262,7 @@ h2,h3,p{margin-top:0}
 @media(max-width:640px){.learning-intro{min-height:120px}.learning-intro-art{display:none}.inner-page{padding-top:1.5rem}.learning-empty{padding-top:4rem}.settings-card{align-items:stretch;flex-direction:column}}
 @media(max-width:560px){.delete-card-row{align-items:stretch;flex-direction:column}.delete-card button{align-self:flex-start}}
 @media(max-width:980px){.header-inner{flex-wrap:wrap;padding-block:.8rem}.site-search{order:5;flex-basis:100%;max-width:none}.primary-nav{margin-inline:auto}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.page-shell,.header-inner{width:min(100% - 2rem,1160px)}.brand{font-size:1rem}.primary-nav{order:4;justify-content:flex-start;gap:.8rem;width:100%;margin:0;overflow-x:auto}.primary-nav a{font-size:.7rem}.welcome-band .page-shell{padding-block:1.2rem}.dashboard-content{padding-top:1rem}.interest-panel{padding:1rem}.course-filter-grid{grid-template-columns:1fr}.clear-course-filters{justify-self:start}.resume-grid,.promo-grid,.account-section{grid-template-columns:1fr}.resume-empty{min-height:170px}.catalog-grid{gap:.65rem}.card-cover{height:110px}.card-body h3{font-size:.8rem}.card-body p{font-size:.69rem}.card-provider{font-size:.61rem}.card-type{font-size:.58rem}.course-cover,.space-cover{height:110px}.course-detail-data{grid-template-columns:1fr}.diploma-session-detail li{grid-template-columns:1fr}.promo{min-height:150px}.account-section dl{grid-template-columns:1fr 1fr}.dui-entry{align-items:stretch;flex-direction:column}.dui-entry button{align-self:flex-start}.space-catalog-section{margin-inline:-.35rem;padding:1.25rem}.reservation-fields{grid-template-columns:1fr}.reservation-reason{grid-column:auto}.reservation-summary,.rental-item{align-items:flex-start;flex-direction:column}.rental-controls{width:100%;justify-content:space-between}}
+@media(max-width:640px){.diploma-enrollment-panel{align-items:stretch;flex-direction:column}.diploma-enrollment-actions{min-width:0}}
 
 /* Ficha individual del curso */
 .course-page{padding-top:1rem;padding-bottom:4rem}
