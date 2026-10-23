@@ -100,11 +100,20 @@ Desde el catálogo, un cliente con sesión iniciada puede inscribirse en un curs
 | `GET` | `/api/v1/cliente/inscripciones` | Lista las inscripciones de la cuenta autenticada |
 | `POST` | `/api/v1/cliente/inscripciones` | Inscribe al cliente en un curso activo y con cupo |
 | `GET` | `/api/v1/cliente/pagos` | Lista los pagos de la cuenta autenticada |
-| `POST` | `/api/v1/cliente/pagos` | Registra un pago pendiente para una inscripción propia |
+| `POST` | `/api/v1/cliente/pagos` | Registra un pago manual pendiente para una inscripción propia |
+| `POST` | `/api/v1/cliente/pagos/wompi/iniciar` | Crea el enlace seguro de pago con tarjeta |
+| `GET` | `/api/v1/cliente/pagos/wompi/retorno` | Recibe el retorno de Wompi y devuelve al navegador a Mi aprendizaje en localhost |
+| `POST` | `/api/v1/cliente/pagos/wompi/webhook` | Confirma el resultado del pago desde Wompi
 
 Para inscribirse, envía `{"idCurso": 10}`. Para registrar un pago, envía `{"idInscripcion": 25, "metodo": "TRANSFERENCIA", "referencia": "REF-123"}`. Los métodos admitidos son `EFECTIVO`, `TRANSFERENCIA` y `TARJETA`. El importe siempre se toma del costo de la inscripción; el cliente no puede modificarlo.
 
-El registro de pago queda `PENDIENTE` hasta que recepción lo verifique y confirme. Esta función registra el pago para revisión; no procesa cargos de tarjeta ni se conecta a una pasarela bancaria.
+Los pagos en efectivo o transferencia quedan `PENDIENTE` hasta que recepción los verifique. Los pagos con tarjeta se procesan en Wompi; el webhook confirma la transacción y actualiza el acceso al curso.
+
+### Configurar Wompi para desarrollo local
+
+Wompi no requiere instalar un programa adicional. Cada desarrollador debe usar las credenciales de su propio aplicativo Wompi: coloca su App ID y API Secret en el archivo local `.env`, que está excluido de Git. No escribas credenciales reales en `.env.example` ni en el repositorio.
+
+La app y el inicio de sesión permanecen en `http://localhost:8080`. Cloudflare Quick Tunnel solo expone temporalmente el callback para que Wompi alcance el backend. En `WOMPI_REDIRECT_URL` configura `https://<host-del-tunel>/api/v1/cliente/pagos/wompi/retorno`; el host `trycloudflare.com` cambia al reiniciar un túnel gratuito, así que actualiza `.env` y vuelve a iniciar Spring. `WOMPI_FRONTEND_RETURN_URL` debe permanecer en `http://localhost:8080/cliente/aprendizaje.html` para conservar la sesión local.
 
 ## Módulo de cotizaciones
 

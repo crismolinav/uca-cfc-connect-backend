@@ -8,5 +8,6 @@ import java.util.List;
 public interface PagoRepository extends JpaRepository<Pago, Long> {
     boolean existsByAlquilerIdAndEstado(Long alquilerId, String estado);
     boolean existsByInscripcionIdAndEstadoIn(Long inscripcionId, List<String> estados);
+    java.util.Optional<Pago> findByReferencia(String referencia);
     List<Pago> findByClienteIdOrderByFechaDescIdDesc(Long clienteId);
 }

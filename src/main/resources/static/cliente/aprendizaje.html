@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Tu espacio de aprendizaje en UCA CFC Connect.">
     <title>Mi aprendizaje | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/cliente.css?v=20261022-16">
+    <link rel="stylesheet" href="/css/cliente.css?v=20261023-2">
     <script src="/js/client-shell.js" defer></script>
     <script src="/js/auth.js" defer></script>
-    <script src="/js/aprendizaje.js?v=20261022-7" defer></script>
+    <script src="/js/aprendizaje.js?v=20261023-1" defer></script>
 </head>
 <body data-page="aprendizaje">
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -63,18 +63,27 @@
         </section>
         <p id="learning-status" class="learning-note" role="status">Cargando tus cursos y pagos...</p>
         <div class="learning-dashboard-grid">
-            <section class="learning-section learning-enrollments-section" aria-labelledby="enrolled-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Sigue aprendiendo</span><h2 id="enrolled-title">Mis inscripciones</h2></div><a href="/cliente/index.html#explorar">Explorar cursos <span aria-hidden="true">→</span></a></div><div id="enrolled-courses" class="learning-list"></div></section>
-            <section class="learning-section learning-payments-section" aria-labelledby="payments-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Estado de cuenta</span><h2 id="payments-title">Mis pagos</h2></div></div><div id="client-payments" class="learning-list"></div></section>
+            <section class="learning-section learning-enrollments-section" aria-labelledby="enrolled-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Sigue aprendiendo</span><h2 id="enrolled-title">Mis inscripciones</h2></div><a href="/cliente/index.html#explorar">Explorar cursos <span aria-hidden="true">→</span></a></div><div id="enrolled-courses" class="learning-list"></div><nav id="enrollment-pagination" class="learning-pagination" aria-label="Páginas de mis inscripciones" hidden><button type="button" data-page-direction="previous">Anterior</button><span aria-live="polite"></span><button type="button" data-page-direction="next">Siguiente</button></nav></section>
+            <section class="learning-section learning-payments-section" aria-labelledby="payments-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Estado de cuenta</span><h2 id="payments-title">Mis pagos</h2></div></div><div id="client-payments" class="learning-list"></div><nav id="payment-pagination" class="learning-pagination" aria-label="Páginas de mis pagos" hidden><button type="button" data-page-direction="previous">Anterior</button><span aria-live="polite"></span><button type="button" data-page-direction="next">Siguiente</button></nav></section>
         </div>
     </div>
 </main>
-<dialog id="client-payment-dialog" class="course-detail-dialog" aria-labelledby="client-payment-title">
+<dialog id="client-payment-dialog" class="course-detail-dialog client-payment-dialog" aria-labelledby="client-payment-title">
     <form id="client-payment-form">
-        <div class="course-detail-header"><div><span class="course-detail-category">Inscripción de curso</span><h2 id="client-payment-title">Registrar pago</h2></div><button id="client-payment-close" type="button">Cerrar</button></div>
-        <p id="client-payment-course" class="course-detail-description"></p>
-        <div class="reservation-fields"><div class="field"><label for="client-payment-method">Método de pago *</label><select id="client-payment-method" required><option value="">Selecciona un método</option><option value="TRANSFERENCIA">Transferencia</option><option value="TARJETA">Tarjeta (registro para procesar en recepción)</option><option value="EFECTIVO">Efectivo</option></select></div><div class="field"><label for="client-payment-reference">Referencia (opcional)</label><input id="client-payment-reference" maxlength="100" placeholder="Número de comprobante"></div></div>
-        <p class="reservation-note">El pago quedará pendiente hasta que recepción lo verifique. Este formulario registra el pago y no procesa cargos de tarjeta.</p>
-        <p id="client-payment-error" class="form-status" role="alert"></p><div class="reservation-actions"><button id="client-payment-cancel" type="button">Cancelar</button><button type="submit">Registrar pago</button></div>
+        <div class="course-detail-header payment-dialog-header">
+            <div class="payment-heading-copy"><span class="payment-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h3"></path></svg></span><div><span class="course-detail-category">Inscripción de curso</span><h2 id="client-payment-title">Registrar pago</h2></div></div>
+            <button id="client-payment-close" class="payment-close-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg><span>Cerrar</span></button>
+        </div>
+        <div class="payment-dialog-body">
+            <div class="payment-course-summary"><span class="payment-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z"></path><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 10h8"></path></svg></span><p id="client-payment-course"></p></div>
+            <div class="payment-method-fields">
+                <div class="field"><label for="client-payment-method"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v12H3zM3 10h18M7 15h3"></path></svg>Otro método de pago <span class="payment-required">*</span></label><select id="client-payment-method" required><option value="">Selecciona un método</option><option value="TRANSFERENCIA">Transferencia</option><option value="EFECTIVO">Efectivo</option></select></div>
+                <div class="field"><label for="client-payment-reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H5V3h2Zm7 0v5h5M8 13h8M8 17h6"></path></svg>Referencia <span class="payment-optional">Opcional</span></label><input id="client-payment-reference" maxlength="100" placeholder="Número de comprobante"></div>
+            </div>
+            <div class="payment-help-note"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5m0-8h.01"></path></svg><p>Las transferencias y pagos en efectivo quedan pendientes hasta que recepción los verifique. Wompi procesa la tarjeta en su sitio seguro; la confirmación automática requiere una URL pública de retorno.</p></div>
+            <p id="client-payment-error" class="form-status payment-error" role="alert"></p>
+            <div class="reservation-actions payment-dialog-actions"><button id="client-payment-cancel" class="payment-secondary-button" type="button">Cancelar</button><button id="client-pay-wompi" class="payment-wompi-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"></rect><path d="M3 10h18M7 15h3"></path></svg>Pagar con tarjeta <span>Wompi</span></button><button class="payment-manual-button" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4zM7 7V4h10v3M8 12h8M8 16h5"></path></svg>Registrar otro método</button></div>
+        </div>
     </form>
 </dialog>
 </body>

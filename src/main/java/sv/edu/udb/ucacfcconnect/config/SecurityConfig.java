@@ -50,7 +50,7 @@ public class SecurityConfig {
             ActiveAccountFilter activeAccountFilter
     ) throws Exception {
         http
-                .csrf(Customizer.withDefaults())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/cliente/pagos/wompi/webhook"))
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
@@ -66,6 +66,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/docente/**").hasRole("DOCENTE")
                         .requestMatchers("/docente/**").hasRole("DOCENTE")
                         .requestMatchers(HttpMethod.GET, "/api/v1/docentes/*/perfil").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/cliente/pagos/wompi/retorno").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/cliente/pagos/wompi/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/csrf",

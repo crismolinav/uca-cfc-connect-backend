@@ -23,7 +23,7 @@ import java.util.Locale;
 @Service
 public class PagoClienteService {
     private static final ZoneId ZONA = ZoneId.of("America/El_Salvador");
-    private static final List<String> METODOS = List.of("EFECTIVO", "TRANSFERENCIA", "TARJETA");
+    private static final List<String> METODOS = List.of("EFECTIVO", "TRANSFERENCIA");
     private final UsuarioRepository usuarios;
     private final ClienteRepository clientes;
     private final InscripcionRepository inscripciones;

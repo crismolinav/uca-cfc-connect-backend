@@ -510,12 +510,75 @@ h2,h3,p{margin-top:0}
 .course-module-complete{grid-column:2;justify-self:start;margin:.35rem 0 .15rem;padding:.62rem .85rem;border:0;border-radius:8px;background:#0755c3;color:#fff;font-size:.74rem;font-weight:700;cursor:pointer}
 .course-module-complete:hover{background:#0646a7}.course-module-complete:disabled{opacity:.65;cursor:wait}
 .learning-progress{max-width:520px;margin-top:.75rem}
-.course-completion{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:1rem 0;padding:1rem 1.1rem;border:1px solid #b9dfc4;border-radius:12px;background:linear-gradient(110deg,#f0faf3,#fff);color:#1d6037}
-.course-completion>div{display:grid;gap:.25rem}.course-completion strong{font-size:.9rem}.course-completion span{color:#526c5b;font-size:.76rem}
-.course-certificate-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:.6rem .9rem;border-radius:8px;background:#0755c3;color:#fff;font-size:.75rem;font-weight:700;text-decoration:none;white-space:nowrap}
-.course-certificate-link:hover{background:#0646a7}
-@media(max-width:640px){.course-completion{align-items:flex-start;flex-direction:column}}
 @media(max-width:640px){.course-progress{width:100%}.course-module-complete{grid-column:1/-1}.course-module-locked-note{grid-column:1/-1}.course-module-card.is-unlocked{padding-right:.55rem;padding-left:.55rem}.learning-progress-heading{align-items:flex-start;flex-direction:column;gap:.15rem}}
 @media(max-width:900px){.learning-item{grid-template-columns:145px minmax(0,1fr) auto}.learning-item-cover{width:145px;height:92px}}
 @media(max-width:720px){.course-hero{grid-template-columns:minmax(0,1fr) 220px}.course-hero-art{display:grid;min-height:0}.course-hero-art.has-image>img{display:block}}
 @media(max-width:640px){.learning-item{grid-template-columns:108px minmax(0,1fr);align-items:start}.learning-item-cover{grid-row:span 2;width:108px;height:82px}.learning-item-copy{grid-column:2}.learning-item-state{grid-column:2;margin:0}.learning-actions{grid-column:2}.course-hero{grid-template-columns:1fr}.course-hero-art:not(.has-image){display:none}.course-hero-art{width:min(100%,360px);justify-self:center;margin-top:.75rem}}
+
+/* Mi aprendizaje: tarjetas con espacio suficiente para títulos, progreso y acciones. */
+.learning-dashboard-grid{grid-template-columns:minmax(0,1.25fr) minmax(350px,.85fr);gap:1.25rem}
+.learning-enrollments-section .learning-item{grid-template-columns:120px minmax(0,1fr);grid-template-rows:auto auto auto;align-items:start;gap:.55rem 1rem;padding:1rem}
+.learning-enrollments-section .learning-item-cover{grid-column:1;grid-row:1 / span 3;width:120px;height:92px}
+.learning-enrollments-section .learning-item-copy{grid-column:2;grid-row:1;align-self:start}
+.learning-enrollments-section .learning-item h3{font-size:.98rem;line-height:1.35;overflow-wrap:anywhere}
+.learning-enrollments-section .learning-item-copy>p{line-height:1.45}
+.learning-enrollments-section .learning-item-state{grid-column:2;grid-row:2;justify-self:start;max-width:100%;white-space:normal;line-height:1.35}
+.learning-enrollments-section .learning-actions{grid-column:2;grid-row:3;justify-content:flex-start;align-self:start}
+.learning-enrollments-section .learning-progress{max-width:560px}
+.learning-enrollments-section .learning-progress-heading{align-items:flex-start;flex-wrap:wrap}
+.learning-payments-section .learning-item{grid-template-columns:88px minmax(0,1fr);grid-template-rows:auto auto;align-items:start;gap:.45rem .75rem;padding:.8rem}
+.learning-payments-section .learning-item-cover{grid-column:1;grid-row:1 / span 2;width:88px;height:70px}
+.learning-payments-section .learning-item-copy{grid-column:2;grid-row:1;align-self:start}
+.learning-payments-section .learning-item h3{font-size:.88rem;line-height:1.35;overflow-wrap:anywhere}
+.learning-payments-section .learning-item-copy>p{line-height:1.45;overflow-wrap:anywhere}
+.learning-payments-section .learning-item-state{grid-column:2;grid-row:2;justify-self:start;max-width:100%;white-space:normal;line-height:1.35}
+@media(max-width:1080px){.learning-dashboard-grid{grid-template-columns:1fr}.learning-enrollments-section .learning-item{grid-template-columns:132px minmax(0,1fr);grid-template-rows:auto auto auto}.learning-enrollments-section .learning-item-cover{width:132px;height:96px}.learning-payments-section .learning-item{grid-template-columns:105px minmax(0,1fr);grid-template-rows:auto auto}.learning-payments-section .learning-item-cover{width:105px;height:78px}}
+@media(max-width:640px){.learning-dashboard-grid{gap:.8rem}.learning-section{padding:.95rem}.learning-enrollments-section .learning-item,.learning-payments-section .learning-item{grid-template-columns:78px minmax(0,1fr);gap:.5rem .7rem;padding:.75rem}.learning-enrollments-section .learning-item-cover,.learning-payments-section .learning-item-cover{grid-column:1;grid-row:1 / span 3;width:78px;height:66px}.learning-enrollments-section .learning-item-copy,.learning-payments-section .learning-item-copy{grid-column:2;grid-row:1}.learning-enrollments-section .learning-item-state,.learning-payments-section .learning-item-state{grid-column:2;grid-row:2}.learning-enrollments-section .learning-actions{grid-column:2;grid-row:3;justify-content:flex-start}.learning-enrollments-section .learning-course-link,.learning-enrollments-section .learning-action{min-height:34px;padding:.45rem .6rem;font-size:.65rem}.learning-enrollments-section .learning-progress-heading{flex-direction:column;gap:.2rem}.learning-payments-section .learning-item-cover{grid-row:1 / span 2}}
+.learning-pagination{display:flex;align-items:center;justify-content:center;gap:.75rem;margin:1rem 0 .1rem;padding:.6rem;border:1px solid #e1e9f4;border-radius:10px;background:#f7faff;color:#405674}
+.learning-pagination[hidden]{display:none}
+.learning-pagination span{min-width:6rem;text-align:center;font-size:.72rem;font-variant-numeric:tabular-nums}
+.learning-pagination button{min-height:36px;padding:.45rem .8rem;border:1px solid #cbd9ec;border-radius:7px;background:#fff;color:#174e9a;font-size:.7rem;font-weight:650;cursor:pointer;transition:background .18s,border-color .18s}
+.learning-pagination button:not(:disabled):hover{border-color:#7ca5db;background:#edf4ff}
+.learning-pagination button:disabled{opacity:.48;cursor:default}
+@media(max-width:640px){.learning-pagination{gap:.5rem;padding:.5rem}.learning-pagination button{min-height:34px;padding:.4rem .65rem}.learning-pagination span{min-width:5rem;font-size:.68rem}}
+
+/* Modal de pago: jerarquía clara, acciones diferenciadas e iconografía accesible. */
+.client-payment-dialog{width:min(94vw,720px);max-height:min(90vh,760px);overflow:auto;border-radius:18px;background:#fff;box-shadow:0 28px 90px rgb(7 24 56 / .34)}
+.client-payment-dialog::backdrop{background:rgb(8 22 45 / .66);backdrop-filter:blur(4px)}
+.client-payment-dialog form{margin:0}
+.payment-dialog-header{align-items:center;padding:1.35rem 1.6rem;background:linear-gradient(115deg,#f4f8ff,#edf4ff);border-bottom:1px solid #dce7f6}
+.payment-heading-copy{display:flex;align-items:center;gap:.9rem}
+.payment-heading-icon,.payment-summary-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:13px;background:#e0ecff;color:#0756c7}
+.payment-heading-icon svg,.payment-summary-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.payment-dialog-header h2{margin:.2rem 0 0;font-size:1.35rem;letter-spacing:-.025em;color:#152b4c}
+.payment-dialog-header .course-detail-category{font-size:.65rem;letter-spacing:.1em}
+.client-payment-dialog button.payment-close-button{display:inline-flex;align-items:center;gap:.4rem;min-height:38px;padding:.45rem .75rem;border:1px solid #c7d6eb;border-radius:9px;background:#fff;color:#405673;font-size:.72rem;font-weight:650;cursor:pointer}
+.payment-close-button:hover,.payment-secondary-button:hover,.payment-manual-button:hover{border-color:#7ea5dc;background:#f6f9ff}
+.payment-close-button svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.payment-dialog-body{padding:1.35rem 1.6rem 1.5rem}
+.payment-course-summary{display:flex;align-items:center;gap:.85rem;padding:.85rem 1rem;border:1px solid #e1eaf6;border-radius:12px;background:#f8faff}
+.payment-course-summary .payment-summary-icon{width:40px;height:40px;border-radius:11px;background:#fff;color:#255eac;border:1px solid #e5edf9}
+.payment-course-summary p{margin:0;color:#435875;font-size:.86rem;font-weight:650;line-height:1.45}
+.payment-method-fields{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.25rem}
+.payment-method-fields .field{min-width:0}
+.client-payment-dialog .payment-method-fields label{display:flex!important;align-items:center;gap:.42rem;margin:0 0 .45rem!important;color:#263a56;font-size:.75rem;font-weight:700}
+.payment-method-fields label svg{width:16px;height:16px;fill:none;stroke:#4774b4;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.payment-method-fields label .payment-required{color:#c53030}
+.payment-method-fields label .payment-optional{margin-left:auto;color:#8593a7;font-size:.65rem;font-weight:500}
+.client-payment-dialog .payment-method-fields select,.client-payment-dialog .payment-method-fields input{display:block;width:100%;min-height:46px;padding:.65rem .8rem;border:1px solid #cbd8e9;border-radius:9px;background:#fff;color:#233752;font:inherit;font-size:.8rem;transition:border-color .18s,box-shadow .18s}
+.client-payment-dialog .payment-method-fields select:focus,.client-payment-dialog .payment-method-fields input:focus{outline:0;border-color:#4d85dd;box-shadow:0 0 0 3px rgb(50 112 207 / .14)}
+.payment-help-note{display:flex;align-items:flex-start;gap:.65rem;margin:1.15rem 0 0;padding:.8rem .9rem;border:1px solid #dce8f8;border-radius:10px;background:#f4f8ff;color:#596d88}
+.payment-help-note svg{flex:none;width:18px;height:18px;margin-top:.05rem;fill:none;stroke:#3973c5;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.payment-help-note p{margin:0;font-size:.71rem;line-height:1.55}
+.payment-error{display:flex;align-items:center;gap:.45rem;min-height:0!important;margin:.55rem 0 0!important;color:#b42318;font-size:.73rem;line-height:1.45}
+.payment-error:not(:empty)::before{content:"!";display:grid;place-items:center;flex:none;width:17px;height:17px;border-radius:50%;background:#fee4e2;color:#b42318;font-size:.7rem;font-weight:800}
+.payment-dialog-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.65rem;margin:1.15rem 0 0;padding:0!important}
+.payment-dialog-actions button{display:inline-flex;align-items:center;justify-content:center;gap:.48rem;min-height:44px;padding:.65rem .9rem;border:1px solid #c9d7e9;border-radius:9px;background:#fff;color:#344d6e;font-size:.72rem;font-weight:700;cursor:pointer;transition:transform .16s,box-shadow .16s,background .16s}
+.payment-dialog-actions button:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgb(17 50 94 / .1)}
+.payment-dialog-actions button:disabled{opacity:.65;cursor:wait;transform:none}
+.payment-dialog-actions .payment-wompi-button{border-color:#0756c7;background:linear-gradient(135deg,#1267dc,#064db7);color:#fff;box-shadow:0 5px 12px rgb(7 86 199 / .2)}
+.payment-dialog-actions .payment-wompi-button:hover{background:linear-gradient(135deg,#075bc9,#063f98)}
+.payment-wompi-button svg,.payment-manual-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.payment-wompi-button span{padding:.15rem .35rem;border:1px solid rgb(255 255 255 / .35);border-radius:5px;background:rgb(255 255 255 / .12);font-size:.63rem}
+.payment-dialog-actions button.payment-manual-button{border-color:#c4d4ea;background:#f7faff;color:#174b91}
+@media(max-width:620px){.payment-dialog-header{padding:1rem}.payment-heading-icon{width:40px;height:40px}.payment-dialog-header h2{font-size:1.15rem}.payment-dialog-body{padding:1rem}.payment-method-fields{grid-template-columns:1fr;gap:.8rem;margin-top:1rem}.payment-dialog-actions{display:grid;grid-template-columns:1fr 1fr}.payment-dialog-actions button{min-height:43px;padding:.55rem .45rem;font-size:.67rem}.payment-dialog-actions .payment-wompi-button{grid-column:1/-1;grid-row:1}.payment-close-button{min-height:35px;padding:.35rem .55rem}.payment-heading-copy{gap:.65rem}}

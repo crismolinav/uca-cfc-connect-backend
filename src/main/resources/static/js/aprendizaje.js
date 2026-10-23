@@ -7,8 +7,13 @@
     const dialog = document.getElementById('client-payment-dialog');
     const form = document.getElementById('client-payment-form');
     const error = document.getElementById('client-payment-error');
+    const pageSize = 3;
     let csrfToken;
     let selectedEnrollment;
+    let enrollmentData = [];
+    let paymentData = [];
+    let enrollmentPage = 0;
+    let paymentPage = 0;
 
     async function request(url, options = {}) {
         if (options.method && !csrfToken) {
@@ -72,7 +77,22 @@
         return article;
     }
 
-    function render(enrollments, payments) {
+    function updatePagination(id, page, itemCount, onPageChange) {
+        const pagination = document.getElementById(id);
+        const pageCount = Math.ceil(itemCount / pageSize);
+        pagination.hidden = pageCount <= 1;
+        const previous = pagination.querySelector('[data-page-direction="previous"]');
+        const next = pagination.querySelector('[data-page-direction="next"]');
+        previous.disabled = page <= 0;
+        next.disabled = page >= pageCount - 1;
+        pagination.querySelector('span').textContent = `Página ${page + 1} de ${pageCount}`;
+        previous.onclick = () => { if (page > 0) onPageChange(page - 1); };
+        next.onclick = () => { if (page < pageCount - 1) onPageChange(page + 1); };
+    }
+
+    function render() {
+        const enrollments = enrollmentData;
+        const payments = paymentData;
         enrollmentList.replaceChildren();
         paymentList.replaceChildren();
         if (!enrollments.length) {
@@ -92,7 +112,8 @@
         document.getElementById('learning-average-progress').textContent = averageProgress + '%';
         document.getElementById('learning-pending-count').textContent = String(enrollments.filter(enrollment =>
             enrollment.estado === 'PENDIENTE' || paymentsByEnrollment.get(enrollment.idInscripcion)?.estado === 'PENDIENTE').length);
-        enrollments.forEach((enrollment) => {
+        const visibleEnrollments = enrollments.slice(enrollmentPage * pageSize, (enrollmentPage + 1) * pageSize);
+        visibleEnrollments.forEach((enrollment) => {
             const payment = paymentsByEnrollment.get(enrollment.idInscripcion);
             const actions = node('div', 'learning-actions');
             if (enrollment.idCurso) {
@@ -105,8 +126,8 @@
                 certificate.href = `/api/v1/cliente/cursos/${encodeURIComponent(enrollment.idCurso)}/certificado`;
                 actions.append(certificate);
             }
-            if (enrollment.idCurso && enrollment.estado === 'PENDIENTE' && !payment) {
-                const action = node('button', 'learning-action', 'Registrar pago');
+            if (enrollment.idCurso && enrollment.estado === 'PENDIENTE' && (!payment || payment.estado === 'RECHAZADO')) {
+                const action = node('button', 'learning-action', 'Pagar inscripción');
                 action.type = 'button';
                 action.addEventListener('click', () => abrirPago(enrollment));
                 actions.append(action);
@@ -128,12 +149,21 @@
         });
         if (!payments.length) paymentList.append(node('p', 'learning-note', 'Todavía no has registrado pagos.'));
         const enrollmentsById = new Map(enrollments.map(enrollment => [enrollment.idInscripcion, enrollment]));
-        payments.forEach((payment) => {
+        const visiblePayments = payments.slice(paymentPage * pageSize, (paymentPage + 1) * pageSize);
+        visiblePayments.forEach((payment) => {
             const enrollment = enrollmentsById.get(payment.idInscripcion);
             paymentList.append(row(payment.curso, money(payment.monto) + ' · ' + payment.fecha + ' · ' + payment.metodo,
                 payment.estado + (payment.referencia ? ' · ' + payment.referencia : ''), null,
                 enrollment?.imagenUrl, enrollment?.idCurso
                     ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null));
+        });
+        updatePagination('enrollment-pagination', enrollmentPage, enrollments.length, (nextPage) => {
+            enrollmentPage = nextPage;
+            render();
+        });
+        updatePagination('payment-pagination', paymentPage, payments.length, (nextPage) => {
+            paymentPage = nextPage;
+            render();
         });
         status.textContent = 'Se actualizaron tus cursos y pagos.';
     }
@@ -144,7 +174,11 @@
             const [enrollments, payments] = await Promise.all([
                 request('/api/v1/cliente/inscripciones'), request('/api/v1/cliente/pagos')
             ]);
-            render(enrollments, payments);
+            enrollmentData = enrollments;
+            paymentData = payments;
+            enrollmentPage = Math.min(enrollmentPage, Math.max(Math.ceil(enrollmentData.length / pageSize) - 1, 0));
+            paymentPage = Math.min(paymentPage, Math.max(Math.ceil(paymentData.length / pageSize) - 1, 0));
+            render();
         } catch (e) {
             status.textContent = e.message;
         }
@@ -177,7 +211,36 @@
             button.disabled = false;
         }
     });
+    document.getElementById('client-pay-wompi').addEventListener('click', async (event) => {
+        if (!selectedEnrollment) return;
+        const button = event.currentTarget;
+        button.disabled = true;
+        error.textContent = '';
+        try {
+            const result = await request('/api/v1/cliente/pagos/wompi/iniciar', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({idInscripcion: selectedEnrollment.idInscripcion})
+            });
+            window.location.assign(result.url);
+        } catch (e) {
+            error.textContent = e.message;
+            button.disabled = false;
+        }
+    });
     document.getElementById('client-payment-close').addEventListener('click', () => dialog.close());
     document.getElementById('client-payment-cancel').addEventListener('click', () => dialog.close());
-    cargar();
+    const query = new URLSearchParams(window.location.search);
+    let callbackMessage = '';
+    if (query.get('pago') === 'wompi') {
+        const messages = {
+            confirmado: 'Pago aprobado por Wompi. Tu inscripción quedó confirmada y ya puedes iniciar el curso.',
+            rechazado: 'Wompi no aprobó el pago. Puedes intentarlo nuevamente desde tu inscripción.',
+            pendiente: 'No se pudo confirmar el pago todavía. Tu inscripción sigue bloqueada; actualiza esta página en un momento.'
+        };
+        callbackMessage = messages[query.get('estado')] || messages.pendiente;
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+    cargar().then(() => {
+        if (callbackMessage) status.textContent = callbackMessage;
+    });
 })();
