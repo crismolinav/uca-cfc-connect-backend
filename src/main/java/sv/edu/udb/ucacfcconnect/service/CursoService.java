@@ -1,5 +1,7 @@
 package sv.edu.udb.ucacfcconnect.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,6 +44,7 @@ import java.util.Set;
 
 @Service
 public class CursoService {
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private static final Map<String, String> CAMPOS_ORDENAMIENTO = Map.ofEntries(
             Map.entry("idCurso", "idCurso"),
@@ -144,6 +147,13 @@ public class CursoService {
     }
 
     @Transactional(readOnly = true)
+    public boolean clienteTieneAccesoConfirmado(Long usuarioId, Long idCurso) {
+        return usuarioId != null && inscripcionRepository != null
+                && inscripcionRepository.buscarInscripcionCursoDeUsuario(usuarioId, idCurso).stream()
+                .anyMatch(inscripcion -> "CONFIRMADA".equalsIgnoreCase(inscripcion.getEstado()));
+    }
+
+    @Transactional(readOnly = true)
     public List<CatalogoResponseDTO> listarCategorias() {
         return categoriaRepository.findAll(Sort.by(Sort.Direction.ASC, "nombre"))
                 .stream()
@@ -165,6 +175,7 @@ public class CursoService {
 
     @Transactional
     public CursoResponseDTO crear(CursoDTO dto, Long usuarioId) {
+        validarMinimoModulos(dto.getContenidoPrograma());
         validarFechas(dto, null);
         validarHorarioYDuracion(dto);
         Curso curso = new Curso();
@@ -183,6 +194,7 @@ public class CursoService {
 
     @Transactional
     public CursoResponseDTO actualizar(Long id, CursoDTO dto) {
+        validarMinimoModulos(dto.getContenidoPrograma());
         Curso curso = buscarCurso(id);
         validarFechas(dto, curso.getFechaInicio());
         validarHorarioYDuracion(dto);
@@ -195,12 +207,29 @@ public class CursoService {
     public CursoResponseDTO actualizarContenido(Long id, ContenidoCursoDTO dto, Long usuarioId) {
         Curso curso = buscarCurso(id);
         validarPermisoEdicion(curso, usuarioId);
+        validarMinimoModulos(dto.contenidoPrograma());
         if (dto.descripcion() != null) curso.setDescripcion(dto.descripcion().strip());
         curso.setLoQueAprenderas(limpiar(dto.loQueAprenderas()));
         curso.setContenidoPrograma(limpiar(dto.contenidoPrograma()));
         curso.setRequisitos(limpiar(dto.requisitos()));
         curso.setDirigidoA(limpiar(dto.dirigidoA()));
         return aRespuesta(cursoRepository.save(curso));
+    }
+
+    private void validarMinimoModulos(String contenido) {
+        int cantidad;
+        try {
+            JsonNode modulos = JSON.readTree(contenido == null ? "" : contenido);
+            cantidad = 0;
+            if (modulos != null && modulos.isArray()) {
+                for (JsonNode modulo : modulos) {
+                    if (modulo.path("titulo").isTextual() && !modulo.path("titulo").asText().isBlank()) cantidad++;
+                }
+            }
+        } catch (Exception ignored) {
+            cantidad = contenido == null ? 0 : (int) contenido.lines().map(String::trim).filter(linea -> !linea.isEmpty()).count();
+        }
+        if (cantidad < 3) throw new SolicitudInvalidaException("Cada curso debe incluir al menos 3 módulos con título.");
     }
 
     @Transactional

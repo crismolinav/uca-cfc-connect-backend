@@ -103,6 +103,10 @@ public class ClienteFormacionService {
         Inscripcion inscripcion = inscripciones.buscarInscripcionCursoDeUsuario(usuarioId, cursoId).stream()
                 .findFirst().orElseThrow(() -> new ApiException(HttpStatus.FORBIDDEN,
                         "Necesitas una inscripción activa para guardar tu progreso."));
+        if (!"CONFIRMADA".equalsIgnoreCase(inscripcion.getEstado())) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "Tu acceso al curso está bloqueado hasta que recepción verifique y confirme tu pago.");
+        }
         int total = contarModulos(inscripcion.getCurso());
         if (numeroModulo == null || numeroModulo < 1 || numeroModulo > total) {
             throw conflicto("El módulo indicado no pertenece a este curso.");

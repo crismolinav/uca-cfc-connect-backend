@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -74,6 +75,7 @@ public class CursoController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<PaginaDTO<CursoResponseDTO>> listar(
+            @AuthenticationPrincipal Jwt jwt,
             @Parameter(description = "Texto contenido en el título o descripción")
             @RequestParam(required = false) String texto,
             @Parameter(description = "Identificador de la categoría")
@@ -89,9 +91,18 @@ public class CursoController {
             @Parameter(description = "Dirección: asc o desc", example = "asc")
             @RequestParam(defaultValue = "asc") String direccion
     ) {
-        return ResponseEntity.ok(cursoService.listar(
+        PaginaDTO<CursoResponseDTO> paginaCursos = cursoService.listar(
                 texto, idCategoria, idModalidad, activo, pagina, tamano, ordenarPor, direccion
-        ));
+        );
+        if (esPersonalAcademico()) return ResponseEntity.ok(paginaCursos);
+        Long usuarioId = jwt == null ? null : Long.valueOf(jwt.getSubject());
+        List<CursoResponseDTO> cursosVisibles = paginaCursos.contenido().stream()
+                .map(curso -> cursoService.clienteTieneAccesoConfirmado(usuarioId, curso.idCurso())
+                        ? curso : curso.sinContenidoPrograma())
+                .toList();
+        return ResponseEntity.ok(new PaginaDTO<>(cursosVisibles, paginaCursos.paginaActual(),
+                paginaCursos.tamanoPagina(), paginaCursos.totalElementos(), paginaCursos.totalPaginas(),
+                paginaCursos.primera(), paginaCursos.ultima()));
     }
 
     @GetMapping("/catalogos/categorias")
@@ -116,8 +127,20 @@ public class CursoController {
             @ApiResponse(responseCode = "404", description = "Curso no encontrado",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public ResponseEntity<CursoResponseDTO> obtenerPorId(@PathVariable @Positive Long id) {
-        return ResponseEntity.ok(cursoService.obtenerPorId(id));
+    public ResponseEntity<CursoResponseDTO> obtenerPorId(@PathVariable @Positive Long id,
+                                                         @AuthenticationPrincipal Jwt jwt) {
+        CursoResponseDTO curso = cursoService.obtenerPorId(id);
+        if (!esPersonalAcademico() && !cursoService.clienteTieneAccesoConfirmado(
+                jwt == null ? null : Long.valueOf(jwt.getSubject()), id)) {
+            curso = curso.sinContenidoPrograma();
+        }
+        return ResponseEntity.ok(curso);
+    }
+
+    private boolean esPersonalAcademico() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(authority ->
+                authority.getAuthority().equals("ROLE_ADMIN") || authority.getAuthority().equals("ROLE_DOCENTE"));
     }
 
     @GetMapping("/{id}/docentes")

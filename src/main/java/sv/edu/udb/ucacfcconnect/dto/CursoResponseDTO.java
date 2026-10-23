@@ -35,4 +35,10 @@ public record CursoResponseDTO(
         Long cantidadResenas,
         String imagenUrl
 ) {
+    public CursoResponseDTO sinContenidoPrograma() {
+        return new CursoResponseDTO(idCurso, titulo, descripcion, duracionHoras, cupoMaximo, costo,
+                fechaInicio, fechaFin, horario, activo, idCategoria, categoria, idModalidad, modalidad,
+                docentes, loQueAprenderas, null, requisitos, dirigidoA, creadoPor, fechaActualizacion,
+                estudiantesInscritos, calificacionPromedio, cantidadResenas, imagenUrl);
+    }
 }
