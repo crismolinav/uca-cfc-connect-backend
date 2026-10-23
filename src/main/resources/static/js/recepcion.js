@@ -99,7 +99,7 @@
     }
 
     function recursosPorTipo(tipo, formId) {
-        if (tipo === 'ESPACIO') return state.espacios;
+        if (tipo === 'ESPACIO') return state.espacios.filter((espacio) => espacio.disponible);
         if (tipo === 'CATERING' && formId === 'quote-form') return state.catalogos?.servicios || [];
         if (tipo === 'CATERING') return state.catering.map((s) => ({...s, nombre: s.servicio + ' · ' + s.fecha}));
         if (tipo === 'CURSO') return state.catalogos?.cursos || [];
@@ -226,7 +226,9 @@
     }
 
     async function cargarCatalogos() {
-        state.catalogos = await request(api + '/catalogos');
+        [state.catalogos, state.espacios] = await Promise.all([
+            request(api + '/catalogos'), request(api + '/espacios')
+        ]);
         completarOpciones();
     }
 
