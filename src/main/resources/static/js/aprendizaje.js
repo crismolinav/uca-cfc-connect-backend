@@ -100,6 +100,11 @@
                 detail.href = '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso);
                 actions.append(detail);
             }
+            if (enrollment.idCurso && enrollment.finalizado) {
+                const certificate = node('a', 'learning-course-link', 'Descargar certificado PDF');
+                certificate.href = `/api/v1/cliente/cursos/${encodeURIComponent(enrollment.idCurso)}/certificado`;
+                actions.append(certificate);
+            }
             if (enrollment.idCurso && enrollment.estado === 'PENDIENTE' && !payment) {
                 const action = node('button', 'learning-action', 'Registrar pago');
                 action.type = 'button';
@@ -109,7 +114,8 @@
             const total = enrollment.total == null ? '' : money(enrollment.total) + ' · ';
             const courseUrl = enrollment.idCurso
                 ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null;
-            const estadoVisible = enrollment.estado === 'CONFIRMADA' ? 'Acceso confirmado'
+            const estadoVisible = enrollment.finalizado ? 'Curso finalizado'
+                : enrollment.estado === 'CONFIRMADA' ? 'Acceso confirmado'
                 : enrollment.estado === 'PENDIENTE' ? 'Acceso bloqueado · pago pendiente'
                     : enrollment.estado;
             enrollmentList.append(row(enrollment.curso, total + 'Inscripción ' + enrollment.fecha,

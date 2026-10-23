@@ -15,5 +15,7 @@ public record InscripcionClienteDTO(
         String imagenUrl,
         List<Integer> modulosCompletados,
         int totalModulos,
-        int progresoPorcentaje
+        int progresoPorcentaje,
+        boolean finalizado,
+        LocalDate fechaFinalizacion
 ) {}

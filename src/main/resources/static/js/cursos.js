@@ -161,7 +161,8 @@
         description.className = 'course-description';
         const mobileMeta = document.createElement('span');
         mobileMeta.className = 'course-mobile-meta';
-        mobileMeta.textContent = curso.categoria + ' · ' + curso.modalidad + ' · ' + moneda(curso.costo);
+        mobileMeta.textContent = curso.categoria + ' · ' + curso.modalidad + ' · ' + moneda(curso.costo)
+            + ' · ' + fecha(curso.fechaInicio) + ' – ' + fecha(curso.fechaFin);
         const mobileSchedule = document.createElement('span');
         mobileSchedule.className = 'course-mobile-schedule';
         mobileSchedule.textContent = curso.horario;

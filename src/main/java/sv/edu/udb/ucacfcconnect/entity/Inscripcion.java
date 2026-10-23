@@ -15,6 +15,7 @@ public class Inscripcion {
     @Column(nullable = false, length = 30) private String estado;
     @Column(nullable = false, precision = 10, scale = 2) private BigDecimal total;
     @Column(name = "modulos_completados", columnDefinition = "TEXT") private String modulosCompletados;
+    @Column(name = "fecha_finalizacion") private LocalDate fechaFinalizacion;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_participante", nullable = false, foreignKey = @ForeignKey(name = "fk_inscripcion_participante"))
     private Participante participante;
@@ -32,6 +33,7 @@ public class Inscripcion {
     public String getEstado() { return estado; } public void setEstado(String estado) { this.estado = estado; }
     public BigDecimal getTotal() { return total; } public void setTotal(BigDecimal total) { this.total = total; }
     public String getModulosCompletados() { return modulosCompletados; } public void setModulosCompletados(String modulosCompletados) { this.modulosCompletados = modulosCompletados; }
+    public LocalDate getFechaFinalizacion() { return fechaFinalizacion; } public void setFechaFinalizacion(LocalDate fechaFinalizacion) { this.fechaFinalizacion = fechaFinalizacion; }
     public Participante getParticipante() { return participante; } public void setParticipante(Participante participante) { this.participante = participante; }
     public Curso getCurso() { return curso; } public void setCurso(Curso curso) { this.curso = curso; }
     public Diplomado getDiplomado() { return diplomado; } public void setDiplomado(Diplomado diplomado) { this.diplomado = diplomado; }

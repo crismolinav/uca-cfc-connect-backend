@@ -74,6 +74,9 @@ public class SecurityConfig {
                                 "/api/v1/cursos/**",
                                 "/api/v1/diplomados/**",
                                 "/api/v1/espacios/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/archivos/cursos/*/portadas/*",
+                                "/archivos/cursos/*/*").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/cotizaciones",
                                 "/api/v1/alquileres",
@@ -113,7 +116,6 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/assets/**",
-                                "/archivos/**",
                                 "/favicon.ico").permitAll()
                         .requestMatchers(
                                 "/oauth2/**",

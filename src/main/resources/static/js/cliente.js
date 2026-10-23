@@ -343,8 +343,8 @@
         setGridLoading(courseGrid, true);
         preparePagination(coursePagination);
         try {
-            const [data, enrollments] = await Promise.all([
-                request(courseApi + '?' + query(coursePage)),
+            const [firstPage, enrollments] = await Promise.all([
+                request(courseApi + '?' + query(0)),
                 enrollmentListLoaded ? Promise.resolve(null) : request('/api/v1/cliente/inscripciones').then((result) => {
                     if (!Array.isArray(result)) throw new Error('No se pudo comprobar el estado de tus inscripciones. Recarga la página.');
                     return result;
@@ -361,20 +361,38 @@
                 enrollmentListLoaded = true;
             }
             if (thisLoad !== courseLoadNumber) return;
-            if (data.totalPaginas > 0 && coursePage >= data.totalPaginas) { coursePage = data.totalPaginas - 1; return loadCourses(); }
-            if (!data.totalPaginas) coursePage = 0;
-            updateOverviewCount('overview-course-count', data.totalElementos);
+            const inicio = coursePage * size;
+            const cursosDisponibles = [];
+            let paginaActual = firstPage;
+            let paginaCruda = 0;
+            while (paginaActual && paginaCruda < paginaActual.totalPaginas && cursosDisponibles.length <= inicio + size) {
+                if (paginaCruda > 0) paginaActual = await request(courseApi + '?' + query(paginaCruda));
+                if (thisLoad !== courseLoadNumber) return;
+                cursosDisponibles.push(...paginaActual.contenido.filter((course) => !enrolledCourseIds.has(String(course.idCurso))));
+                paginaCruda += 1;
+            }
+            updateOverviewCount('overview-course-count', firstPage.totalElementos);
             updateOverviewCount('overview-enrollment-count', clientEnrollments.length);
-            const availableCourses = data.contenido.filter((course) => !enrolledCourseIds.has(String(course.idCurso)));
+            if (coursePage > 0 && cursosDisponibles.length <= inicio) {
+                coursePage = Math.max(0, Math.ceil(cursosDisponibles.length / size) - 1);
+                return loadCourses();
+            }
+            const availableCourses = cursosDisponibles.slice(inicio, inicio + size);
             replaceGridCards(courseGrid, availableCourses.map((course) => catalogCard(course, 'course')));
             courseStatus.textContent = availableCourses.length
-                ? availableCourses.length + (availableCourses.length === 1 ? ' curso disponible en esta página.' : ' cursos disponibles en esta página.')
-                : data.totalElementos
-                    ? 'Ya estás inscrito en los cursos que aparecen en esta página.'
+                ? 'Mostrando ' + availableCourses.length + (availableCourses.length === 1 ? ' curso disponible.' : ' cursos disponibles.')
+                : firstPage.totalElementos
+                    ? 'Ya estás inscrito en todos los cursos que coinciden con estos filtros.'
                     : 'No hay cursos activos que coincidan con los filtros seleccionados.';
-            renderPagination(data,
-                document.getElementById('course-previous-page'), document.getElementById('course-next-page'),
-                document.getElementById('course-page-indicator'), coursePagination);
+            const previous = document.getElementById('course-previous-page');
+            const next = document.getElementById('course-next-page');
+            const indicator = document.getElementById('course-page-indicator');
+            const hasPrevious = coursePage > 0;
+            const hasNext = cursosDisponibles.length > inicio + size;
+            coursePagination.hidden = !hasPrevious && !hasNext;
+            previous.disabled = !hasPrevious;
+            next.disabled = !hasNext;
+            indicator.textContent = 'Página ' + (coursePage + 1);
         } catch (error) {
             if (thisLoad !== courseLoadNumber) return;
             setGridLoading(courseGrid, false);

@@ -44,7 +44,8 @@ public class ArchivoCursoService {
         if (tipo == null) throw new SolicitudInvalidaException("Tipo de archivo no permitido");
         if (portada && !"IMAGEN".equals(tipo)) throw new SolicitudInvalidaException("La portada debe ser una imagen PNG, JPG, WEBP o GIF");
         String nombreGuardado = UUID.randomUUID() + "." + extension;
-        Path carpeta = directorio.resolve("cursos").resolve(String.valueOf(idCurso)).normalize();
+        String tipoCarpeta = portada ? "portadas" : "recursos";
+        Path carpeta = directorio.resolve("cursos").resolve(String.valueOf(idCurso)).resolve(tipoCarpeta).normalize();
         if (!carpeta.startsWith(directorio)) throw new SolicitudInvalidaException("Ruta de archivo inválida");
         try {
             Files.createDirectories(carpeta);
@@ -52,6 +53,33 @@ public class ArchivoCursoService {
         } catch (IOException e) {
             throw new IllegalStateException("No se pudo guardar el archivo del curso", e);
         }
-        return new ArchivoCursoDTO("/archivos/cursos/" + idCurso + "/" + nombreGuardado, nombre, tipo);
+        return new ArchivoCursoDTO("/archivos/cursos/" + idCurso + "/" + tipoCarpeta + "/" + nombreGuardado, nombre, tipo);
+    }
+
+    public Path obtener(Long idCurso, String carpeta, String nombreArchivo) {
+        if (idCurso == null || idCurso <= 0 || !("portadas".equals(carpeta) || "recursos".equals(carpeta))
+                || nombreArchivo == null || !nombreArchivo.matches("[0-9a-fA-F-]{36}\\.[a-zA-Z0-9]{2,5}")) {
+            throw new SolicitudInvalidaException("La ruta del archivo no es válida");
+        }
+        Path archivo = directorio.resolve("cursos").resolve(String.valueOf(idCurso))
+                .resolve(carpeta).resolve(nombreArchivo).normalize();
+        Path carpetaBase = directorio.resolve("cursos").resolve(String.valueOf(idCurso)).resolve(carpeta).normalize();
+        if (!archivo.startsWith(carpetaBase) || !Files.isRegularFile(archivo)) {
+            throw new sv.edu.udb.ucacfcconnect.exception.RecursoNoEncontradoException("Archivo", idCurso);
+        }
+        return archivo;
+    }
+
+    public Path obtenerAnterior(Long idCurso, String nombreArchivo) {
+        if (idCurso == null || idCurso <= 0 || nombreArchivo == null
+                || !nombreArchivo.matches("[0-9a-fA-F-]{36}\\.[a-zA-Z0-9]{2,5}")) {
+            throw new SolicitudInvalidaException("La ruta del archivo no es válida");
+        }
+        Path carpeta = directorio.resolve("cursos").resolve(String.valueOf(idCurso)).normalize();
+        Path archivo = carpeta.resolve(nombreArchivo).normalize();
+        if (!archivo.startsWith(carpeta) || !Files.isRegularFile(archivo)) {
+            throw new sv.edu.udb.ucacfcconnect.exception.RecursoNoEncontradoException("Archivo", idCurso);
+        }
+        return archivo;
     }
 }

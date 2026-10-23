@@ -116,6 +116,12 @@
         }
         const progress = document.getElementById('course-progress');
         const progressMessage = document.getElementById('course-progress-message');
+        const completion = document.getElementById('course-completion');
+        completion.hidden = !enrollment?.finalizado;
+        if (enrollment?.finalizado) {
+            document.getElementById('course-certificate-link').href =
+                `/api/v1/cliente/cursos/${encodeURIComponent(curso.idCurso)}/certificado`;
+        }
         const completed = new Set(enrollment?.modulosCompletados || []);
         const total = modules.length;
         if (enrollment && enrollment.estado !== 'CONFIRMADA') {
@@ -135,8 +141,8 @@
             document.getElementById('course-progress-fill').style.width = percent + '%';
             progress.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(percent));
             progressMessage.hidden = false;
-            progressMessage.textContent = completed.size === total
-                ? '¡Completaste todo el contenido de este curso!'
+            progressMessage.textContent = enrollment.finalizado
+                ? '¡Completaste todo el contenido de este curso! Tu certificado ya está disponible.'
                 : 'Completa cada módulo para desbloquear el siguiente. Tu avance también aparece en Mi aprendizaje.';
         } else {
             progress.hidden = true;
@@ -191,12 +197,17 @@
                     complete.disabled = true;
                     complete.textContent = 'Guardando tu avance…';
                     try {
+                        const yaFinalizado = Boolean(enrollment.finalizado);
                         const actualizada = await secureRequest(`/api/v1/cliente/cursos/${curso.idCurso}/progreso`, {
                             method: 'POST', headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({numeroModulo: number})
                         });
                         Object.assign(enrollment, actualizada);
                         renderProgram(curso.contenidoPrograma, enrollment);
+                        if (!yaFinalizado && actualizada.finalizado) {
+                            progressMessage.textContent = 'Curso finalizado. Estamos descargando tu certificado PDF.';
+                            window.location.assign(`/api/v1/cliente/cursos/${encodeURIComponent(curso.idCurso)}/certificado`);
+                        }
                     } catch (error) {
                         complete.disabled = false;
                         complete.textContent = 'Marcar como completado y desbloquear el siguiente →';

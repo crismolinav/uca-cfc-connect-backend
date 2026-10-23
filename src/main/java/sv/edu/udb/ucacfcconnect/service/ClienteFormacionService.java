@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.dto.InscripcionClienteDTO;
 import sv.edu.udb.ucacfcconnect.dto.InscripcionCursoRequest;
+import sv.edu.udb.ucacfcconnect.dto.CertificadoCursoDTO;
 import sv.edu.udb.ucacfcconnect.entity.*;
 import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.repository.*;
@@ -88,7 +89,7 @@ public class ClienteFormacionService {
         return vista(inscripciones.save(inscripcion));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<InscripcionClienteDTO> inscripciones(Long usuarioId) {
         usuarioCliente(usuarioId);
         Cliente cliente = clientes.findByUsuarioId(usuarioId).orElse(null);
@@ -118,7 +119,35 @@ public class ClienteFormacionService {
         completados.add(numeroModulo);
         inscripcion.setModulosCompletados(completados.stream().map(String::valueOf)
                 .collect(java.util.stream.Collectors.joining(",")));
+        if (completados.size() == total && inscripcion.getFechaFinalizacion() == null) {
+            inscripcion.setFechaFinalizacion(LocalDate.now(ZONA));
+        }
         return vista(inscripciones.save(inscripcion));
+    }
+
+    @Transactional
+    public CertificadoCursoDTO certificado(Long usuarioId, Long cursoId) {
+        usuarioCliente(usuarioId);
+        Inscripcion inscripcion = inscripciones.buscarInscripcionCursoDeUsuario(usuarioId, cursoId).stream()
+                .findFirst().orElseThrow(() -> new ApiException(HttpStatus.FORBIDDEN,
+                        "Necesitas una inscripción para obtener el certificado."));
+        int total = contarModulos(inscripcion.getCurso());
+        Set<Integer> completados = leerModulosCompletados(inscripcion.getModulosCompletados(), total);
+        if (!"CONFIRMADA".equalsIgnoreCase(inscripcion.getEstado()) || total == 0 || completados.size() != total) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "El certificado estará disponible cuando completes el curso y recepción confirme tu pago.");
+        }
+        if (inscripcion.getFechaFinalizacion() == null) {
+            inscripcion.setFechaFinalizacion(LocalDate.now(ZONA));
+            inscripciones.save(inscripcion);
+        }
+        Curso curso = inscripcion.getCurso();
+        List<String> docentes = curso.getDocentes().stream()
+                .map(asignacion -> asignacion.getDocente().getNombre()).toList();
+        String nombre = inscripcion.getParticipante().getNombre() + " " + inscripcion.getParticipante().getApellido();
+        String codigo = "UCA-CFC-" + inscripcion.getFechaFinalizacion().getYear() + "-" + inscripcion.getId();
+        return new CertificadoCursoDTO(nombre, curso.getTitulo(), docentes,
+                inscripcion.getFechaFinalizacion(), codigo);
     }
 
     private Usuario usuarioCliente(Long usuarioId) {
@@ -136,10 +165,16 @@ public class ClienteFormacionService {
         List<Integer> completados = leerModulosCompletados(inscripcion.getModulosCompletados(), totalModulos)
                 .stream().toList();
         int porcentaje = totalModulos == 0 ? 0 : completados.size() * 100 / totalModulos;
+        boolean finalizado = "CONFIRMADA".equalsIgnoreCase(inscripcion.getEstado())
+                && totalModulos > 0 && porcentaje == 100;
+        if (finalizado && inscripcion.getFechaFinalizacion() == null) {
+            inscripcion.setFechaFinalizacion(LocalDate.now(ZONA));
+        }
         return new InscripcionClienteDTO(inscripcion.getId(), curso == null ? null : curso.getIdCurso(),
                 curso == null ? inscripcion.getDiplomado().getNombre() : curso.getTitulo(), inscripcion.getFecha(), inscripcion.getEstado(),
                 inscripcion.getTotal(), curso != null && resenas != null && resenas.existsByInscripcion_Id(inscripcion.getId()),
-                curso == null ? null : curso.getImagenUrl(), completados, totalModulos, porcentaje);
+                curso == null ? null : curso.getImagenUrl(), completados, totalModulos, porcentaje,
+                finalizado, finalizado ? inscripcion.getFechaFinalizacion() : null);
     }
 
     private int contarModulos(Curso curso) {
