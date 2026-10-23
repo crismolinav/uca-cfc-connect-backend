@@ -361,38 +361,35 @@
                 enrollmentListLoaded = true;
             }
             if (thisLoad !== courseLoadNumber) return;
-            const inicio = coursePage * size;
-            const cursosDisponibles = [];
-            let paginaActual = firstPage;
-            let paginaCruda = 0;
-            while (paginaActual && paginaCruda < paginaActual.totalPaginas && cursosDisponibles.length <= inicio + size) {
-                if (paginaCruda > 0) paginaActual = await request(courseApi + '?' + query(paginaCruda));
-                if (thisLoad !== courseLoadNumber) return;
-                cursosDisponibles.push(...paginaActual.contenido.filter((course) => !enrolledCourseIds.has(String(course.idCurso))));
-                paginaCruda += 1;
-            }
+
+            const remainingPages = firstPage.totalPaginas > 1
+                ? await Promise.all(Array.from({length: firstPage.totalPaginas - 1}, (_, index) =>
+                    request(courseApi + '?' + query(index + 1))))
+                : [];
+            if (thisLoad !== courseLoadNumber) return;
+
+            const allCourses = [firstPage, ...remainingPages].flatMap((page) => page.contenido || []);
+            const availableCourses = allCourses.filter((course) => !enrolledCourseIds.has(String(course.idCurso)));
             updateOverviewCount('overview-course-count', firstPage.totalElementos);
             updateOverviewCount('overview-enrollment-count', clientEnrollments.length);
-            if (coursePage > 0 && cursosDisponibles.length <= inicio) {
-                coursePage = Math.max(0, Math.ceil(cursosDisponibles.length / size) - 1);
-                return loadCourses();
-            }
-            const availableCourses = cursosDisponibles.slice(inicio, inicio + size);
-            replaceGridCards(courseGrid, availableCourses.map((course) => catalogCard(course, 'course')));
-            courseStatus.textContent = availableCourses.length
-                ? 'Mostrando ' + availableCourses.length + (availableCourses.length === 1 ? ' curso disponible.' : ' cursos disponibles.')
-                : firstPage.totalElementos
-                    ? 'Ya estás inscrito en todos los cursos que coinciden con estos filtros.'
+
+            const totalPages = Math.ceil(availableCourses.length / size);
+            coursePage = Math.min(coursePage, Math.max(totalPages - 1, 0));
+            const visibleCourses = availableCourses.slice(coursePage * size, (coursePage + 1) * size);
+            replaceGridCards(courseGrid, visibleCourses.map((course) => catalogCard(course, 'course')));
+            courseStatus.textContent = visibleCourses.length
+                ? visibleCourses.length + (visibleCourses.length === 1 ? ' curso disponible en esta página.' : ' cursos disponibles en esta página.')
+                : allCourses.length
+                    ? 'Ya estás inscrito en todos los cursos que coinciden con los filtros.'
                     : 'No hay cursos activos que coincidan con los filtros seleccionados.';
-            const previous = document.getElementById('course-previous-page');
-            const next = document.getElementById('course-next-page');
-            const indicator = document.getElementById('course-page-indicator');
-            const hasPrevious = coursePage > 0;
-            const hasNext = cursosDisponibles.length > inicio + size;
-            coursePagination.hidden = !hasPrevious && !hasNext;
-            previous.disabled = !hasPrevious;
-            next.disabled = !hasNext;
-            indicator.textContent = 'Página ' + (coursePage + 1);
+
+            renderPagination({
+                paginaActual: coursePage,
+                totalPaginas: totalPages,
+                primera: coursePage === 0,
+                ultima: totalPages === 0 || coursePage >= totalPages - 1
+            }, document.getElementById('course-previous-page'),
+            document.getElementById('course-next-page'), document.getElementById('course-page-indicator'), coursePagination);
         } catch (error) {
             if (thisLoad !== courseLoadNumber) return;
             setGridLoading(courseGrid, false);
@@ -514,6 +511,13 @@
     document.getElementById('reservation-close').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());
     document.getElementById('reservation-cancel').addEventListener('click', () => document.getElementById('space-reservation-dialog').close());
     document.getElementById('space-reservation-dialog').addEventListener('close', restoreDetailFocus);
+
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            enrollmentListLoaded = false;
+            loadCourses();
+        }
+    });
 
     const initialQuery = new URLSearchParams(window.location.search).get('q');
     if (initialQuery?.trim()) searchInput.value = initialQuery.trim();
