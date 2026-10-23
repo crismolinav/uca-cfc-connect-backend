@@ -34,5 +34,10 @@ class RecepcionFrontendIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("usuario?.rol === \"RECEPCIONISTA\"")))
                 .andExpect(content().string(containsString("/recepcion/index.html")));
+
+        mvc.perform(get("/js/recepcion.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("[state.catalogos, state.espacios]")))
+                .andExpect(content().string(containsString("request(api + '/espacios')")));
     }
 }
