@@ -50,6 +50,27 @@ class AdminOperacionesIntegrationTests {
     @Autowired RecepcionOperacionesService operaciones;
 
     @Test
+    void cotizacionesCargaCatalogosYListadoSinFiltros() throws Exception {
+        String admin = token("ADMIN", "admin-cotizaciones@example.com");
+
+        mvc.perform(get("/api/v1/cotizaciones/catalogos")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/clientes")
+                        .param("page", "0").param("size", "100")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/espacios")
+                        .param("pagina", "0").param("tamano", "100").param("ordenarPor", "nombre")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/cotizaciones")
+                        .param("pagina", "0").param("tamano", "10").param("direccion", "desc")
+                        .header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void soloAdminPuedeCrearRecursosYConsultarPagos() throws Exception {
         String admin = token("ADMIN", "admin-operaciones@example.com");
         String recepcion = token("RECEPCIONISTA", "recepcion-operaciones@example.com");
