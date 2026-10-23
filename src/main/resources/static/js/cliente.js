@@ -17,19 +17,35 @@
     const diplomaStatus = document.getElementById('diploma-list-status');
     const diplomaPagination = document.getElementById('diploma-pagination');
     const diplomaDetailDialog = document.getElementById('diploma-detail-dialog');
-    const size = 8;
+    const size = 6;
     let coursePage = 0;
     let diplomaPage = 0;
     let courseLoadNumber = 0;
     let diplomaLoadNumber = 0;
+    let spaceLoadNumber = 0;
     let diplomaDetailLoadNumber = 0;
     let detailTrigger = null;
     let spacePage = 0;
+    let activeCatalogView = 'courses';
     let selectedSpace = null;
     let csrfToken = null;
     let enrolledCourseIds = new Set();
     let clientEnrollments = [];
     let enrollmentListLoaded = false;
+
+    function setCatalogView(view, scroll = false) {
+        const sections = {courses: 'explorar', diplomas: 'diplomados', spaces: 'espacios'};
+        if (!sections[view]) return;
+        activeCatalogView = view;
+        Object.entries(sections).forEach(([key, id]) => {
+            document.getElementById(id).hidden = key !== view;
+            const button = document.querySelector('[data-catalog-view="' + key + '"]');
+            button.classList.toggle('is-active', key === view);
+            button.setAttribute('aria-pressed', String(key === view));
+        });
+        document.getElementById('catalog-filters').hidden = view === 'spaces';
+        if (scroll) scrollToSection(sections[view]);
+    }
 
     async function request(url) {
         const response = await fetch(url, {credentials: 'same-origin'});
@@ -82,6 +98,30 @@
         if (className) node.className = className;
         if (text !== undefined) node.textContent = text;
         return node;
+    }
+
+    function updateOverviewCount(id, value) {
+        const counter = document.getElementById(id);
+        if (counter) counter.textContent = new Intl.NumberFormat('es-SV').format(value);
+    }
+
+    function setGridLoading(grid, loading) {
+        grid.classList.toggle('is-loading', loading);
+        grid.setAttribute('aria-busy', String(loading));
+    }
+
+    function replaceGridCards(grid, cards) {
+        grid.replaceChildren(...cards);
+        setGridLoading(grid, false);
+    }
+
+    function preparePagination(container) {
+        container.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+    }
+
+    function scrollToSection(id) {
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        document.getElementById(id).scrollIntoView({behavior, block: 'start'});
     }
 
     function fact(label, value) {
@@ -141,14 +181,22 @@
     }
 
     async function loadSpaces() {
+        const thisLoad = ++spaceLoadNumber;
         const status = document.getElementById('space-list-status'), grid = document.getElementById('space-grid'), pagination = document.getElementById('space-pagination');
-        status.textContent = 'Cargando espacios disponibles...'; grid.replaceChildren(); pagination.hidden = true;
+        status.textContent = 'Cargando espacios disponibles...'; status.classList.remove('is-error'); setGridLoading(grid, true); preparePagination(pagination);
         try {
-            const params = new URLSearchParams({disponible: 'true', pagina: String(spacePage), tamano: '8', ordenarPor: 'capacidad', direccion: 'asc'});
-            const data = await request(spaceApi + '?' + params); data.contenido.forEach(space => grid.append(spaceCard(space)));
-            status.textContent = data.totalElementos ? data.totalElementos + (data.totalElementos === 1 ? ' espacio disponible.' : ' espacios disponibles.') : 'Por ahora no hay espacios disponibles para reservar.';
+            const params = new URLSearchParams({disponible: 'true', pagina: String(spacePage), tamano: String(size), ordenarPor: 'capacidad', direccion: 'asc'});
+            const data = await request(spaceApi + '?' + params);
+            if (thisLoad !== spaceLoadNumber) return;
+            if (data.totalPaginas > 0 && spacePage >= data.totalPaginas) { spacePage = data.totalPaginas - 1; return loadSpaces(); }
+            replaceGridCards(grid, data.contenido.map(spaceCard));
+            updateOverviewCount('overview-space-count', data.totalElementos);
+            status.textContent = data.totalElementos ? data.contenido.length + (data.contenido.length === 1 ? ' espacio en esta página.' : ' espacios en esta página.') : 'Por ahora no hay espacios disponibles para reservar.';
             renderPagination(data, document.getElementById('space-previous-page'), document.getElementById('space-next-page'), document.getElementById('space-page-indicator'), pagination);
-        } catch (error) { status.classList.add('is-error'); status.textContent = error.message; }
+        } catch (error) {
+            if (thisLoad !== spaceLoadNumber) return;
+            setGridLoading(grid, false); status.classList.add('is-error'); status.textContent = error.message;
+        }
     }
 
     function rentalBadge(state) { return element('span', 'rental-state state-' + state.toLowerCase(), ({PENDIENTE:'Pendiente',CONFIRMADO:'Confirmada',CANCELADO:'Cancelada',FINALIZADO:'Finalizada'}[state] || state)); }
@@ -281,18 +329,19 @@
     }
 
     function renderPagination(data, previous, next, indicator, container) {
-        container.hidden = data.totalElementos === 0;
-        previous.disabled = data.primera;
-        next.disabled = data.ultima;
-        indicator.textContent = 'Página ' + (data.paginaActual + 1) + ' de ' + Math.max(data.totalPaginas, 1);
+        container.hidden = data.totalPaginas <= 1;
+        container.dataset.totalPages = String(data.totalPaginas || 0);
+        previous.disabled = Boolean(data.primera) || data.paginaActual <= 0;
+        next.disabled = Boolean(data.ultima) || data.paginaActual >= data.totalPaginas - 1;
+        indicator.textContent = 'Página ' + (data.paginaActual + 1) + ' de ' + Math.max(data.totalPaginas || 0, 1);
     }
 
     async function loadCourses() {
         const thisLoad = ++courseLoadNumber;
         courseStatus.textContent = 'Cargando cursos disponibles...';
         courseStatus.classList.remove('is-error');
-        courseGrid.replaceChildren();
-        coursePagination.hidden = true;
+        setGridLoading(courseGrid, true);
+        preparePagination(coursePagination);
         try {
             const [data, enrollments] = await Promise.all([
                 request(courseApi + '?' + query(coursePage)),
@@ -312,8 +361,12 @@
                 enrollmentListLoaded = true;
             }
             if (thisLoad !== courseLoadNumber) return;
+            if (data.totalPaginas > 0 && coursePage >= data.totalPaginas) { coursePage = data.totalPaginas - 1; return loadCourses(); }
+            if (!data.totalPaginas) coursePage = 0;
+            updateOverviewCount('overview-course-count', data.totalElementos);
+            updateOverviewCount('overview-enrollment-count', clientEnrollments.length);
             const availableCourses = data.contenido.filter((course) => !enrolledCourseIds.has(String(course.idCurso)));
-            availableCourses.forEach((course) => courseGrid.append(catalogCard(course, 'course')));
+            replaceGridCards(courseGrid, availableCourses.map((course) => catalogCard(course, 'course')));
             courseStatus.textContent = availableCourses.length
                 ? availableCourses.length + (availableCourses.length === 1 ? ' curso disponible en esta página.' : ' cursos disponibles en esta página.')
                 : data.totalElementos
@@ -324,6 +377,7 @@
                 document.getElementById('course-page-indicator'), coursePagination);
         } catch (error) {
             if (thisLoad !== courseLoadNumber) return;
+            setGridLoading(courseGrid, false);
             courseStatus.classList.add('is-error');
             courseStatus.textContent = error.message || 'No se pudo cargar el catálogo de cursos.';
         }
@@ -333,20 +387,24 @@
         const thisLoad = ++diplomaLoadNumber;
         diplomaStatus.textContent = 'Cargando diplomados disponibles...';
         diplomaStatus.classList.remove('is-error');
-        diplomaGrid.replaceChildren();
-        diplomaPagination.hidden = true;
+        setGridLoading(diplomaGrid, true);
+        preparePagination(diplomaPagination);
         try {
             const data = await request(diplomaApi + '?' + query(diplomaPage));
             if (thisLoad !== diplomaLoadNumber) return;
-            data.contenido.forEach((diploma) => diplomaGrid.append(catalogCard(diploma, 'diploma')));
+            if (data.totalPaginas > 0 && diplomaPage >= data.totalPaginas) { diplomaPage = data.totalPaginas - 1; return loadDiplomas(); }
+            if (!data.totalPaginas) diplomaPage = 0;
+            updateOverviewCount('overview-diploma-count', data.totalElementos);
+            replaceGridCards(diplomaGrid, data.contenido.map((diploma) => catalogCard(diploma, 'diploma')));
             diplomaStatus.textContent = data.totalElementos
-                ? data.totalElementos + (data.totalElementos === 1 ? ' diplomado disponible.' : ' diplomados disponibles.')
+                ? data.contenido.length + (data.contenido.length === 1 ? ' diplomado en esta página.' : ' diplomados en esta página.')
                 : 'No hay diplomados activos que coincidan con los filtros seleccionados.';
             renderPagination(data,
                 document.getElementById('diploma-previous-page'), document.getElementById('diploma-next-page'),
                 document.getElementById('diploma-page-indicator'), diplomaPagination);
         } catch (error) {
             if (thisLoad !== diplomaLoadNumber) return;
+            setGridLoading(diplomaGrid, false);
             diplomaStatus.classList.add('is-error');
             diplomaStatus.textContent = error.message || 'No se pudo cargar el catálogo de diplomados.';
         }
@@ -354,7 +412,7 @@
 
     async function loadAll(scroll = false) {
         await Promise.all([loadCourses(), loadDiplomas()]);
-        if (scroll) document.getElementById('explorar').scrollIntoView({behavior: 'smooth', block: 'start'});
+        if (scroll) scrollToSection({courses: 'explorar', diplomas: 'diplomados', spaces: 'espacios'}[activeCatalogView]);
     }
 
     async function openDiplomaDetail(diploma, trigger) {
@@ -398,6 +456,7 @@
 
     searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
+        setCatalogView('courses');
         coursePage = 0;
         diplomaPage = 0;
         loadAll(true);
@@ -415,12 +474,22 @@
         diplomaPage = 0;
         loadAll(true);
     });
-    document.getElementById('course-previous-page').addEventListener('click', () => { coursePage -= 1; loadCourses(); });
-    document.getElementById('course-next-page').addEventListener('click', () => { coursePage += 1; loadCourses(); });
-    document.getElementById('diploma-previous-page').addEventListener('click', () => { diplomaPage -= 1; loadDiplomas(); });
-    document.getElementById('diploma-next-page').addEventListener('click', () => { diplomaPage += 1; loadDiplomas(); });
-    document.getElementById('space-previous-page').addEventListener('click', () => { spacePage -= 1; loadSpaces(); });
-    document.getElementById('space-next-page').addEventListener('click', () => { spacePage += 1; loadSpaces(); });
+    document.querySelectorAll('[data-catalog-view]').forEach((button) => {
+        button.addEventListener('click', () => setCatalogView(button.dataset.catalogView, true));
+    });
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href="#explorar"], a[href="#diplomados"], a[href="#espacios"]');
+        if (!link) return;
+        event.preventDefault();
+        const view = {'#explorar': 'courses', '#diplomados': 'diplomas', '#espacios': 'spaces'}[link.getAttribute('href')];
+        setCatalogView(view, true);
+    });
+    document.getElementById('course-previous-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { coursePage = Math.max(0, coursePage - 1); scrollToSection('explorar'); loadCourses(); } });
+    document.getElementById('course-next-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { coursePage += 1; scrollToSection('explorar'); loadCourses(); } });
+    document.getElementById('diploma-previous-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { diplomaPage = Math.max(0, diplomaPage - 1); scrollToSection('diplomados'); loadDiplomas(); } });
+    document.getElementById('diploma-next-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { diplomaPage += 1; scrollToSection('diplomados'); loadDiplomas(); } });
+    document.getElementById('space-previous-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { spacePage = Math.max(0, spacePage - 1); scrollToSection('espacios'); loadSpaces(); } });
+    document.getElementById('space-next-page').addEventListener('click', (event) => { if (!event.currentTarget.disabled) { spacePage += 1; scrollToSection('espacios'); loadSpaces(); } });
     document.getElementById('diploma-detail-close').addEventListener('click', () => diplomaDetailDialog.close());
     diplomaDetailDialog.addEventListener('close', restoreDetailFocus);
     document.getElementById('reservation-form').addEventListener('submit', submitReservation);
@@ -430,6 +499,8 @@
 
     const initialQuery = new URLSearchParams(window.location.search).get('q');
     if (initialQuery?.trim()) searchInput.value = initialQuery.trim();
+    const initialView = {'#diplomados': 'diplomas', '#espacios': 'spaces'}[window.location.hash] || 'courses';
+    setCatalogView(initialView);
     loadCatalogs();
     loadAll(Boolean(initialQuery?.trim()));
     loadSpaces();

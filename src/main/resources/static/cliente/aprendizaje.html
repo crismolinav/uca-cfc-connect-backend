@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Tu espacio de aprendizaje en UCA CFC Connect.">
     <title>Mi aprendizaje | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/cliente.css?v=20261022-11">
+    <link rel="stylesheet" href="/css/cliente.css?v=20261022-15">
     <script src="/js/client-shell.js" defer></script>
     <script src="/js/auth.js" defer></script>
-    <script src="/js/aprendizaje.js?v=20261022-5" defer></script>
+    <script src="/js/aprendizaje.js?v=20261022-6" defer></script>
 </head>
 <body data-page="aprendizaje">
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -40,19 +40,32 @@
     <p id="client-error" class="error-message" role="alert"></p>
     <div id="client-content" hidden>
         <section class="learning-intro" aria-labelledby="learning-title">
-            <div class="learning-intro-copy">
-                <span id="learning-avatar" class="intro-avatar" aria-hidden="true">U</span>
-                <div><span class="learning-eyebrow">Tu espacio de formación</span><h1 id="learning-title">Hola, <span id="client-name"></span></h1><p>Continúa donde lo dejaste y revisa tu avance.</p></div>
+            <div class="learning-cover-banner" aria-hidden="true">
+                <span>FORMACIÓN CONTINUA · UCA</span>
+                <svg viewBox="0 0 180 130"><path d="M24 30c27-8 48-3 66 12v65c-18-15-39-20-66-12V30Zm132 0c-27-8-48-3-66 12v65c18-15 39-20 66-12V30Z"></path><path d="M36 48c16-3 30-1 42 6M36 62c16-3 30-1 42 6m66-20c-16-3-30-1-42 6m42 8c-16-3-30-1-42 6"></path></svg>
+                <span class="learning-cover-orbit"></span>
             </div>
-            <div class="learning-summary" aria-label="Resumen de aprendizaje">
-                <div><span>Cursos inscritos</span><strong id="learning-course-count">0</strong></div>
-                <div><span>Avance promedio</span><strong id="learning-average-progress">0%</strong></div>
-                <div><span>Pagos pendientes</span><strong id="learning-pending-count">0</strong></div>
+            <div class="learning-profile-card">
+                <div class="learning-profile-main">
+                    <span id="learning-avatar" class="intro-avatar learning-profile-avatar" aria-hidden="true">U</span>
+                    <div class="learning-profile-copy"><span class="learning-eyebrow">Tu espacio de formación</span><h1 id="learning-title">Hola, <span id="client-name"></span></h1><p>Continúa donde lo dejaste y revisa tu avance.</p></div>
+                </div>
+                <div class="learning-profile-contact">
+                    <div><span>Estudiante</span><strong id="client-full-name"></strong></div>
+                    <div><span>Correo</span><strong id="client-email"></strong></div>
+                </div>
+                <div class="learning-summary" aria-label="Resumen de aprendizaje">
+                    <div><span>Cursos inscritos</span><strong id="learning-course-count">0</strong></div>
+                    <div><span>Avance promedio</span><strong id="learning-average-progress">0%</strong></div>
+                    <div><span>Pagos pendientes</span><strong id="learning-pending-count">0</strong></div>
+                </div>
             </div>
         </section>
         <p id="learning-status" class="learning-note" role="status">Cargando tus cursos y pagos...</p>
-        <section class="learning-section" aria-labelledby="enrolled-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Sigue aprendiendo</span><h2 id="enrolled-title">Mis inscripciones</h2></div><a href="/cliente/index.html#explorar">Explorar cursos <span aria-hidden="true">→</span></a></div><div id="enrolled-courses" class="learning-list"></div></section>
-        <section class="learning-section" aria-labelledby="payments-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Estado de cuenta</span><h2 id="payments-title">Mis pagos</h2></div></div><div id="client-payments" class="learning-list"></div></section>
+        <div class="learning-dashboard-grid">
+            <section class="learning-section learning-enrollments-section" aria-labelledby="enrolled-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Sigue aprendiendo</span><h2 id="enrolled-title">Mis inscripciones</h2></div><a href="/cliente/index.html#explorar">Explorar cursos <span aria-hidden="true">→</span></a></div><div id="enrolled-courses" class="learning-list"></div></section>
+            <section class="learning-section learning-payments-section" aria-labelledby="payments-title"><div class="learning-section-heading"><div><span class="learning-section-kicker">Estado de cuenta</span><h2 id="payments-title">Mis pagos</h2></div></div><div id="client-payments" class="learning-list"></div></section>
+        </div>
     </div>
 </main>
 <dialog id="client-payment-dialog" class="course-detail-dialog" aria-labelledby="client-payment-title">

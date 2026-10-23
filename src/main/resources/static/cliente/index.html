@@ -5,18 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Catálogo de cursos, diplomados y espacio de aprendizaje de UCA CFC Connect.">
     <title>Inicio | UCA CFC Connect</title>
-    <link rel="stylesheet" href="/css/cliente.css?v=20261022-10">
+    <link rel="stylesheet" href="/css/cliente.css?v=20261022-15">
     <script src="/js/client-shell.js" defer></script>
     <script src="/js/auth.js" defer></script>
-    <script src="/js/cliente.js?v=20261022-6" defer></script>
+    <script src="/js/cliente.js?v=20261022-9" defer></script>
 </head>
 <body data-page="cliente">
-<!-- THESIS: El cliente entra a una página de descubrimiento, no a una ficha de perfil.
-OWN-WORLD: Azul CFC, fondos celestes, tarjetas de formación y fotografía educativa propia.
-STORY: Saludar, elegir un interés, explorar formatos y mantener la cuenta al alcance.
-FIRST VIEWPORT: Navegación compacta, bienvenida, intereses y dos bloques para retomar la exploración.
-FORM: Adaptación directa de las capturas aportadas por el usuario; sin cursos ficticios.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md. -->
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 <header class="site-header">
     <div class="header-inner">
@@ -47,10 +41,49 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <p id="client-loading" class="loading page-shell" role="status">Cargando tu espacio...</p>
     <p id="client-error" class="error-message page-shell" role="alert"></p>
     <div id="client-content" hidden>
-        <section class="welcome-band" aria-labelledby="welcome-title"><div class="page-shell"><h1 id="welcome-title">Bienvenido/a, <span id="client-name"></span></h1></div></section>
+        <section class="welcome-band" aria-labelledby="welcome-title">
+            <div class="page-shell welcome-inner">
+                <div class="welcome-copy">
+                    <span class="welcome-eyebrow">Formación continua · UCA</span>
+                    <h1 id="welcome-title">Bienvenido/a, <span id="client-name"></span></h1>
+                    <p>Encuentra cursos y diplomados para aprender algo nuevo y avanzar a tu ritmo.</p>
+                    <a class="welcome-action" href="#explorar">Explorar formación <span aria-hidden="true">→</span></a>
+                </div>
+                <div class="welcome-art" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+        </section>
 
         <div class="page-shell dashboard-content">
-            <section class="interest-panel" aria-labelledby="interest-title">
+            <section class="overview-section" aria-labelledby="overview-title">
+                <h2 id="overview-title">Tu resumen</h2>
+                <article class="overview-card overview-card-courses">
+                    <span class="overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"></path><path d="M4 5.5v15M8 7h8M8 11h8"></path></svg></span>
+                    <span class="overview-copy"><small>Catálogo</small><strong id="overview-course-count">—</strong><span>Cursos en catálogo</span></span>
+                </article>
+                <article class="overview-card overview-card-enrollments">
+                    <span class="overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 8h5M19.5 5.5v5"></path></svg></span>
+                    <span class="overview-copy"><small>Tu actividad</small><strong id="overview-enrollment-count">—</strong><span>Cursos inscritos</span></span>
+                </article>
+                <article class="overview-card overview-card-diplomas">
+                    <span class="overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v13H4zM8 21h8M12 17v4M8 8h8M8 12h5"></path></svg></span>
+                    <span class="overview-copy"><small>Formación extensa</small><strong id="overview-diploma-count">—</strong><span>Diplomados activos</span></span>
+                </article>
+                <article class="overview-card overview-card-spaces">
+                    <span class="overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 21v-4h4v4"></path></svg></span>
+                    <span class="overview-copy"><small>Para tus actividades</small><strong id="overview-space-count">—</strong><span>Espacios disponibles</span></span>
+                </article>
+            </section>
+
+            <section class="catalog-choice" aria-labelledby="catalog-choice-title">
+                <div class="catalog-choice-heading"><h2 id="catalog-choice-title">¿Qué quieres consultar?</h2><p>Elige una opción para ver su información.</p></div>
+                <div class="catalog-choice-list" role="group" aria-label="Tipo de información">
+                    <button class="catalog-choice-button is-active" type="button" data-catalog-view="courses" aria-pressed="true" aria-controls="explorar"><span class="catalog-choice-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21zM4 5.5v15M8 7h8M8 11h8"></path></svg></span><span><strong>Cursos</strong><small>Explora cursos e inscríbete</small></span><span class="catalog-choice-arrow" aria-hidden="true">→</span></button>
+                    <button class="catalog-choice-button" type="button" data-catalog-view="diplomas" aria-pressed="false" aria-controls="diplomados"><span class="catalog-choice-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v13H4zM8 21h8M12 17v4M8 8h8M8 12h5"></path></svg></span><span><strong>Diplomados</strong><small>Consulta programas y sesiones</small></span><span class="catalog-choice-arrow" aria-hidden="true">→</span></button>
+                    <button class="catalog-choice-button" type="button" data-catalog-view="spaces" aria-pressed="false" aria-controls="espacios"><span class="catalog-choice-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 21v-4h4v4"></path></svg></span><span><strong>Espacios</strong><small>Busca y solicita un espacio</small></span><span class="catalog-choice-arrow" aria-hidden="true">→</span></button>
+                </div>
+            </section>
+
+            <section class="interest-panel" id="catalog-filters" aria-labelledby="interest-title">
                 <h2 id="interest-title">Encuentra tu próxima formación</h2>
                 <div class="course-filter-grid">
                     <div class="course-filter-field">
@@ -66,18 +99,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                 <p class="interest-status">Solo se muestran cursos y diplomados activos publicados por el CFC.</p>
             </section>
 
-            <section class="resume-section" id="aprendizaje" aria-labelledby="resume-title">
-                <h2 id="resume-title">Empieza a explorar</h2>
-                <div class="resume-grid">
-                    <div class="resume-box"><h3>Mi aprendizaje</h3><div class="resume-empty"><strong>Tu espacio para seguir aprendiendo</strong><p>El seguimiento de actividad aún no está disponible. Por ahora, conoce los formatos de formación del CFC.</p><a href="#explorar">Explorar formatos <span aria-hidden="true">→</span></a></div></div>
-                    <div class="resume-box"><h3>Para comenzar</h3><div class="resume-list">
-                        <a href="#explorar"><span class="mini-cover mini-cover-blue" aria-hidden="true">C</span><span><small>Oferta académica</small><strong>Cursos disponibles</strong><small>Consulta fechas, horarios y costos</small></span><span aria-hidden="true">→</span></a>
-                        <a href="#course-category-filter"><span class="mini-cover mini-cover-gold" aria-hidden="true">T</span><span><small>Encuentra lo que buscas</small><strong>Categorías</strong><small>Filtra los cursos por temática</small></span><span aria-hidden="true">→</span></a>
-                        <a href="#course-modality-filter"><span class="mini-cover mini-cover-purple" aria-hidden="true">M</span><span><small>Elige cómo aprender</small><strong>Modalidades</strong><small>Presencial, virtual o híbrida</small></span><span aria-hidden="true">→</span></a>
-                    </div></div>
-                </div>
-            </section>
-
             <section class="catalog-section" id="explorar" aria-labelledby="catalog-title">
                 <div class="section-heading"><h2 id="catalog-title">Cursos disponibles</h2><p>Consulta la oferta activa, sus fechas, horarios, modalidad y costo.</p></div>
                 <p id="course-list-status" class="course-list-status" role="status">Cargando cursos disponibles...</p>
@@ -89,7 +110,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                 </nav>
             </section>
 
-            <section class="catalog-section" id="diplomados" aria-labelledby="diploma-catalog-title">
+            <section class="catalog-section" id="diplomados" aria-labelledby="diploma-catalog-title" hidden>
                 <div class="section-heading"><h2 id="diploma-catalog-title">Diplomados disponibles</h2><p>Explora programas de formación extensos y consulta todas sus sesiones programadas.</p></div>
                 <p id="diploma-list-status" class="course-list-status" role="status">Cargando diplomados disponibles...</p>
                 <div class="catalog-grid" id="diploma-grid" aria-live="polite"></div>
@@ -100,7 +121,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
                 </nav>
             </section>
 
-            <section class="catalog-section space-catalog-section" id="espacios" aria-labelledby="space-catalog-title">
+            <section class="catalog-section space-catalog-section" id="espacios" aria-labelledby="space-catalog-title" hidden>
                 <div class="section-heading"><span class="section-eyebrow">Alquiler de espacios</span><h2 id="space-catalog-title">Encuentra el lugar para tu actividad</h2><p>Consulta capacidad, equipamiento y precio. Tu solicitud quedará pendiente de confirmación por el CFC.</p></div>
                 <p id="space-list-status" class="course-list-status" role="status">Cargando espacios disponibles...</p>
                 <div class="catalog-grid" id="space-grid" aria-live="polite"></div>

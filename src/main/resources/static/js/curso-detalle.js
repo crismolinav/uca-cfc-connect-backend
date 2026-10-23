@@ -118,6 +118,16 @@
         const progressMessage = document.getElementById('course-progress-message');
         const completed = new Set(enrollment?.modulosCompletados || []);
         const total = modules.length;
+        if (enrollment && enrollment.estado !== 'CONFIRMADA') {
+            progress.hidden = true;
+            progressMessage.hidden = false;
+            progressMessage.classList.add('course-access-blocked');
+            progressMessage.replaceChildren(icon('lock', 'interface-icon'),
+                document.createTextNode('Tu acceso al curso está bloqueado. Podrás comenzar cuando recepción verifique y confirme tu pago.'));
+            container.append(node('p', 'course-module-empty', 'El contenido se habilitará después de confirmar el pago.'));
+            return;
+        }
+        progressMessage.classList.remove('course-access-blocked');
         if (enrollment && total) {
             const percent = enrollment.progresoPorcentaje || 0;
             progress.hidden = false;
@@ -282,7 +292,9 @@
         button.disabled = alreadyEnrolled;
         button.textContent = alreadyEnrolled ? 'Ya estás inscrito' : 'Inscribirme';
         put('course-enroll-status', alreadyEnrolled
-            ? 'Ya tienes una inscripción para este curso. Puedes consultar el estado del pago en Mi aprendizaje.'
+            ? enrollment?.estado === 'CONFIRMADA'
+                ? 'Tu inscripción está confirmada. Ya puedes acceder al contenido del curso.'
+                : 'Tu acceso está bloqueado hasta que recepción verifique y confirme tu pago.'
             : 'La inscripción quedará pendiente de pago. Podrás continuar desde Mi aprendizaje.');
         content.hidden = false;
         loading.hidden = true;
@@ -406,13 +418,13 @@
             return;
         }
         try {
-            curso = await request(api + '/' + encodeURIComponent(id));
             try {
                 const result = await request('/api/v1/cliente/inscripciones');
                 if (Array.isArray(result)) inscripciones = result;
             } catch (error) {
                 if (error.status !== 401 && error.status !== 403) throw error;
             }
+            curso = await request(api + '/' + encodeURIComponent(id));
             renderCourse(curso);
             await Promise.all([loadReviews(), loadTeacherProfiles()]);
         } catch (error) {

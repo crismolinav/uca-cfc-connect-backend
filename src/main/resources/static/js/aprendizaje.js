@@ -84,7 +84,8 @@
         const paymentsByEnrollment = new Map(payments.filter((p) => p.idInscripcion)
             .map((payment) => [payment.idInscripcion, payment]));
         document.getElementById('learning-course-count').textContent = String(enrollments.length);
-        const coursesWithProgress = enrollments.filter(enrollment => enrollment.totalModulos > 0);
+        const coursesWithProgress = enrollments.filter(enrollment =>
+            enrollment.estado === 'CONFIRMADA' && enrollment.totalModulos > 0);
         const averageProgress = coursesWithProgress.length
             ? Math.round(coursesWithProgress.reduce((sum, enrollment) => sum + (enrollment.progresoPorcentaje || 0), 0) / coursesWithProgress.length)
             : 0;
@@ -108,11 +109,16 @@
             const total = enrollment.total == null ? '' : money(enrollment.total) + ' · ';
             const courseUrl = enrollment.idCurso
                 ? '/cliente/curso.html?id=' + encodeURIComponent(enrollment.idCurso) : null;
+            const estadoVisible = enrollment.estado === 'CONFIRMADA' ? 'Acceso confirmado'
+                : enrollment.estado === 'PENDIENTE' ? 'Acceso bloqueado · pago pendiente'
+                    : enrollment.estado;
             enrollmentList.append(row(enrollment.curso, total + 'Inscripción ' + enrollment.fecha,
-                payment?.estado === 'CONFIRMADO' ? 'Pagado' : payment?.estado === 'PENDIENTE' ? 'Pago pendiente' : enrollment.estado,
+                estadoVisible,
                 actions.childElementCount ? actions : null, enrollment.imagenUrl, courseUrl,
-                {completed: enrollment.modulosCompletados?.length || 0, total: enrollment.totalModulos || 0,
-                    percent: enrollment.progresoPorcentaje || 0}));
+                enrollment.estado === 'CONFIRMADA' && enrollment.totalModulos > 0
+                    ? {completed: enrollment.modulosCompletados?.length || 0, total: enrollment.totalModulos,
+                        percent: enrollment.progresoPorcentaje || 0}
+                    : null));
         });
         if (!payments.length) paymentList.append(node('p', 'learning-note', 'Todavía no has registrado pagos.'));
         const enrollmentsById = new Map(enrollments.map(enrollment => [enrollment.idInscripcion, enrollment]));
