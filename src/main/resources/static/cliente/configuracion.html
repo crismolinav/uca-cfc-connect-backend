@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Configuración de apariencia de UCA CFC Connect.">
+    <meta name="description" content="Configuración de cuenta de UCA CFC Connect.">
     <title>Configuración | UCA CFC Connect</title>
     <link rel="stylesheet" href="/css/cliente.css">
     <script src="/js/client-shell.js" defer></script>
@@ -39,7 +39,7 @@
     <p id="client-error" class="error-message" role="alert"></p>
     <div id="client-content" hidden>
         <h1>Configuración de cuenta</h1>
-        <p class="settings-lead">Personaliza cómo se muestra tu espacio de aprendizaje.</p>
+        <p class="settings-lead">Consulta tus datos y administra el acceso a tu cuenta.</p>
         <section class="settings-card personal-card" aria-labelledby="personal-title">
             <div class="settings-card-heading"><h2 id="personal-title">Datos personales</h2><p>Consulta tus datos de cuenta y la zona horaria de este navegador.</p></div>
             <div class="personal-fields">
@@ -51,15 +51,23 @@
             <button class="settings-save" type="button" disabled>Guardar cambios</button>
             <p class="settings-availability">La edición de datos personales estará disponible próximamente.</p>
         </section>
-        <section class="settings-card" aria-labelledby="appearance-title">
-            <div><h2 id="appearance-title">Apariencia</h2><p>El modo oscuro estará disponible próximamente.</p></div>
-            <div class="appearance-control"><label class="visually-hidden" for="appearance-select">Apariencia</label><select id="appearance-select" aria-describedby="appearance-hint"><option value="light">Modo claro</option><option value="dark" disabled>Modo oscuro · próximamente</option></select><span id="appearance-hint" class="visually-hidden">Por ahora solo está disponible el modo claro.</span></div>
-        </section>
         <section class="settings-card delete-card" aria-labelledby="delete-title">
-            <div class="delete-card-row"><div><h2 id="delete-title">Eliminar cuenta</h2><p>Eliminar una cuenta es una acción permanente. Por ahora, esta función no está habilitada.</p></div><button type="button" disabled>Eliminar cuenta</button></div>
-            <p class="delete-notice"><span aria-hidden="true">!</span> La eliminación de cuentas estará disponible próximamente.</p>
+            <div class="delete-card-row"><div><h2 id="delete-title">Eliminar cuenta</h2><p>Se eliminará tu acceso y se cerrará tu sesión. Las inscripciones y los pagos permanecerán como registros del centro.</p></div><button id="delete-account-open" type="button">Eliminar cuenta</button></div>
         </section>
     </div>
 </main>
+<dialog id="delete-account-dialog" class="delete-account-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-description">
+    <form id="delete-account-form">
+        <h2 id="delete-dialog-title">¿Seguro que quieres eliminar tu cuenta?</h2>
+        <p id="delete-dialog-description">Esta acción es permanente. Perderás el acceso a tus cursos y certificados. Las inscripciones y los pagos permanecerán como registros del centro.</p>
+        <label for="delete-account-confirmation">Escribe <strong>ELIMINAR</strong> para confirmar</label>
+        <input id="delete-account-confirmation" name="confirmacion" type="text" autocomplete="off" spellcheck="false" aria-describedby="delete-account-error" required>
+        <p id="delete-account-error" class="delete-account-error" role="alert"></p>
+        <div class="delete-dialog-actions">
+            <button id="delete-account-cancel" class="delete-cancel" type="button" autofocus>Cancelar</button>
+            <button id="delete-account-confirm" class="delete-confirm" type="submit">Eliminar mi cuenta</button>
+        </div>
+    </form>
+</dialog>
 </body>
 </html>

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.udb.ucacfcconnect.entity.Cotizacion;
 import sv.edu.udb.ucacfcconnect.entity.Pago;
+import sv.edu.udb.ucacfcconnect.entity.SolicitudCatering;
 import sv.edu.udb.ucacfcconnect.exception.ApiException;
 import sv.edu.udb.ucacfcconnect.repository.AlquilerRepository;
 import sv.edu.udb.ucacfcconnect.repository.CotizacionRepository;
@@ -41,6 +42,17 @@ public class AdminOperacionesService {
         return new CotizacionAprobada(cotizacion.getId(), cotizacion.getEstado());
     }
 
+    @Transactional
+    public SolicitudCateringAprobada aprobarCatering(Long id) {
+        SolicitudCatering solicitud = catering.bloquear(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No se encontró la solicitud de catering"));
+        if (!"PENDIENTE".equals(solicitud.getEstado())) {
+            throw new ApiException(HttpStatus.CONFLICT, "Solo se puede aprobar una solicitud de catering pendiente");
+        }
+        solicitud.setEstado("APROBADA");
+        return new SolicitudCateringAprobada(solicitud.getId(), solicitud.getEstado());
+    }
+
     @Transactional(readOnly = true)
     public ReporteResumen reporte(LocalDate desde, LocalDate hasta) {
         if (desde == null || hasta == null || desde.isAfter(hasta)) {
@@ -65,6 +77,7 @@ public class AdminOperacionesService {
     }
 
     public record CotizacionAprobada(Long id, String estado) {}
+    public record SolicitudCateringAprobada(Long id, String estado) {}
     public record ReporteResumen(LocalDate desde, LocalDate hasta, long reservas, long solicitudesCatering,
                                  long cotizaciones, long pagos, long pagosConfirmados,
                                  BigDecimal montoConfirmado, BigDecimal montoPendiente) {}

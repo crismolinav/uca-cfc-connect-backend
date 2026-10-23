@@ -117,9 +117,17 @@
 
     function prepararLogin() {
         const formulario = document.getElementById("login-form");
+        if (new URLSearchParams(window.location.search).get("cuenta") === "eliminada") {
+            const estado = document.getElementById("form-status");
+            estado.textContent = "Tu cuenta fue eliminada. Puedes crear una nueva si lo necesitas.";
+            estado.classList.add("is-success");
+            estado.setAttribute("role", "status");
+        }
         formulario.addEventListener("submit", async (evento) => {
             evento.preventDefault();
             limpiarErrores(formulario);
+            document.getElementById("form-status").classList.remove("is-success");
+            document.getElementById("form-status").setAttribute("role", "alert");
 
             if (!formulario.reportValidity()) return;
             const boton = formulario.querySelector("button[type='submit']");
@@ -364,6 +372,75 @@
         }
     }
 
+    function prepararEliminacionCuenta() {
+        const dialogo = document.getElementById("delete-account-dialog");
+        const abrir = document.getElementById("delete-account-open");
+        const cancelar = document.getElementById("delete-account-cancel");
+        const formulario = document.getElementById("delete-account-form");
+        const confirmacion = document.getElementById("delete-account-confirmation");
+        const confirmar = document.getElementById("delete-account-confirm");
+        const error = document.getElementById("delete-account-error");
+        let enviando = false;
+
+        abrir.addEventListener("click", () => dialogo.showModal());
+        cancelar.addEventListener("click", () => dialogo.close());
+        dialogo.addEventListener("cancel", (evento) => {
+            if (enviando) evento.preventDefault();
+        });
+        dialogo.addEventListener("close", () => {
+            formulario.reset();
+            error.textContent = "";
+            confirmacion.removeAttribute("aria-invalid");
+            abrir.focus();
+        });
+        confirmacion.addEventListener("input", () => {
+            error.textContent = "";
+            confirmacion.removeAttribute("aria-invalid");
+        });
+
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const texto = confirmacion.value.trim().toUpperCase();
+            if (texto !== "ELIMINAR") {
+                error.textContent = "Escribe ELIMINAR para continuar.";
+                confirmacion.setAttribute("aria-invalid", "true");
+                confirmacion.focus();
+                return;
+            }
+
+            enviando = true;
+            confirmar.disabled = true;
+            cancelar.disabled = true;
+            try {
+                const csrf = await obtenerCsrf();
+                const respuesta = await fetch("/api/v1/auth/me", {
+                    method: "DELETE",
+                    credentials: "same-origin",
+                    headers: {"Content-Type": "application/json", "X-CSRF-TOKEN": csrf},
+                    body: JSON.stringify({confirmacion: texto})
+                });
+                if (respuesta.ok) {
+                    limpiarAlmacenamientoAnterior();
+                    window.location.replace("/auth/login.html?cuenta=eliminada");
+                    return;
+                }
+                if (respuesta.status === 401 || respuesta.status === 403) {
+                    window.location.replace("/auth/login.html");
+                    return;
+                }
+                const contenido = await respuesta.json().catch(() => ({}));
+                error.textContent = contenido.mensaje ||
+                    "No pudimos eliminar la cuenta. Intenta de nuevo o contacta con soporte.";
+            } catch (_error) {
+                error.textContent = "No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.";
+            } finally {
+                enviando = false;
+                confirmar.disabled = false;
+                cancelar.disabled = false;
+            }
+        });
+    }
+
     function mostrarDuiEnPerfil(usuario) {
         const fila = document.getElementById("profile-dui-row");
         const formulario = document.getElementById("complete-dui-form");
@@ -418,5 +495,6 @@
         prepararCompletarDui();
         cargarPanelCliente();
     }
+    if (pagina === "configuracion") prepararEliminacionCuenta();
     if (pagina === "aprendizaje" || pagina === "configuracion") cargarPanelCliente();
 })();

@@ -48,7 +48,7 @@ FORM: Extensión de la interfaz administrativa existente. -->
         <div class="content operations-content">
             <div class="page-intro">
                 <div><h1>Operaciones</h1><p class="breadcrumb">Administración <span aria-hidden="true">/</span> Operaciones</p></div>
-                <p class="page-description">Configura recursos, aprueba cotizaciones y consulta resultados.</p>
+                <p class="page-description">Configura recursos, aprueba solicitudes y cotizaciones, y consulta resultados.</p>
             </div>
             <nav class="operations-jump" aria-label="Secciones de operaciones">
                 <a href="#espacios">Espacios</a><a href="#catering">Catering</a>
@@ -72,7 +72,12 @@ FORM: Extensión de la interfaz administrativa existente. -->
             </section>
 
             <section class="operations-section" id="catering" aria-labelledby="catering-title">
-                <div class="operations-heading"><div><h2 id="catering-title">Servicios de catering</h2><p>Define los servicios que recepción podrá solicitar para un cliente.</p></div></div>
+                <div class="operations-heading"><div><h2 id="catering-title">Catering</h2><p>Revisa las solicitudes y administra los servicios disponibles para recepción.</p></div></div>
+                <h3 class="operations-subheading">Solicitudes de catering</h3>
+                <p class="operations-help">La aprobación de una solicitud no confirma su pago.</p>
+                <p id="catering-status" class="operations-status" role="status"></p>
+                <div id="catering-list" class="operations-list" aria-label="Solicitudes de catering registradas"></div>
+                <h3 class="operations-subheading">Servicios disponibles</h3>
                 <form id="service-form" class="operations-form">
                     <label>Nombre<input name="nombre" type="text" maxlength="100" required></label>
                     <label>Tipo de servicio<input name="tipoServicio" type="text" maxlength="80" placeholder="Coffee break, almuerzo..." required></label>

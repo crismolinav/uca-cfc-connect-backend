@@ -217,8 +217,6 @@ h2,h3,p{margin-top:0}
 .settings-card{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;margin-top:1rem;padding:1.25rem 1.35rem;border:1px solid var(--line);border-radius:12px;background:#fff}
 .settings-card h2{margin:0 0 .3rem;font-size:1rem}
 .settings-card p{max-width:35ch;margin:0;color:var(--muted);font-size:.76rem;line-height:1.5}
-.appearance-control{flex:none}
-.appearance-control select{max-width:230px;min-height:42px;padding:.5rem .65rem;border:1px solid #91acd8;border-radius:6px;background:#fff;color:#1f3558;font-size:.8rem}
 .personal-card,.delete-card{display:block}
 .personal-card .settings-card-heading p{max-width:none}
 .personal-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;margin-top:1.2rem}
@@ -232,10 +230,24 @@ h2,h3,p{margin-top:0}
 .delete-card h2{color:#b02531}
 .delete-card-row{display:flex;justify-content:space-between;align-items:center;gap:1rem}
 .delete-card-row p{max-width:54ch}
-.delete-card button{flex:none;min-height:40px;padding:.5rem .8rem;border:1px solid #9bb7e6;border-radius:5px;background:#fff;color:#6d7789;font-size:.75rem;font-weight:600}
-.settings-card .delete-notice{display:flex;align-items:center;gap:.65rem;max-width:none;margin-top:1rem;padding:.65rem .75rem;border-radius:7px;background:#fff1d7;color:#583c17;font-size:.73rem}
-.delete-notice span{display:grid;flex:none;place-items:center;width:19px;height:19px;border-radius:50%;background:#a55f08;color:#fff;font-size:.73rem;font-weight:700}
-@media(max-width:640px){.learning-intro{min-height:120px}.learning-intro-art{display:none}.inner-page{padding-top:1.5rem}.learning-empty{padding-top:4rem}.settings-card{align-items:stretch;flex-direction:column}.appearance-control select{max-width:none;width:100%}}
+.delete-card button{flex:none;min-height:42px;padding:.55rem .85rem;border:1px solid #b02531;border-radius:6px;background:#fff;color:#a31f2c;font-size:.77rem;font-weight:600}
+.delete-card button:hover{background:#fff1f1}
+.delete-account-dialog{width:min(100% - 2rem,480px);max-height:min(90vh,600px);padding:1.5rem;border:1px solid #d3ddec;border-radius:14px;background:#fff;color:#202838;box-shadow:0 18px 50px rgb(12 42 92 / .2);overscroll-behavior:contain}
+.delete-account-dialog::backdrop{background:rgb(12 31 59 / .58)}
+.delete-account-dialog h2{margin:0 0 .7rem;color:#a31f2c;font-size:1.2rem;line-height:1.35}
+.delete-account-dialog p{margin:0 0 1.2rem;color:#45546b;font-size:.85rem;line-height:1.6}
+.delete-account-dialog label{display:block;margin-bottom:.5rem;font-size:.8rem;font-weight:600}
+.delete-account-dialog input{width:100%;min-height:44px;padding:.6rem .75rem;border:1px solid #8da7d0;border-radius:6px;background:#fff;color:#202838;font-size:1rem}
+.delete-account-dialog input[aria-invalid='true']{border-color:#b02531}
+.delete-account-dialog .delete-account-error{min-height:1.3rem;margin:.4rem 0 .8rem;color:#a31f2c;font-size:.78rem}
+.delete-dialog-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.65rem}
+.delete-dialog-actions button{min-height:44px;padding:.6rem 1rem;border-radius:6px;font-size:.8rem;font-weight:600}
+.delete-cancel{border:1px solid #a9bcda;background:#fff;color:#243650}
+.delete-cancel:hover{background:#f1f5fb}
+.delete-confirm{border:1px solid #a31f2c;background:#a31f2c;color:#fff}
+.delete-confirm:hover:not(:disabled){background:#841924}
+.delete-dialog-actions button:disabled{cursor:wait;opacity:.65}
+@media(max-width:640px){.learning-intro{min-height:120px}.learning-intro-art{display:none}.inner-page{padding-top:1.5rem}.learning-empty{padding-top:4rem}.settings-card{align-items:stretch;flex-direction:column}}
 @media(max-width:560px){.personal-fields{grid-template-columns:1fr}.delete-card-row{align-items:stretch;flex-direction:column}.delete-card button{align-self:flex-start}}
 @media(max-width:980px){.header-inner{flex-wrap:wrap;padding-block:.8rem}.site-search{order:5;flex-basis:100%;max-width:none}.primary-nav{margin-inline:auto}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.page-shell,.header-inner{width:min(100% - 2rem,1160px)}.brand{font-size:1rem}.primary-nav{order:4;justify-content:flex-start;gap:.8rem;width:100%;margin:0;overflow-x:auto}.primary-nav a{font-size:.7rem}.welcome-band .page-shell{padding-block:1.2rem}.dashboard-content{padding-top:1rem}.interest-panel{padding:1rem}.course-filter-grid{grid-template-columns:1fr}.clear-course-filters{justify-self:start}.resume-grid,.promo-grid,.account-section{grid-template-columns:1fr}.resume-empty{min-height:170px}.catalog-grid{gap:.65rem}.card-cover{height:110px}.card-body h3{font-size:.8rem}.card-body p{font-size:.69rem}.card-provider{font-size:.61rem}.card-type{font-size:.58rem}.course-cover,.space-cover{height:110px}.course-detail-data{grid-template-columns:1fr}.diploma-session-detail li{grid-template-columns:1fr}.promo{min-height:150px}.account-section dl{grid-template-columns:1fr 1fr}.dui-entry{align-items:stretch;flex-direction:column}.dui-entry button{align-self:flex-start}.space-catalog-section{margin-inline:-.35rem;padding:1.25rem}.reservation-fields{grid-template-columns:1fr}.reservation-reason{grid-column:auto}.reservation-summary,.rental-item{align-items:flex-start;flex-direction:column}.rental-controls{width:100%;justify-content:space-between}}

@@ -87,6 +87,36 @@
         'Todavía no hay servicios de catering.');
     }
 
+    async function cargarSolicitudesCatering() {
+        const items = await request(api + '/catering');
+        mostrarLista('catering-list', items, item => {
+            let button;
+            if (item.estado === 'PENDIENTE') {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'secondary-button';
+                button.textContent = 'Aprobar';
+                button.setAttribute('aria-label', 'Aprobar solicitud de catering ' + item.id + ' de ' + item.cliente);
+                button.addEventListener('click', async () => {
+                    if (!window.confirm('¿Aprobar la solicitud de catering #' + item.id + ' de ' + item.cliente + '? Esto no confirma el pago.')) return;
+                    button.disabled = true;
+                    estado('catering-status', 'Aprobando solicitud de catering...');
+                    try {
+                        await request(api + '/catering/' + item.id + '/aprobar', {method: 'PATCH'});
+                        await cargarSolicitudesCatering();
+                        estado('catering-status', 'Solicitud de catering #' + item.id + ' aprobada. El pago sigue siendo independiente.');
+                    } catch (error) {
+                        estado('catering-status', error.message, true);
+                        button.disabled = false;
+                    }
+                });
+            }
+            return linea('Solicitud #' + item.id + ' · ' + item.servicio + ' · ' + item.cliente,
+                item.fecha + ' · ' + item.hora + ' · ' + item.lugar + ' · ' + item.numeroAsistentes + ' asistentes' +
+                (item.menu ? ' · Menú: ' + item.menu : ''), item.estado, button);
+        }, 'Todavía no hay solicitudes de catering.');
+    }
+
     async function cargarCotizaciones() {
         const items = await request(api + '/cotizaciones');
         mostrarLista('quote-list', items, item => {
@@ -242,7 +272,7 @@
             const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
             document.querySelector('#report-form [name="hasta"]').value = localDate;
             document.querySelector('#report-form [name="desde"]').value = localDate.slice(0, 8) + '01';
-            await Promise.all([cargarEspacios(), cargarServicios(), cargarCotizaciones(), cargarPagos(), cargarReporte()]);
+            await Promise.all([cargarEspacios(), cargarServicios(), cargarSolicitudesCatering(), cargarCotizaciones(), cargarPagos(), cargarReporte()]);
         } catch (error) {
             estado('page-status', error.message, true);
         }
