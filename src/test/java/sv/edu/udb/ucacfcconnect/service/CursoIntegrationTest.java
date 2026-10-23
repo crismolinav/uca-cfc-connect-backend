@@ -130,6 +130,7 @@ class CursoIntegrationTest {
         dto.setHorario("Lunes, Miércoles | 18:00-20:00");
         dto.setIdCategoria(idCategoria);
         dto.setIdModalidad(idModalidad);
+        dto.setContenidoPrograma("[{\"titulo\":\"Introducción\"},{\"titulo\":\"Práctica\"},{\"titulo\":\"Proyecto\"}]");
         return dto;
     }
 }

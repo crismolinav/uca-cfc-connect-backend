@@ -142,6 +142,7 @@ class DocenteIntegrationTest {
         dto.setHorario(horario);
         dto.setIdCategoria(idCategoria);
         dto.setIdModalidad(idModalidad);
+        dto.setContenidoPrograma("[{\"titulo\":\"Introducción\"},{\"titulo\":\"Práctica\"},{\"titulo\":\"Proyecto\"}]");
         return dto;
     }
 }
